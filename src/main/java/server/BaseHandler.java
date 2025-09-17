@@ -57,13 +57,13 @@ public abstract class BaseHandler implements HttpHandler {
     protected int getIdFromHeader(HttpExchange exchange) throws IOException {
         String studentIdStr = exchange.getRequestHeaders().getFirst("student_id");
         if (studentIdStr == null) {
-            sendResponse(exchange, 401, Map.of("error", "Unauthorized: Missing X-Student-ID header"));
+            sendResponse(exchange, 401, Map.of("error", "Unauthorized: Missing Student ID header"));
             return -1;
         }
         try {
             return Integer.parseInt(studentIdStr);
         } catch (NumberFormatException e) {
-            sendResponse(exchange, 400, Map.of("error", "Bad Request: Invalid X-Student-ID format"));
+            sendResponse(exchange, 400, Map.of("error", "Bad Request: Invalid Student ID format"));
             return -1;
         }
     }
@@ -75,6 +75,19 @@ public abstract class BaseHandler implements HttpHandler {
             return null;
         }
         return role;
+    }
+
+    protected boolean isAuthorized(HttpExchange exchange, int studentId) throws IOException {
+        String role = getRoleFromHeader(exchange);
+        if (role == null) return false;
+
+        int headerId = getIdFromHeader(exchange);
+        if (headerId == -1) return false;
+        if (role.equals("user") && studentId != headerId) {
+            sendResponse(exchange, 403, Map.of("error", "Forbidden: Insufficient permissions"));
+            return false;
+        }
+        return true;
     }
 
 }

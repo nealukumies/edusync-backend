@@ -13,16 +13,16 @@ import java.sql.*;
 public class StudentDao {
 
     /**
-     * Adds a new student to the database. Returns the generated student ID, or -1 if insertion fails.
+     * Adds a new student to the database. Returns the Student object if successful, or null if insertion fails.
      * @param name
      * @param email
      * @param password
-     * @return int - student ID, -1 if error occurs
+     * @return Student - the created Student object, or null if error occurs
      */
-    public int addStudent(String name, String email, String password) {
+    public Student addStudent(String name, String email, String password) {
         if (name == null || name.isEmpty() || email == null || email.isEmpty() || password == null || password.isEmpty()) {
             System.out.println("Error: Name, email and password cannot be null or empty.");
-            return -1;
+            return null;
         }
         Connection conn = MariaDBConnection.getConnection();
         String sql = "INSERT INTO students (name, email, password_hash) VALUES (?, ?, ?);";
@@ -36,12 +36,13 @@ public class StudentDao {
             if (rows > 0) {
                 ResultSet rs = ps.getGeneratedKeys();
                 if (rs.next()) {
-                    return rs.getInt(1); // Return the generated student ID
+                    int newId = rs.getInt(1);
+                    return new Student(newId, name, email, "user"); // Default role is "user"
                 }
-            } return -1; // Indicate failure
+            } return null; // Indicate failure
         } catch (SQLException e) {
             System.out.println("Error adding student: " + e.getMessage());
-            return -1; // Indicate failure
+            return null; // Indicate failure
         }
     }
 
