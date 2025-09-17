@@ -13,21 +13,14 @@ public class LoginHandler extends BaseHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        String method = exchange.getRequestMethod();
-        if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
-            sendResponse(exchange, 405, Map.of("error", "Method not allowed"));
-            return;
-        }
-        String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
-        Map<String, String> requestMap;
-        try {
-            requestMap = gson.fromJson(body, Map.class);
-        } catch (Exception e) {
-            sendResponse(exchange, 400, Map.of("error", "Invalid JSON"));
-            return;
-        }
+        if (!isMethod(exchange, "POST")) { return; }
+
+        Map<String, String> requestMap = parseJsonBody(exchange);
+        if (requestMap == null) { return; }
+
         String email = requestMap.get("email");
         String password = requestMap.get("password");
+
         if (email == null || password == null) {
             sendResponse(exchange, 400, Map.of("error", "Email and password are required"));
             return;
@@ -38,7 +31,7 @@ public class LoginHandler extends BaseHandler {
             sendResponse(exchange, 200, Map.of(
                     "studentId", student.getId(),
                     "name", student.getName(),
-                    "emil", student.getEmail(),
+                    "email", student.getEmail(),
                     "role", student.getRole()));
         } else {
             sendResponse(exchange, 401, Map.of("error", "Invalid email or password"));

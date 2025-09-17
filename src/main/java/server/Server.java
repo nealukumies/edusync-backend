@@ -16,8 +16,13 @@ public class Server {
 
     public void runServer() throws IOException {
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
-        HttpContext context = server.createContext("/login");
-        context.setHandler(new LoginHandler());
+
+        HttpContext loginContext = server.createContext("/login");
+        loginContext.setHandler(new LoginHandler());
+
+        HttpContext studentsContext = server.createContext("/students");
+        studentsContext.setHandler(new StudentHandler());
+
         server.start();
     }
 

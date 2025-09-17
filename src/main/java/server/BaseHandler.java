@@ -12,12 +12,69 @@ import java.util.Map;
 public abstract class BaseHandler implements HttpHandler {
     protected final Gson gson = new Gson();
 
-    protected void sendResponse(HttpExchange exchange, int statusCode, Map<String, Object> data) throws IOException {
-        String jsonResponse = gson.toJson(data);
+    protected void sendResponse(HttpExchange exchange, int statusCode, Object responseObj) throws IOException {
+        String jsonResponse = gson.toJson(responseObj);
         exchange.getResponseHeaders().set("Content-Type", "application/json");
         exchange.sendResponseHeaders(statusCode, jsonResponse.getBytes(StandardCharsets.UTF_8).length);
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(jsonResponse.getBytes(StandardCharsets.UTF_8));
         }
     }
+
+    protected boolean isMethod(HttpExchange exchange, String method) throws IOException {
+        if (!exchange.getRequestMethod().equalsIgnoreCase(method)) {
+            sendResponse(exchange, 405, Map.of("error", "Method Not Allowed"));
+            return false;
+        }
+        return true;
+    }
+
+    protected Map<String, String> parseJsonBody(HttpExchange exchange) throws IOException {
+        String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+        try {
+            return gson.fromJson(body, Map.class);
+        } catch (Exception e) {
+            sendResponse(exchange, 400, Map.of("error", "Invalid JSON"));
+            return null; // Caller can check for null and return
+        }
+    }
+
+
+    protected int getIdFromPath(HttpExchange exchange, int index) throws IOException {
+        String[] pathParts = exchange.getRequestURI().getPath().split("/");
+        if (pathParts.length <= index) {
+            sendResponse(exchange, 400, Map.of("error", "Bad Request: Missing ID in path"));
+            return -1;
+        }
+        try {
+            return Integer.parseInt(pathParts[index]);
+        } catch (NumberFormatException e) {
+            sendResponse(exchange, 400, Map.of("error", "Bad Request: Invalid ID format"));
+            return -1;
+        }
+    }
+
+    protected int getIdFromHeader(HttpExchange exchange) throws IOException {
+        String studentIdStr = exchange.getRequestHeaders().getFirst("student_id");
+        if (studentIdStr == null) {
+            sendResponse(exchange, 401, Map.of("error", "Unauthorized: Missing X-Student-ID header"));
+            return -1;
+        }
+        try {
+            return Integer.parseInt(studentIdStr);
+        } catch (NumberFormatException e) {
+            sendResponse(exchange, 400, Map.of("error", "Bad Request: Invalid X-Student-ID format"));
+            return -1;
+        }
+    }
+
+    protected String getRoleFromHeader(HttpExchange exchange) throws IOException {
+        String role = exchange.getRequestHeaders().getFirst("role");
+        if (role == null) {
+            sendResponse(exchange, 401, Map.of("error", "Unauthorized: Missing role header"));
+            return null;
+        }
+        return role;
+    }
+
 }
