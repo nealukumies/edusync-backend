@@ -17,14 +17,14 @@ public class CourseDao {
      * @param startDate
      * @param endDate
      */
-    public int addCourse(int studentId, String courseName, Date startDate, Date endDate) {
+    public Course addCourse(int studentId, String courseName, Date startDate, Date endDate) {
         if (startDate != null && endDate != null && endDate.before(startDate)) {
             System.out.println("Error: End date cannot be before start date.");
-            return -1;
+            return null;
         }
         if (courseName == null || courseName.isEmpty()) {
             System.out.println("Error: Course name cannot be null or empty.");
-            return -1;
+            return null;
         }
         Connection conn = MariaDBConnection.getConnection();
         String sql = "INSERT INTO courses (student_id, course_name, start_date, end_date) VALUES (?, ?, ?, ?);";
@@ -38,13 +38,14 @@ public class CourseDao {
             if (rows > 0) {
                 ResultSet rs = ps.getGeneratedKeys();
                 if (rs.next()) {
-                    return rs.getInt(1); // Return the generated course ID
+                    int newId = rs.getInt(1);
+                    return new Course(newId, studentId, courseName, startDate, endDate);
                 }
-            } return -1; // Indicate failure
+            } return null; // Indicate failure
 
         } catch (SQLException e) {
             System.out.println("Error adding course.");
-            return -1; // Indicate failure
+            return null; // Indicate failure
         }
     }
 
