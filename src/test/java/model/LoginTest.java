@@ -2,7 +2,7 @@ package model;
 
 import org.junit.jupiter.api.Test;
 
-import static model.Login.tryLogin;
+import service.AuthService.tryLogin;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class LoginTest {
