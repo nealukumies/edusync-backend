@@ -1,19 +1,23 @@
 package model;
 
 import org.junit.jupiter.api.Test;
+import service.AuthService;
 
-import service.AuthService.tryLogin;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 class LoginTest {
 
+    private AuthService authService = new AuthService();
+
     @Test
-    void TryWorkingEmailToLogin() {
-        assertEquals(32, tryLogin("Katti.Matikainen@katti.org"));
+    void TryLoginTest() {
+
+        Student student  = authService.tryLogin("pellen@maili.fi", "salasana");
+        assertTrue(student != null, "Login should be succesfull for correct credentials");
     }
 
     @Test
-    void TryInvalidEmailToLogin() {
-        assertEquals(-1, tryLogin("Matti.Katikainen@katti.org"));
+    void TryLoginWrongPasswordTest() {
+        assertEquals(null, authService.tryLogin("pellen@maili.fi", "wrongpassword"));
     }
 }

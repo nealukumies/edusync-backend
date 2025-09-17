@@ -133,7 +133,7 @@ public class AssignmentDaoTest {
     @Test
     void getAssignmentsForStudentWithNoAssignmentsTest() {
         StudentDao studentDao = new StudentDao();
-        int studentId = studentDao.addStudent("NoAssign", "nojob@today.fi");
+        int studentId = studentDao.addStudent("NoAssign", "nojob@today.fi", "password");
         List<Assignment> assignments = assignmentDao.getAssignments(studentId);
         assertTrue(assignments.isEmpty(), "Assignments list for student with no assignments should be empty");
         studentDao.deleteStudent(studentId);

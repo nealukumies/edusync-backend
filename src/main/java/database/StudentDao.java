@@ -52,7 +52,7 @@ public class StudentDao {
      */
     public Student getStudent(String email) {
         Connection conn = MariaDBConnection.getConnection();
-        String sql = "SELECT student_id, name FROM students WHERE email = ?;";
+        String sql = "SELECT student_id, name, email, role FROM students WHERE email = ?;";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, email);
@@ -60,7 +60,8 @@ public class StudentDao {
             if (rs.next()) {
                 int id = rs.getInt("student_id");
                 String name = rs.getString("name");
-                return new Student(id, name, email);
+                String role = rs.getString("role");
+                return new Student(id, name, email, role);
             }
             return null; // Student not found
         } catch (SQLException e) {
@@ -77,7 +78,7 @@ public class StudentDao {
 
     public Student getStudentById(int studentId) {
         Connection conn = MariaDBConnection.getConnection();
-        String sql = "SELECT name, email FROM students WHERE student_id = ?;";
+        String sql = "SELECT name, email, role FROM students WHERE student_id = ?;";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, studentId);
@@ -85,7 +86,8 @@ public class StudentDao {
             if (rs.next()) {
                 String name = rs.getString("name");
                 String email = rs.getString("email");
-                return new Student(studentId, name, email);
+                String role = rs.getString("role");
+                return new Student(studentId, name, email, role);
             }
             return null; // Student not found
         } catch (SQLException e) {

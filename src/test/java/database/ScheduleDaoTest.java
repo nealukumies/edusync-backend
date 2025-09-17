@@ -176,7 +176,7 @@ class ScheduleDaoTest {
     void getAllSchedulesForStudentTest() {
         StudentDao studentDao = new StudentDao();
         CourseDao courseDao = new CourseDao();
-        int studentId = studentDao.addStudent("testuser", "test@cases.com");
+        int studentId = studentDao.addStudent("testuser", "test@cases.com", "password");
         int courseId = courseDao.addCourse(studentId, "Test101", Date.valueOf("2025-01-01"), Date.valueOf("2025-06-01"));
         assertTrue(studentId > 0 && courseId > 0, "Student and Course insertion should be successful");
         int scheduleId1 = scheduleDao.insertSchedule(courseId, model.Weekday.THURSDAY, LocalTime.of(10, 0), LocalTime.of(11, 0));
@@ -200,7 +200,7 @@ class ScheduleDaoTest {
     @Test
     void getAllSchedulesForStudentWithNoSchedulesTest() {
         StudentDao studentDao = new StudentDao();
-        int studentId = studentDao.addStudent("Testuser", "email@email.email");
+        int studentId = studentDao.addStudent("Testuser", "email@email.email", "password");
         List<Schedule> schedules = scheduleDao.getAllSchedulesForStudent(studentId);
         assertNotNull(schedules, "Schedules list should not be null");
         assertTrue(schedules.isEmpty(), "Schedules list should be empty");

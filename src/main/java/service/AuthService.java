@@ -6,14 +6,14 @@ import org.mindrot.jbcrypt.BCrypt;
 
 public class AuthService {
 
-    public int tryLogin(String email, String password) {
+    public Student tryLogin(String email, String password) {
         StudentDao dao = new StudentDao();
         String storedHash = dao.getPasswordHash(email);
 
         if (storedHash != null && verifyPassword(password, storedHash)) {
-            return dao.getStudent(email).getId();
+            return dao.getStudent(email);
         } else {
-            return -1;
+            return null;
         }
     }
 

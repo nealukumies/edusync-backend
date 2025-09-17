@@ -1,6 +1,7 @@
 package server;
 
 import com.sun.net.httpserver.HttpExchange;
+import model.Student;
 import service.AuthService;
 
 import java.io.IOException;
@@ -32,9 +33,13 @@ public class LoginHandler extends BaseHandler {
             return;
         }
 
-        int studentId = authService.tryLogin(email, password);
-        if (studentId != -1) {
-            sendResponse(exchange, 200, Map.of("studentId", studentId));
+        Student student = authService.tryLogin(email, password);
+        if (student != null) {
+            sendResponse(exchange, 200, Map.of(
+                    "studentId", student.getId(),
+                    "name", student.getName(),
+                    "emil", student.getEmail(),
+                    "role", student.getRole()));
         } else {
             sendResponse(exchange, 401, Map.of("error", "Invalid email or password"));
         }
