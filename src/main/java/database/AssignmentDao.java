@@ -17,15 +17,15 @@ public class AssignmentDao {
 
     /**
      * Inserts a new assignment into the database.
-     * Returns the generated assignment ID, or -1 if insertion fails, or 0 if no rows were affected.
+     * Returns the created Assignment object, or null if insertion fails or no rows affected.
      * @param studentId
      * @param courseId
      * @param title
      * @param description
      * @param deadline
-     * @return int - assignment ID, 0 if no rows affected, -1 if error occurs
+     * @return Assignment object or null
      */
-    public int insertAssignment(int studentId, Integer courseId, String title, String description, Date deadline) {
+    public Assignment insertAssignment(int studentId, Integer courseId, String title, String description, Date deadline) {
         Connection conn = MariaDBConnection.getConnection();
         String sql = "INSERT INTO assignments (student_id, course_id, title, description, deadline) VALUES (?, ?, ?, ?, ?)";
         try{
@@ -43,15 +43,16 @@ public class AssignmentDao {
             ResultSet rs = ps.getGeneratedKeys();
             if (rs.next()) {
                 int newId = rs.getInt(1);
-                return newId;
+                Assignment assignment = new Assignment(newId, studentId, courseId, title, description, deadline, Status.PENDING);
+                return assignment; // Return the created assignment object
             } else if (rows == 0) {
-                return 0; // No rows affected
+                return null; // No rows affected
             } else {
-                return -1; // Indicate failure
+                return null; // Indicate failure
             }
         } catch (SQLException e) {
             System.out.println("Error inserting assignment: " + e.getMessage());
-            return -1; // Indicate failure
+            return null; // Indicate failure
         }
     }
 

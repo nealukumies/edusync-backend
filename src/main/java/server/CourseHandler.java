@@ -41,6 +41,8 @@ public class CourseHandler extends BaseHandler {
             sendResponse(exchange, 404, "Course not found");
             return;
         }
+        int studentId = course.getStudentId();
+        if (!isAuthorized(exchange, studentId)) return;
         sendResponse(exchange, 200, course);
     }
 
@@ -105,13 +107,15 @@ public class CourseHandler extends BaseHandler {
     }
 
     private void handlePut(HttpExchange exchange) throws IOException {
-        int studentId = getIdFromHeader(exchange);
-        if (studentId == -1) return;
         int courseId = getIdFromPath(exchange, 2);
         if (courseId == -1) return;
 
         Map<String, String> requestMap = parseJsonBody(exchange);
         if (requestMap == null) { return; }
+
+        int studentId = Integer.parseInt(requestMap.get("student_id"));
+        if (!isAuthorized(exchange, studentId)) return;
+
         String courseName = requestMap.get("course_name");
         String startDate = requestMap.get("start_date");
         String endDate = requestMap.get("end_date");
@@ -132,10 +136,6 @@ public class CourseHandler extends BaseHandler {
         Course existingCourse = courseDao.getCourseById(courseId);
         if (existingCourse == null) {
             sendResponse(exchange, 404, Map.of("error", "Course not found"));
-            return;
-        }
-        if (existingCourse.getStudentId() != studentId) {
-            sendResponse(exchange, 403, Map.of("error", "Forbidden: You can only update your own courses"));
             return;
         }
         boolean updatedCourse = courseDao.updateCourse(courseId, courseName, sqlStartDate, sqlEndDate);
