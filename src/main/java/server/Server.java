@@ -29,7 +29,11 @@ public class Server {
         HttpContext assignmentsContext = server.createContext("/assignments");
         assignmentsContext.setHandler(new AssignmentHandler());
 
+        HttpContext scheduleContext = server.createContext("/schedules");
+        scheduleContext.setHandler(new ScheduleHandler());
+
         server.start();
+        System.out.println("Server started on port " + port);
     }
 
 }

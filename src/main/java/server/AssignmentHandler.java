@@ -36,6 +36,21 @@ public class AssignmentHandler extends BaseHandler {
     }
 
     private void handleGet(HttpExchange exchange) throws IOException {
+        String[] pathParts = exchange.getRequestURI().getPath().split("/");
+
+        // Handle /assignments/students/{studentId}
+        if (pathParts.length == 4 && pathParts[2].equals("students")) {
+            int studentId = getIdFromPath(exchange, 3);
+            if (studentId == -1) return;
+            if (!isAuthorized(exchange, studentId)) return;
+
+            AssignmentDao assignmentDao = new AssignmentDao();
+            var assignments = assignmentDao.getAssignments(studentId);
+            sendResponse(exchange, 200, assignments);
+            return;
+        }
+
+        // Handle /assignments/{assignmentId}
         int assignmentId = getIdFromPath(exchange, 2);
         if (assignmentId == -1) return;
 
@@ -52,10 +67,11 @@ public class AssignmentHandler extends BaseHandler {
     }
 
     private void handlePost(HttpExchange exchange) throws IOException {
+        System.out.println("Handle post");
         Map<String, String> requestMap = parseJsonBody(exchange);
         if (requestMap == null) { return; }
 
-        int studentId = Integer.parseInt(requestMap.get("student_id"));
+        int studentId = getIdFromHeader(exchange);
         if (!isAuthorized(exchange, studentId)) return;
 
         int courseId = Integer.parseInt(requestMap.get("course_id"));
@@ -73,13 +89,14 @@ public class AssignmentHandler extends BaseHandler {
             return;
         }
 
-        if (courseId > 0 || studentId > 0 || title == null || sqlDeadline == null) {
+        if (courseId <= 0 || studentId <= 0 || title == null || sqlDeadline == null) {
             sendResponse(exchange, 400, Map.of("Error", "Title, and deadline are required"));
             return;
         }
 
         AssignmentDao assignmentDao = new AssignmentDao();
         Assignment newAssignment = assignmentDao.insertAssignment(studentId, courseId, title, description, sqlDeadline);
+        System.out.println("New assignment: " + newAssignment);
         sendResponse(exchange, 201, newAssignment);
     }
 
@@ -106,23 +123,7 @@ public class AssignmentHandler extends BaseHandler {
         int assignmentId = getIdFromPath(exchange, 2);
         if (assignmentId == -1) return;
         Map<String, String> requestMap = parseJsonBody(exchange);
-        if (requestMap == null) { return; }
-        int studentId = Integer.parseInt(requestMap.get("student_id"));
-        if (!isAuthorized(exchange, studentId)) return;
-
-        int courseId = Integer.parseInt(requestMap.get("course_id"));
-        String newTitle = requestMap.get("title");
-        String newDescription = requestMap.get("description");
-        String newDeadline = requestMap.get("deadline");
-        String newStatus = requestMap.get("status");
-
-        Date sqlDeadline = null;
-        try {
-            if (newDeadline != null) {
-                sqlDeadline = Date.valueOf(newDeadline);
-            }
-        } catch (IllegalArgumentException e) {
-            sendResponse(exchange, 400, Map.of("error", "Invalid date format. Use YYYY-MM-DD"));
+        if (requestMap == null) {
             return;
         }
 
@@ -133,27 +134,51 @@ public class AssignmentHandler extends BaseHandler {
             return;
         }
 
-        boolean updated = false;
+        int studentId = existingAssignment.getStudentId();
+        if (!isAuthorized(exchange, studentId)) return;
 
-        if (newTitle != null || newDescription != null || sqlDeadline != null) {
-            assignmentDao.updateAssignment(assignmentId, newTitle, newDescription, sqlDeadline, courseId > 0 ? courseId : null);
-            updated = true;
+        String newTitle = requestMap.getOrDefault("title", existingAssignment.getTitle());
+        String newDescription = requestMap.getOrDefault("description", existingAssignment.getDescription());
+        java.sql.Date newDeadline = existingAssignment.getDeadline() != null
+                ? new java.sql.Date(existingAssignment.getDeadline().getTime())
+                : null;
+        if (requestMap.get("deadline") != null) {
+            try {
+                newDeadline = java.sql.Date.valueOf(requestMap.get("deadline"));
+            } catch (IllegalArgumentException e) {
+                sendResponse(exchange, 400, Map.of("error", "Invalid date format. Use YYYY-MM-DD"));
+                return;
+            }
         }
-        if (newStatus != null) {
-            Status status = Status.fromDbValue(newStatus);
+
+        Integer newCourseId = existingAssignment.getCourseId();
+        if (requestMap.get("course_id") != null) {
+            try {
+                int parsedCourseId = Integer.parseInt(requestMap.get("course_id"));
+                if (parsedCourseId > 0) newCourseId = parsedCourseId;
+            } catch (NumberFormatException e) {
+                sendResponse(exchange, 400, Map.of("error", "Invalid course_id"));
+                return;
+            }
+        }
+
+        if (requestMap.get("status") != null) {
+            Status status = Status.fromDbValue(requestMap.get("status"));
             if (status == null) {
                 sendResponse(exchange, 400, Map.of("error", "Invalid status value"));
                 return;
             }
             assignmentDao.setStatus(assignmentId, status);
-            updated = true;
         }
+
+        boolean updated = assignmentDao.updateAssignment(assignmentId, newTitle, newDescription, newDeadline, newCourseId);
 
         if (updated) {
             Assignment updatedAssignment = assignmentDao.getAssignmentById(assignmentId);
             sendResponse(exchange, 200, updatedAssignment);
         } else {
-            sendResponse(exchange, 400, Map.of("error", "No valid fields to update"));
+            sendResponse(exchange, 400, Map.of("error", "No fields were updated"));
         }
     }
+
 }

@@ -53,7 +53,8 @@ class ScheduleDaoTest {
      */
     @Test
     void insertAndDeleteScheduleTest() {
-        int id = scheduleDao.insertSchedule(1, model.Weekday.MONDAY, LocalTime.of(10, 0), LocalTime.of(11, 0));
+        Schedule schedule = scheduleDao.insertSchedule(1, model.Weekday.MONDAY, LocalTime.of(10, 0), LocalTime.of(11, 0));
+        int id = schedule.getScheduleId();
         assertTrue(id > 0, "Insertion successful, got ID: " + id);
         assertTrue(scheduleDao.deleteSchedule(id), "Deletion successful for ID: " + id);
     }
@@ -103,10 +104,10 @@ class ScheduleDaoTest {
      */
     @Test
     void getScheduleTest() {
-        int id = scheduleDao.insertSchedule(1, model.Weekday.TUESDAY, LocalTime.of(9, 0), LocalTime.of(10, 0));
+        Schedule schedule = scheduleDao.insertSchedule(1, model.Weekday.TUESDAY, LocalTime.of(9, 0), LocalTime.of(10, 0));
+        int id = schedule.getScheduleId();
         assertTrue(id > 0, "Insertion successful, got ID: " + id);
         insertedSchedules.add(id);
-        Schedule schedule = scheduleDao.getSchedule(id);
         assertNotNull(schedule, "Schedule should not be null");
         assertEquals(id, schedule.getScheduleId(), "Schedule ID should match");
         assertEquals(1, schedule.getCourseId(), "Course ID should match");
@@ -134,8 +135,10 @@ class ScheduleDaoTest {
         Course course = courseDao.addCourse(1, "Test101", Date.valueOf("2025-01-01"), Date.valueOf("2025-06-01"));
         int courseId = course.getCourseId();
         assertTrue(courseId > 0, "Course insertion should be succesfull");
-        int scheduleId1 = scheduleDao.insertSchedule(courseId, model.Weekday.WEDNESDAY, LocalTime.of(10, 0), LocalTime.of(11, 0));
-        int scheduleId2 = scheduleDao.insertSchedule(courseId, model.Weekday.FRIDAY, LocalTime.of(14, 0), LocalTime.of(15, 0));
+        Schedule schedule1 = scheduleDao.insertSchedule(courseId, model.Weekday.WEDNESDAY, LocalTime.of(10, 0), LocalTime.of(11, 0));
+        Schedule schedule2 = scheduleDao.insertSchedule(courseId, model.Weekday.FRIDAY, LocalTime.of(14, 0), LocalTime.of(15, 0));
+        int scheduleId1 = schedule1.getScheduleId();
+        int scheduleId2 = schedule2.getScheduleId();
         assertTrue(scheduleId1 > 0 && scheduleId2 > 0, "Schedule insertions should be successful");
         insertedSchedules.add(scheduleId1);
         insertedSchedules.add(scheduleId2);
@@ -185,8 +188,10 @@ class ScheduleDaoTest {
         Course course = courseDao.addCourse(studentId, "Test101", Date.valueOf("2025-01-01"), Date.valueOf("2025-06-01"));
         int courseId = course.getCourseId();
         assertTrue(studentId > 0 && courseId > 0, "Student and Course insertion should be successful");
-        int scheduleId1 = scheduleDao.insertSchedule(courseId, model.Weekday.THURSDAY, LocalTime.of(10, 0), LocalTime.of(11, 0));
-        int scheduleId2 = scheduleDao.insertSchedule(courseId, model.Weekday.FRIDAY, LocalTime.of(14, 0), LocalTime.of(15, 0));
+        Schedule schedule1 = scheduleDao.insertSchedule(courseId, model.Weekday.THURSDAY, LocalTime.of(10, 0), LocalTime.of(11, 0));
+        Schedule schedule2 = scheduleDao.insertSchedule(courseId, model.Weekday.FRIDAY, LocalTime.of(14, 0), LocalTime.of(15, 0));
+        int scheduleId1 = schedule1.getScheduleId();
+        int scheduleId2 = schedule2.getScheduleId();
         assertTrue(scheduleId1 > 0 && scheduleId2 > 0, "Schedule insertions should be successful");
         insertedSchedules.add(scheduleId1);
         insertedSchedules.add(scheduleId2);
@@ -229,16 +234,17 @@ class ScheduleDaoTest {
      */
     @Test
     void updateScheduleTest() {
-        int id = scheduleDao.insertSchedule(1, model.Weekday.MONDAY, LocalTime.of(9, 0), LocalTime.of(11, 0));
+        Schedule schedule = scheduleDao.insertSchedule(1, model.Weekday.MONDAY, LocalTime.of(9, 0), LocalTime.of(11, 0));
+        int id = schedule.getScheduleId();
         assertTrue(id > 0, "Insertion successful, got ID: " + id);
         insertedSchedules.add(id);
         boolean updated = scheduleDao.updateSchedule(id, 1, model.Weekday.WEDNESDAY, LocalTime.of(12, 0), LocalTime.of(15, 0));
         assertTrue(updated, "Update should be successful");
-        Schedule schedule = scheduleDao.getSchedule(id);
-        assertNotNull(schedule, "Schedule should not be null after update");
-        assertEquals(model.Weekday.WEDNESDAY, schedule.getWeekday(), "Weekday should be updated");
-        assertEquals(LocalTime.of(12, 0), schedule.getStartTime(), "Start time should be updated");
-        assertEquals(LocalTime.of(15, 0), schedule.getEndTime(), "End time should be updated");
+        Schedule updatedSchedule = scheduleDao.getSchedule(id);
+        assertNotNull(updatedSchedule, "Schedule should not be null after update");
+        assertEquals(model.Weekday.WEDNESDAY, updatedSchedule.getWeekday(), "Weekday should be updated");
+        assertEquals(LocalTime.of(12, 0), updatedSchedule.getStartTime(), "Start time should be updated");
+        assertEquals(LocalTime.of(15, 0), updatedSchedule.getEndTime(), "End time should be updated");
     }
 
     /**

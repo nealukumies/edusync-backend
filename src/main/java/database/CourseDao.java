@@ -124,14 +124,20 @@ public class CourseDao {
     }
 
     public boolean updateCourse(int courseId, String courseName, Date startDate, Date endDate) {
+        Course existingCourse = getCourseById(courseId);
+        if (existingCourse == null) return false;
+
+        if (courseName == null) courseName = existingCourse.getCourseName();
+        if (startDate == null && existingCourse.getStartDate() != null)
+            startDate = new java.sql.Date(existingCourse.getStartDate().getTime());
+        if (endDate == null && existingCourse.getEndDate() != null)
+            endDate = new java.sql.Date(existingCourse.getEndDate().getTime());
+
         if (startDate != null && endDate != null && endDate.before(startDate)) {
             System.out.println("Error: End date cannot be before start date.");
             return false;
         }
-        if (courseName == null || courseName.isEmpty()) {
-            System.out.println("Error: Course name cannot be null or empty.");
-            return false;
-        }
+
         Connection conn = MariaDBConnection.getConnection();
         String sql = "UPDATE courses SET course_name = ?, start_date = ?, end_date = ? WHERE course_id = ?;";
         try {

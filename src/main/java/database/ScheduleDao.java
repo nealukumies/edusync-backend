@@ -18,16 +18,14 @@ import static java.sql.Time.valueOf;
 public class ScheduleDao {
 
     /**
-     * Inserts a new schedule into the schedules table. Returns the generated schedule ID, or -1 if insertion fails.
-     * Returns 0 if no rows were affected.
-     *
+     * Inserts a new schedule into the schedules table. Returns the created Schedule object, or null if insertion fails.
      * @param courseId
      * @param weekday
      * @param startTime
      * @param endTime
-     * @return int - schedule ID, 0 if no rows affected, -1 if error occurs
+     * @return Schedule object or null
      */
-    public int insertSchedule(Integer courseId, Weekday weekday, LocalTime startTime, LocalTime endTime) {
+    public Schedule insertSchedule(Integer courseId, Weekday weekday, LocalTime startTime, LocalTime endTime) {
         if (courseId == null || weekday == null || startTime == null || endTime == null) {
             throw new IllegalArgumentException("Course ID, weekday, start time, and end time must not be null");
         }
@@ -48,13 +46,14 @@ public class ScheduleDao {
             if (rows > 0) {
                 var rs = ps.getGeneratedKeys();
                 if (rs.next()) {
-                    return rs.getInt(1); // Return the generated schedule ID
+                    int newId = rs.getInt(1);
+                    return new Schedule(newId, courseId, weekday, startTime, endTime);
                 }
             }
-            return 0; // Indicate no rows affected
+            return null; // Indicate no rows affected
         } catch (SQLException e) {
             System.out.println("Error inserting schedule: " + e.getMessage());
-            return -1; // Indicate failure
+            return null; // Indicate failure
         }
     }
 

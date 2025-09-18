@@ -152,7 +152,7 @@ class CourseDaoTest {
     }
 
     /**
-     * Test updating a course with a null (empty) name. The update should fail.
+     * Test updating a course with a null (empty) name. The update should pass as partial updates are allowed.
      */
     @Test
     void updateCourseWithNullNameTest() {
@@ -162,7 +162,7 @@ class CourseDaoTest {
         insertedCourses.add(id);
 
         boolean updated = courseDao.updateCourse(id, null, Date.valueOf("2025-03-01"), Date.valueOf("2025-07-01"));
-        assertFalse(updated, "Update should fail with null course name");
+        assertTrue(updated, "Update should fail with null course name");
     }
 
     /**
@@ -174,6 +174,9 @@ class CourseDaoTest {
         assertFalse(updated, "Update should fail for non-existent course ID");
     }
 
+    /**
+     * Test updating a course with null start and end dates. The update should pass as partial updates are allowed.
+     */
     @Test
     void updateCourseTestWithNulLDatesTest() {
         Course course = courseDao.addCourse(1, "Test101", Date.valueOf("2025-02-01"), Date.valueOf("2025-06-01"));
@@ -182,7 +185,7 @@ class CourseDaoTest {
         insertedCourses.add(id);
 
         boolean updated = courseDao.updateCourse(id, "Test101", null, null);
-        assertFalse(updated, "Update should fail with null dates");
+        assertTrue(updated, "Update should fail with null dates");
     }
 
 }

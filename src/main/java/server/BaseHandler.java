@@ -1,23 +1,36 @@
 package server;
 
-import com.google.gson.Gson;
+import com.google.gson.*;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
 public abstract class BaseHandler implements HttpHandler {
-    protected final Gson gson = new Gson();
+    protected final Gson gson;
 
-    protected void sendResponse(HttpExchange exchange, int statusCode, Object responseObj) throws IOException {
+    public BaseHandler() {
+        this.gson = new GsonBuilder()
+                .registerTypeAdapter(LocalTime.class, (JsonSerializer<LocalTime>) (src, typeOfSrc, context) ->
+                        new JsonPrimitive(src.format(DateTimeFormatter.ofPattern("HH:mm")))
+                )
+                .create();
+    }
+
+
+        protected void sendResponse(HttpExchange exchange, int statusCode, Object responseObj) throws IOException {
         String jsonResponse = gson.toJson(responseObj);
         exchange.getResponseHeaders().set("Content-Type", "application/json");
         exchange.sendResponseHeaders(statusCode, jsonResponse.getBytes(StandardCharsets.UTF_8).length);
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(jsonResponse.getBytes(StandardCharsets.UTF_8));
+            os.flush();
         }
     }
 
@@ -42,6 +55,7 @@ public abstract class BaseHandler implements HttpHandler {
 
     protected int getIdFromPath(HttpExchange exchange, int index) throws IOException {
         String[] pathParts = exchange.getRequestURI().getPath().split("/");
+
         if (pathParts.length <= index) {
             sendResponse(exchange, 400, Map.of("error", "Bad Request: Missing ID in path"));
             return -1;
@@ -79,10 +93,16 @@ public abstract class BaseHandler implements HttpHandler {
 
     protected boolean isAuthorized(HttpExchange exchange, int studentId) throws IOException {
         String role = getRoleFromHeader(exchange);
-        if (role == null) return false;
+        if (role == null) {
+            sendResponse(exchange, 401, Map.of("error", "Unauthorized: Missing role header"));
+            return false;
+        }
 
         int headerId = getIdFromHeader(exchange);
-        if (headerId == -1) return false;
+        if (headerId == -1) {
+            sendResponse(exchange, 401, Map.of("error", "Unauthorized: Missing student id in header"));
+            return false;
+        }
         if (role.equals("user") && studentId != headerId) {
             sendResponse(exchange, 403, Map.of("error", "Forbidden: Insufficient permissions"));
             return false;
