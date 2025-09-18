@@ -1,6 +1,6 @@
 # EduSync Backend
 This is the backend service for the EduSync application that is the Software Engineering Project 1 in Metropolia UAS course. The purpose of this project is to use agile software development methods to create a software product for study planning.
-Frontend repository: ["EduSync"](https://github.com/nealukumies/edusync)
+Frontend repository: [EduSync](https://github.com/nealukumies/edusync)
 
 This backend service is build using HttpServer from `com.sun.net.httpserver` package. The service provides RESTful API endpoints for managing students, courses, assignments and schedules.
 
