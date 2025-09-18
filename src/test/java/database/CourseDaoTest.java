@@ -51,8 +51,9 @@ class CourseDaoTest {
      */
     @Test
     void addAndDeleteCourseTest() {
-        int id = courseDao.addCourse(1, "Test101", Date.valueOf("2025-01-01"), Date.valueOf("2025-06-01"));
-        assertTrue(id > 0, "Insertion successful, got ID: " + id);
+        Course course = courseDao.addCourse(1, "Test101", Date.valueOf("2025-01-01"), Date.valueOf("2025-06-01"));
+        int id = course.getCourseId();
+        assertTrue(course.getCourseId() > 0, "Insertion successful, got ID: " + id);
         assertTrue(courseDao.deleteCourse(id), "Deletion successful for ID: " + id);
     }
 
@@ -70,8 +71,8 @@ class CourseDaoTest {
      */
     @Test
     void addCourseWithInvalidStudentId() {
-        int id = courseDao.addCourse(-200, "Test101", Date.valueOf("2025-04-01"), Date.valueOf("2025-10-01"));
-        assertEquals(-1, id, "Insertion should fail with invalid student ID");
+        Course course = courseDao.addCourse(-200, "Test101", Date.valueOf("2025-04-01"), Date.valueOf("2025-10-01"));
+        assertNull(course, "Insertion should fail with invalid student ID");
     }
 
     /**
@@ -79,8 +80,8 @@ class CourseDaoTest {
      */
     @Test
     void addCourseWithEndDateBeforeStartDate() {
-        int id = courseDao.addCourse(1, "Test101", Date.valueOf("2025-12-01"), Date.valueOf("2025-01-01"));
-        assertEquals(-1, id, "Insertion should fail when end date is before start date");
+        Course course = courseDao.addCourse(1, "Test101", Date.valueOf("2025-12-01"), Date.valueOf("2025-01-01"));
+        assertNull(course, "Insertion should fail when end date is before start date");
     }
 
     /**
@@ -88,8 +89,8 @@ class CourseDaoTest {
      */
     @Test
     void addCourseWithNullName() {
-        int id = courseDao.addCourse(1, "", Date.valueOf("2025-02-01"), Date.valueOf("2025-12-01"));
-        assertEquals(-1, id, "Insertion should fail with null course name");
+        Course course = courseDao.addCourse(1, "", Date.valueOf("2025-02-01"), Date.valueOf("2025-12-01"));
+        assertNull(course, "Insertion should fail with null course name");
     }
 
     /**
@@ -97,11 +98,10 @@ class CourseDaoTest {
      */
     @Test
     void getCourseById() {
-        int id = courseDao.addCourse(1, "Test101", Date.valueOf("2025-02-01"), Date.valueOf("2025-12-01"));
+        Course course= courseDao.addCourse(1, "Test101", Date.valueOf("2025-02-01"), Date.valueOf("2025-12-01"));
+        int id = course.getCourseId();
         assertTrue(id > 0, "Insertion successful, got ID: " + id);
         insertedCourses.add(id);
-
-        Course course = courseDao.getCourseById(id);
         assertNotNull(course, "Course should not be null");
         assertEquals("Test101", course.getCourseName(), "Course name should match");
         assertEquals(Date.valueOf("2025-02-01"), course.getStartDate(), "Start date should match");
@@ -122,18 +122,19 @@ class CourseDaoTest {
      */
     @Test
     void updateCourseTest() {
-        int id = courseDao.addCourse(1, "Test101", Date.valueOf("2025-02-01"), Date.valueOf("2025-06-01"));
+        Course course  = courseDao.addCourse(1, "Test101", Date.valueOf("2025-02-01"), Date.valueOf("2025-06-01"));
+        int id = course.getCourseId();
         assertTrue(id > 0, "Insertion successful, got ID: " + id);
         insertedCourses.add(id);
 
         boolean updated = courseDao.updateCourse(id, "Test Basics", Date.valueOf("2025-03-01"), Date.valueOf("2025-07-01"));
         assertTrue(updated, "Update should be successful");
 
-        Course course = courseDao.getCourseById(id);
-        assertNotNull(course, "Course should not be null after update");
-        assertEquals("Test Basics", course.getCourseName(), "Course name should be updated");
-        assertEquals(Date.valueOf("2025-03-01"), course.getStartDate(), "Start date should be updated");
-        assertEquals(Date.valueOf("2025-07-01"), course.getEndDate(), "End date should be updated");
+        Course updatedCourse = courseDao.getCourseById(id);
+        assertNotNull(updatedCourse, "Course should not be null after update");
+        assertEquals("Test Basics", updatedCourse.getCourseName(), "Course name should be updated");
+        assertEquals(Date.valueOf("2025-03-01"), updatedCourse.getStartDate(), "Start date should be updated");
+        assertEquals(Date.valueOf("2025-07-01"), updatedCourse.getEndDate(), "End date should be updated");
     }
 
     /**
@@ -141,7 +142,8 @@ class CourseDaoTest {
      */
     @Test
     void updateCourseWithInvalidDatesTest() {
-        int id = courseDao.addCourse(1, "Test101", Date.valueOf("2025-02-01"), Date.valueOf("2025-06-01"));
+        Course course = courseDao.addCourse(1, "Test101", Date.valueOf("2025-02-01"), Date.valueOf("2025-06-01"));
+        int id = course.getCourseId();
         assertTrue(id > 0, "Insertion successful, got ID: " + id);
         insertedCourses.add(id);
 
@@ -154,7 +156,8 @@ class CourseDaoTest {
      */
     @Test
     void updateCourseWithNullNameTest() {
-        int id = courseDao.addCourse(1, "Test101", Date.valueOf("2025-02-01"), Date.valueOf("2025-06-01"));
+        Course course = courseDao.addCourse(1, "Test101", Date.valueOf("2025-02-01"), Date.valueOf("2025-06-01"));
+        int id = course.getCourseId();
         assertTrue(id > 0, "Insertion successful, got ID: " + id);
         insertedCourses.add(id);
 
@@ -173,7 +176,8 @@ class CourseDaoTest {
 
     @Test
     void updateCourseTestWithNulLDatesTest() {
-        int id = courseDao.addCourse(1, "Test101", Date.valueOf("2025-02-01"), Date.valueOf("2025-06-01"));
+        Course course = courseDao.addCourse(1, "Test101", Date.valueOf("2025-02-01"), Date.valueOf("2025-06-01"));
+        int id = course.getCourseId();
         assertTrue(id > 0, "Insertion successful, got ID: " + id);
         insertedCourses.add(id);
 

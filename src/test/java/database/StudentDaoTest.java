@@ -50,7 +50,8 @@ class StudentDaoTest {
      */
     @Test
     void addAndDeleteStudentTest() {
-        int id = studentDao.addStudent("Test", "test@student.fi", "password");
+        Student student = studentDao.addStudent("Test", "test@student.fi", "password");
+        int id = student.getId();
         assertTrue(id > 0, "Insertion successful, got ID: " + id);
         assertTrue(studentDao.deleteStudent(id), "Deletion successful for ID: " + id);
     }
@@ -65,11 +66,12 @@ class StudentDaoTest {
      */
     @Test
     void addStudentDuplicateEmailTest() {
-        int id1 = studentDao.addStudent("Test1", "test@test.test", "password");
-        int id2 = studentDao.addStudent("Test2", "test@test.test", "password");
+        Student student1 = studentDao.addStudent("Test1", "test@test.test", "password");
+        Student student2 = studentDao.addStudent("Test2", "test@test.test", "password");
+        int id1 = student1.getId();
         insertedStudents.add(id1);
         assertTrue(id1 > 0, "First insertion successful, got ID: " + id1);
-        assertEquals(-1, id2, "Second insertion with duplicate email should fail");
+        assertNull(student2, "Second insertion with duplicate email should fail");
     }
 
     /**
@@ -77,9 +79,10 @@ class StudentDaoTest {
      */
     @Test
     void getStudentTest() {
-        int student = studentDao.addStudent("Ada", "ada@hupi.fi", "password");
-        insertedStudents.add(student);
-        Student fetchedStudent = studentDao.getStudent("ada@hupi.fi");
+        Student student = studentDao.addStudent("Ada", "ada@hupi.fi", "password");
+        int id = student.getId();
+        insertedStudents.add(id);
+        Student fetchedStudent = studentDao.getStudent(student.getEmail());
         assertNotNull(fetchedStudent, "Student should be found");
         assertEquals("Ada", fetchedStudent.getName(), "Student name should match");
     }
@@ -95,7 +98,8 @@ class StudentDaoTest {
 
     @Test
     void getStudentByIdTest() {
-        int studentId = studentDao.addStudent("Eve", "eve@eevee.com", "password");
+        Student student = studentDao.addStudent("Eve", "eve@eevee.com", "password");
+        int studentId = student.getId();
         insertedStudents.add(studentId);
         Student fetchedStudent = studentDao.getStudentById(studentId);
         assertNotNull(fetchedStudent, "Student should be found");
@@ -123,7 +127,8 @@ class StudentDaoTest {
      */
     @Test
     void updateStudentNameTest() {
-        int studentId = studentDao.addStudent("Bob", "bobs@email.fi", "password");
+        Student student = studentDao.addStudent("Bob", "bobs@email.fi", "password");
+        int studentId = student.getId();
         insertedStudents.add(studentId);
         boolean updateResult = studentDao.updateStudentName(studentId, "Bobby");
         assertTrue(updateResult, "Update should be successful");
@@ -137,7 +142,8 @@ class StudentDaoTest {
      */
     @Test
     void updateStudentNameWithNullNameTest() {
-        int studentId = studentDao.addStudent("Kalle", "pikku@kalle.fi", "password");
+        Student student = studentDao.addStudent("Kalle", "pikku@kalle.fi", "password");
+        int studentId = student.getId();
         insertedStudents.add(studentId);
         boolean updateResult = studentDao.updateStudentName(studentId, null);
         assertFalse(updateResult, "Update should fail with null name");
@@ -151,7 +157,8 @@ class StudentDaoTest {
      */
     @Test
     void updateStudentEmailTest() {
-        int studentId = studentDao.addStudent("Ida", "idan@posti.fi", "password");
+        Student student = studentDao.addStudent("Ida", "idan@posti.fi", "password");
+        int studentId = student.getId();
         insertedStudents.add(studentId);
         boolean updateResult = studentDao.updateStudentEmail(studentId, "uusi@posti.fi");
         assertTrue(updateResult, "Update should be successful");
@@ -165,7 +172,8 @@ class StudentDaoTest {
      */
     @Test
     void updateStudentEmailWithNullEmailTest() {
-        int studentId = studentDao.addStudent("Matti", "matti@teppo.fi", "password");
+        Student student = studentDao.addStudent("Matti", "matti@teppo.fi", "password");
+        int studentId = student.getId();
         insertedStudents.add(studentId);
         boolean updateResult = studentDao.updateStudentEmail(studentId, null);
         assertFalse(updateResult, "Update should fail with null email");

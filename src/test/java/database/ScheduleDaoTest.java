@@ -3,7 +3,9 @@
  */
 package database;
 
+import model.Course;
 import model.Schedule;
+import model.Student;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -129,7 +131,8 @@ class ScheduleDaoTest {
     @Test
     void getAllSchedulesForCourseTest() {
         CourseDao courseDao = new CourseDao();
-        int courseId= courseDao.addCourse(1, "Test101", Date.valueOf("2025-01-01"), Date.valueOf("2025-06-01"));
+        Course course = courseDao.addCourse(1, "Test101", Date.valueOf("2025-01-01"), Date.valueOf("2025-06-01"));
+        int courseId = course.getCourseId();
         assertTrue(courseId > 0, "Course insertion should be succesfull");
         int scheduleId1 = scheduleDao.insertSchedule(courseId, model.Weekday.WEDNESDAY, LocalTime.of(10, 0), LocalTime.of(11, 0));
         int scheduleId2 = scheduleDao.insertSchedule(courseId, model.Weekday.FRIDAY, LocalTime.of(14, 0), LocalTime.of(15, 0));
@@ -151,7 +154,8 @@ class ScheduleDaoTest {
     @Test
     void getAllSchedulesForCourseWithNoSchedulesTest() {
         CourseDao courseDao = new CourseDao();
-        int courseId= courseDao.addCourse(1, "Test101", Date.valueOf("2025-01-01"), Date.valueOf("2025-06-01"));
+        Course course = courseDao.addCourse(1, "Test101", Date.valueOf("2025-01-01"), Date.valueOf("2025-06-01"));
+        int courseId = course.getCourseId();
         List<Schedule> schedules = scheduleDao.getAllSchedulesForCourse(courseId);
         assertNotNull(schedules, "Schedules list should not be null");
         assertEquals(0, schedules.size(), "Should retrieve 0 schedules");
@@ -176,8 +180,10 @@ class ScheduleDaoTest {
     void getAllSchedulesForStudentTest() {
         StudentDao studentDao = new StudentDao();
         CourseDao courseDao = new CourseDao();
-        int studentId = studentDao.addStudent("testuser", "test@cases.com", "password");
-        int courseId = courseDao.addCourse(studentId, "Test101", Date.valueOf("2025-01-01"), Date.valueOf("2025-06-01"));
+        Student student = studentDao.addStudent("testuser", "test@cases.com", "password");
+        int studentId = student.getId();
+        Course course = courseDao.addCourse(studentId, "Test101", Date.valueOf("2025-01-01"), Date.valueOf("2025-06-01"));
+        int courseId = course.getCourseId();
         assertTrue(studentId > 0 && courseId > 0, "Student and Course insertion should be successful");
         int scheduleId1 = scheduleDao.insertSchedule(courseId, model.Weekday.THURSDAY, LocalTime.of(10, 0), LocalTime.of(11, 0));
         int scheduleId2 = scheduleDao.insertSchedule(courseId, model.Weekday.FRIDAY, LocalTime.of(14, 0), LocalTime.of(15, 0));
@@ -200,7 +206,8 @@ class ScheduleDaoTest {
     @Test
     void getAllSchedulesForStudentWithNoSchedulesTest() {
         StudentDao studentDao = new StudentDao();
-        int studentId = studentDao.addStudent("Testuser", "email@email.email", "password");
+        Student student  = studentDao.addStudent("Testuser", "email@email.email", "password");
+        int studentId = student.getId();
         List<Schedule> schedules = scheduleDao.getAllSchedulesForStudent(studentId);
         assertNotNull(schedules, "Schedules list should not be null");
         assertTrue(schedules.isEmpty(), "Schedules list should be empty");

@@ -6,6 +6,7 @@ package database;
 
 import model.Assignment;
 import model.Status;
+import model.Student;
 import org.junit.jupiter.api.*;
 
 import java.sql.Date;
@@ -133,7 +134,8 @@ public class AssignmentDaoTest {
     @Test
     void getAssignmentsForStudentWithNoAssignmentsTest() {
         StudentDao studentDao = new StudentDao();
-        int studentId = studentDao.addStudent("NoAssign", "nojob@today.fi", "password");
+        Student student = studentDao.addStudent("NoAssign", "nojob@today.fi", "password");
+        int studentId = student.getId();
         List<Assignment> assignments = assignmentDao.getAssignments(studentId);
         assertTrue(assignments.isEmpty(), "Assignments list for student with no assignments should be empty");
         studentDao.deleteStudent(studentId);
