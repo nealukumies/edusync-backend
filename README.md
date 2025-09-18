@@ -28,6 +28,8 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 **Errors:**
 - 400 Bad Request: Missing or invalid fields in the request body.
 - 401 Unauthorized: Invalid email or password.
+
+---
         
 ### Students
 **GET** `/students/{studentId}` - Get a specific student by ID
@@ -112,6 +114,7 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 - 404 Not Found: Student with the specified ID does not exist.
 - 403 Forbidden: Unauthorized access to delete the student's account.
 
+---
 
 ### Courses
 
@@ -229,6 +232,7 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 - 403 Forbidden: Unauthorized access to delete the course.
 - 500 Internal Server Error: Failed to delete the course.
 
+---
 
 ### Schedules
 
@@ -375,6 +379,7 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 - 403 Forbidden: Unauthorized access to delete the schedule.
 - 500 Internal Server Error: Failed to delete the schedule.
 
+---
 
 ### Assignments
 
