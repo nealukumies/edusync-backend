@@ -105,26 +105,24 @@ public class AssignmentHandler extends BaseHandler {
     private void handlePut(HttpExchange exchange) throws IOException {
         int assignmentId = getIdFromPath(exchange, 2);
         if (assignmentId == -1) return;
-
         Map<String, String> requestMap = parseJsonBody(exchange);
         if (requestMap == null) { return; }
-
         int studentId = Integer.parseInt(requestMap.get("student_id"));
         if (!isAuthorized(exchange, studentId)) return;
 
         int courseId = Integer.parseInt(requestMap.get("course_id"));
-        String title = requestMap.get("title");
-        String description = requestMap.get("description");
-        String deadline = requestMap.get("deadline");
-        String status = requestMap.get("status");
+        String newTitle = requestMap.get("title");
+        String newDescription = requestMap.get("description");
+        String newDeadline = requestMap.get("deadline");
+        String newStatus = requestMap.get("status");
 
         Date sqlDeadline = null;
         try {
-            if (deadline != null) {
-                sqlDeadline = Date.valueOf(deadline);
+            if (newDeadline != null) {
+                sqlDeadline = Date.valueOf(newDeadline);
             }
         } catch (IllegalArgumentException e) {
-            sendResponse(exchange, 400, Map.of("Error", "Invalid date format. Use YYYY-MM-DD"));
+            sendResponse(exchange, 400, Map.of("error", "Invalid date format. Use YYYY-MM-DD"));
             return;
         }
 
@@ -134,14 +132,28 @@ public class AssignmentHandler extends BaseHandler {
             sendResponse(exchange, 404, "Assignment not found");
             return;
         }
-        if (status!= null) {
-            Status requestedStatus = Status.fromDbValue(status);
-            boolean statusUpdated = assignmentDao.setStatus(assignmentId, requestedStatus);
+
+        boolean updated = false;
+
+        if (newTitle != null || newDescription != null || sqlDeadline != null) {
+            assignmentDao.updateAssignment(assignmentId, newTitle, newDescription, sqlDeadline, courseId > 0 ? courseId : null);
+            updated = true;
         }
-        // KORJAA
-        // KOSKA
-        // PITÄÄ
-        // FUNATA TÄMÄ
-        boolean updated = assignmentDao.updateAssignment(studentId, title, description, sqlDeadline, courseId);
+        if (newStatus != null) {
+            Status status = Status.fromDbValue(newStatus);
+            if (status == null) {
+                sendResponse(exchange, 400, Map.of("error", "Invalid status value"));
+                return;
+            }
+            assignmentDao.setStatus(assignmentId, status);
+            updated = true;
+        }
+
+        if (updated) {
+            Assignment updatedAssignment = assignmentDao.getAssignmentById(assignmentId);
+            sendResponse(exchange, 200, updatedAssignment);
+        } else {
+            sendResponse(exchange, 400, Map.of("error", "No valid fields to update"));
+        }
     }
 }

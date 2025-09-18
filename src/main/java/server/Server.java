@@ -26,6 +26,9 @@ public class Server {
         HttpContext coursesContext = server.createContext("/courses");
         coursesContext.setHandler(new CourseHandler());
 
+        HttpContext assignmentsContext = server.createContext("/assignments");
+        assignmentsContext.setHandler(new AssignmentHandler());
+
         server.start();
     }
 
