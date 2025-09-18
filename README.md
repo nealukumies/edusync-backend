@@ -4,6 +4,18 @@ Frontend repository: ["EduSync"](https://github.com/nealukumies/edusync)
 
 This backend service is build using HttpServer from `com.sun.net.httpserver` package. The service provides RESTful API endpoints for managing students, courses, assignments and schedules.
 
+## How to Run
+1. Clone the repository
+2. Insert environment variables into your system:
+   - DB_URL: Database connection URL
+   - DB_USER: Database username
+   - DB_PASSWORD: Database password
+   - PORT: Port number for the server (e.g., 8000)
+3. Navigate to the project directory
+4. Compile the project using your preferred Java IDE or command line
+5. Run the `Main` class to start the server
+6. The server will start listening on the specified port
+
 ## Endpoints
 
 ### Login
