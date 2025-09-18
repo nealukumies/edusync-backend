@@ -6,6 +6,30 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 
 ## Endpoints
 
+### Login
+#### POST /login
+**POST** `/login` - Authenticate a user using email and password
+
+**Request Body:**
+```json
+{
+  "email": "pellen@maili.fi",
+  "password": "salasana"
+}
+```
+**Response 200:**
+```json
+{
+  "role" : "user",
+  "name": "Pelle",
+  "email" : "pellen@maili.fi",
+  "studentId" : "1"
+}
+```
+**Errors:**
+- 400 Bad Request: Missing or invalid fields in the request body.
+- 401 Unauthorized: Invalid email or password.
+        
 ### Students
 #### GET /students
 **GET** `/students/{studentId}` - Get a specific student by ID
@@ -15,7 +39,7 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 **Response 200:**
 ```json
 {
-  "id": "studentId",
+  "student1d": "1",
   "name": "John",
   "email": "johns@mail.com"
 }
@@ -41,7 +65,8 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 {
   "id": "1",
   "name": "Alice",
-  "email": "alices@mail.com"
+  "email": "alices@mail.com",
+  "role" : "user"
 }
 ```
 **Errors:**
@@ -64,9 +89,10 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 **Response 200:**
 ```json
 {
-  "id": "studentId",
+  "id": "1",
   "name": "New Alice",
-  "email": "new@mail.fi"
+  "email": "new@mail.fi",
+  "role" : "user"
 }
 ```
 **Errors:**
@@ -100,11 +126,11 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 
 **Response 200:**
 ```json
-{"course_id": "courseId",
-  "student_id": "studentId",
-  "course_name": "Mathematics",
-  "start_date": "2023-01-01",
-  "end_date": "2023-06-01"
+{"courseId": "courseId",
+  "studentId": "studentId",
+  "courseName": "Mathematics",
+  "startDate": "2023-01-01",
+  "endDate": "2023-06-01"
 }
 ```
 **Errors:**
@@ -118,17 +144,17 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 **Response 200:**
 ```json
 [
-  {"course_id": "1",
-  "student_id": "studentId",
-  "course_name": "Mathematics",
-  "start_date": "2025-01-01",
-  "end_date": "2025-06-01"
+  {"courseId": "1",
+  "studentId": "studentId",
+  "courseName": "Mathematics",
+  "startDate": "2025-01-01",
+  "endDate": "2025-06-01"
   },
-  {"course_id": "2",
-  "student_id": "studentId",
-  "course_name": "Physics",
-  "start_date": "2025-01-01",
-  "end_date": "2025-06-01"
+  {"courseId": "2",
+  "studentId": "studentId",
+  "courseName": "Physics",
+  "startDate": "2025-01-01",
+  "endDate": "2025-06-01"
   }
 ]
 ```
@@ -153,11 +179,11 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 **Response 201:**
 ```json
 {
-  "course_id": "1",
-  "student_id": "studentId",
-  "course_name": "Mathematics",
-  "start_date": "2023-01-01",
-  "end_date": "2023-06-01"
+  "courseId": "1",
+  "studentId": "studentId",
+  "courseName": "Mathematics",
+  "startDate": "2023-01-01",
+  "endDate": "2023-06-01"
 }
 ```
 **Errors:**
@@ -181,11 +207,11 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 **Response 200:**
 ```json
 {
-  "course_id": "1",
-  "student_id": "studentId",
-  "course_name": "Advanced Mathematics",
-  "start_date": "2025-02-01",
-  "end_date": "2025-07-01"
+  "courseId": "1",
+  "studentId": "studentId",
+  "courseName": "Advanced Mathematics",
+  "startDate": "2025-02-01",
+  "endDate": "2025-07-01"
 }
 ```
 **Errors:**
@@ -221,11 +247,11 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 **Response 200:**
 ```json
 {
-  "schedule_id": "1",
-  "course_id": "1",
+  "scheduleId": "1",
+  "courseId": "1",
   "weekday": "monday",
-  "start_time": "10:00",
-    "end_time": "12:00"
+  "startTime": "10:00",
+  "endTime": "12:00"
 }
 ```
 **Errors:**
@@ -240,17 +266,17 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 **Response 200:**
 ```json
 [
-  {"schedule_id": "1",
-  "course_id": "1",
-  "weekday": "monday",
-  "start_time": "10:00",
-    "end_time": "12:00"
+  {"scheduleId": "1",
+  "courseId": "1",
+  "weekday": "MONDAY",
+  "startTime": "10:00",
+    "endTime": "12:00"
   },
-  {"schedule_id": "2",
-  "course_id": "2",
-  "weekday": "wednesday",
-  "start_time": "14:00",
-    "end_time": "16:00"
+  {"scheduleId": "2",
+  "courseId": "2",
+  "weekday": "WEDNESDAY",
+  "startTime": "14:00", 
+    "endTime": "16:00"
   }
 ]
 ```
@@ -265,18 +291,18 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 **Response 200:**
 ```json
 [
-  {"schedule_id": "1",
-  "course_id": "1",
-  "weekday": "monday",
-  "start_time": "10:00",
-    "end_time": "12:00"
-    },
-    {"schedule_id": "2",
-    "course_id": "2",
-    "weekday": "wednesday",
-    "start_time": "14:00",
-    "end_time": "16:00"
-    }
+  {"scheduleId": "1",
+    "courseId": "1",
+    "weekday": "MONDAY",
+    "startTime": "10:00",
+    "endTime": "12:00"
+  },
+  {"scheduleId": "2",
+    "courseId": "2",
+    "weekday": "WEDNESDAY",
+    "startTime": "14:00",
+    "endTime": "16:00"
+  }
 ]
 ```
 **Errors:**
@@ -301,11 +327,11 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 **Response 201:**
 ```json
 {
-  "schedule_id": "1",
-  "course_id": "1",
+  "scheduleId": "1",
+  "courseId": "1",
   "weekday": "monday",
-  "start_time": "10:00",
-  "end_time": "12:00"
+  "startTime": "10:00",
+  "endTime": "12:00"
  } 
 ```
 **Errors:**
@@ -330,11 +356,11 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 **Response 200:**
 ```json
 {
-  "schedule_id": "1",
-  "course_id": "1",
+  "scheduleId": "1",
+  "courseId": "1",
   "weekday": "tuesday",
-  "start_time": "11:00",
-  "end_time": "13:00"
+  "startTime": "11:00",
+  "endTime": "13:00"
 }
 ```
 **Errors:**
@@ -370,9 +396,9 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 **Response 200:**
 ```json
 {
-  "assignment_id": "1",
-  "student_id": "1",
-  "course_id": "1",
+  "assignmentId": "1",
+  "studentId": "1",
+  "courseId": "1",
   "title": "Homework 1",
   "description": "Solve problems 1-10",
   "deadline": "2025-10-01"
@@ -391,17 +417,17 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 ```json
 [
     {
-    "assignment_id": "1",
-    "student_id": "1",
-    "course_id": "1",
+    "assignmentId": "1",
+    "studentId": "1",
+    "courseId": "1",
     "title": "Homework 1",
     "description": "Solve problems 1-10",
     "deadline": "2025-10-01"
     },
     {
-    "assignment_id": "2",
-    "student_id": "1",
-    "course_id": "2",
+    "assignmentId": "2",
+    "studentId": "1",
+    "courseId": "2",
     "title": "Lab Report",
     "description": "Write a report on the lab experiment",
     "deadline": "2025-10-05"
@@ -431,9 +457,9 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 **Response 201:**
 ```json
 {
-  "assignment_id": "1",
-  "student_id": "1",
-  "course_id": "1",
+  "assignmentId": "1",
+  "studentId": "1",
+  "courseId": "1",
   "title": "Homework 1",
   "description": "Solve problems 1-10",
   "deadline": "2025-10-01"
@@ -463,9 +489,9 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 **Response 200:**
 ```json
 {
-    "assignment_id": "1",
-    "student_id": "1",
-    "course_id": "1",
+    "assignmentId": "1",
+    "studentId": "1",
+    "courseId": "1",
     "title": "Updated Homework 1",
     "description": "Solve problems 1-20",
     "deadline": "2025-10-10",

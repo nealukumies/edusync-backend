@@ -5,7 +5,6 @@ import model.Student;
 import service.AuthService;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 public class LoginHandler extends BaseHandler {
