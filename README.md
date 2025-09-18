@@ -7,7 +7,7 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 ## Endpoints
 
 ### Login
-#### POST /login
+### POST /login
 **POST** `/login` - Authenticate a user using email and password
 
 **Request Body:**
@@ -31,7 +31,7 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 - 401 Unauthorized: Invalid email or password.
         
 ### Students
-#### GET /students
+### GET /students
 **GET** `/students/{studentId}` - Get a specific student by ID
 
 **Authorization**: Student can access only their own data (student_id in header). Admin can access any student's data.
@@ -49,7 +49,7 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 - 403 Forbidden: Unauthorized access to the student's data.
 
 
-#### POST /students
+### POST /students
 **POST** `/students` - Create a new student
 
 **Request Body:**
@@ -74,7 +74,7 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 - 409 Conflict: Email already exists.
 
 
-#### PUT /students
+### PUT /students
 **PUT** `/students/{studentId}` - Update a specific student by ID
 
 **Authorization**: Student can update only their own data. Admin can update any student's data.
@@ -102,7 +102,7 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 - 409 Conflict: Email already exists.
 
 
-#### DELETE /students
+### DELETE /students
 **DELETE** `/students/{studentId}` - Delete a specific student by ID
 
 **Authorization**: Student can delete only their own account. Admin can delete any student's account.
@@ -119,7 +119,7 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 
 
 ### Courses
-#### GET /courses
+### GET /courses
 **GET** `/courses/{courseId}` - Get a specific course by ID
 
 **Authorization**: Student can access only their own courses. Admin can access any course.
@@ -163,7 +163,7 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 - 403 Forbidden: Unauthorized access to the student's courses.
 
 
-#### POST /courses
+### POST /courses
 **POST** `/courses` - Create a new course
 
 **Authorization**: Requires valid student ID in header.
@@ -191,7 +191,7 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 - 500 Internal Server Error: Failed to create the course.
 
 
-#### PUT /courses
+### PUT /courses
 **PUT** `/courses/{courseId}` - Update a specific course by ID
 
 **Authorization**: Student can update only their own courses. Admin can update any course.
@@ -221,7 +221,7 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 - 500 Internal Server Error: Failed to update the course.
 
 
-#### DELETE /courses
+### DELETE /courses
 **DELETE** `/courses/{courseId}` - Delete a specific course by ID
 
 **Authorization**: Student can delete only their own courses. Admin can delete any course.
@@ -239,7 +239,7 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 
 
 ### Schedules
-#### GET /schedules
+### GET /schedules
 **GET** `/schedules/{scheduleId}` - Get a specific schedule by ID
 
 **Authorization**: Student can access only their own schedules. Admin can access any schedule.
@@ -310,7 +310,7 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 - 403 Forbidden: Unauthorized access to the student's schedules.
 
 
-#### POST /schedules
+### POST /schedules
 **POST** `/schedules` - Create a new schedule
 
 **Authorization**: Requires valid student ID in header.
@@ -339,7 +339,7 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 - 500 Internal Server Error: Failed to create the schedule.
 
 
-#### PUT /schedules
+### PUT /schedules
 **PUT** `/schedules/{scheduleId}` - Update a specific schedule by ID
 
 **Authorization**: Student can update only their own course schedules. Admin can update any schedule.
@@ -370,7 +370,7 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 - 500 Internal Server Error: Failed to update the schedule.
 
 
-#### DELETE /schedules
+### DELETE /schedules
 **DELETE** `/schedules/{scheduleId}` - Delete a specific schedule by ID
 
 **Authorization**: Student can delete only their own course schedules. Admin can delete any schedule.
@@ -388,7 +388,7 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 
 
 ### Assignments
-#### GET /assignments
+### GET /assignments
 **GET** `/assignments/{assignmentId}` - Get a specific assignment by ID
 
 **Authorization**: Student can access only their own assignments. Admin can access any assignment.
@@ -440,7 +440,7 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 - 500 Internal Server Error: Failed to retrieve assignments.
 
 
-#### POST /assignments
+### POST /assignments
 **POST** `/assignments` - Create a new assignment
 
 **Authorization:** Requires valid student ID in header.
@@ -471,7 +471,7 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 - 500 Internal Server Error: Failed to create the assignment.
 
 
-#### PUT /assignments
+### PUT /assignments
 **PUT** `/assignments/{assignmentId}` - Update a specific assignment by ID
 
 **Authorization:** Student can update only their own assignments. Admin can update any assignment.
@@ -505,7 +505,7 @@ This backend service is build using HttpServer from `com.sun.net.httpserver` pac
 - 500 Internal Server Error: Failed to update the assignment.
 
 
-#### DELETE /assignments
+### DELETE /assignments
 **DELETE** `/assignments/{assignmentId}` - Delete a specific assignment by ID
 
 **Authorization**: Student can delete only their own assignments. Admin can delete any assignment.
