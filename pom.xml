@@ -63,6 +63,8 @@
                 <version>3.2.5</version>
                 <configuration>
                     <useModulePath>false</useModulePath>
+<!--            This argLine just removes a warning about dynamic agent loading, it won´t be supported in future JDK versions  -->
+                    <argLine>-XX:+EnableDynamicAgentLoading</argLine>
                 </configuration>
             </plugin>
 

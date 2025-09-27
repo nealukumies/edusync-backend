@@ -2,6 +2,7 @@ package server;
 
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpServer;
+import database.StudentDao;
 import service.AuthService;
 
 import java.io.IOException;
@@ -22,7 +23,7 @@ public class Server {
         loginContext.setHandler(new LoginHandler(new AuthService()));
 
         HttpContext studentsContext = server.createContext("/students");
-        studentsContext.setHandler(new StudentHandler());
+        studentsContext.setHandler(new StudentHandler(new StudentDao()));
 
         HttpContext coursesContext = server.createContext("/courses");
         coursesContext.setHandler(new CourseHandler());

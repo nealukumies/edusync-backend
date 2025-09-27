@@ -8,6 +8,11 @@ import java.io.IOException;
 import java.util.Map;
 
 public class StudentHandler extends BaseHandler {
+    private StudentDao studentDao;
+
+    public StudentHandler(StudentDao studentDao) {
+        this.studentDao = studentDao;
+    }
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
@@ -37,7 +42,6 @@ public class StudentHandler extends BaseHandler {
         if (studentId == -1) return;
         if (!isAuthorized(exchange, studentId)) return;
 
-        StudentDao studentDao = new StudentDao();
         Student student = studentDao.getStudentById(studentId);
         if (student == null) {
             sendResponse(exchange, 404, "Student not found");
@@ -61,7 +65,6 @@ public class StudentHandler extends BaseHandler {
             return;
         }
 
-        StudentDao studentDao = new StudentDao();
         if (studentDao.getStudent(email) != null) {
             sendResponse(exchange, 409, Map.of("error", "Email already in use"));
             return;
@@ -76,7 +79,6 @@ public class StudentHandler extends BaseHandler {
         if (studentId == -1) return;
         if (!isAuthorized(exchange, studentId)) return;
 
-        StudentDao studentDao = new StudentDao();
         boolean deleted = studentDao.deleteStudent(studentId);
         if (!deleted) {
             sendResponse(exchange, 404, Map.of("error", "Student not found"));
@@ -102,7 +104,6 @@ public class StudentHandler extends BaseHandler {
         }
 
         if (newEmail != null) {
-            StudentDao studentDao = new StudentDao();
             Student existingStudent = studentDao.getStudent(newEmail);
             if (existingStudent != null && existingStudent.getId() != studentId) {
                 sendResponse(exchange, 409, Map.of("error", "Email already in use by another student"));
@@ -110,7 +111,6 @@ public class StudentHandler extends BaseHandler {
             }
         }
 
-        StudentDao studentDao = new StudentDao();
         boolean updated = false;
         if (newName != null) {
             updated = studentDao.updateStudentName(studentId, newName);

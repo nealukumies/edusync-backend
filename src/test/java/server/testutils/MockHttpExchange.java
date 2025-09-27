@@ -15,6 +15,7 @@ import java.net.URI;
 public class MockHttpExchange extends HttpExchange {
     private String method;
     private URI uri;
+    private Headers requestHeaders;
     private InputStream requestBody;
     private ByteArrayOutputStream responseBody;
     private int responseCode;
@@ -24,11 +25,12 @@ public class MockHttpExchange extends HttpExchange {
         this.uri = URI.create(path);
         this.requestBody = new ByteArrayInputStream(body.getBytes());
         this.responseBody = new ByteArrayOutputStream();
+        this.requestHeaders = new Headers();
     }
 
     @Override
     public Headers getRequestHeaders() {
-        return new Headers();
+        return requestHeaders;
     }
     @Override
     public Headers getResponseHeaders() {
@@ -85,11 +87,11 @@ public class MockHttpExchange extends HttpExchange {
         return responseBody.toString();
     }
     public MockHttpExchange withHeader(String key, String value) {
-        this.getRequestHeaders().add(key, value);
+        requestHeaders.add(key, value);
         return this;
     }
     public MockHttpExchange withStudentId(int studentId) {
-        this.getRequestHeaders().add("StudentId", String.valueOf(studentId));
+        requestHeaders.add("StudentId", String.valueOf(studentId));
         return this;
     }
     public MockHttpExchange withRole(String role){
