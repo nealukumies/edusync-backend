@@ -74,12 +74,7 @@ public class StudentHandler extends BaseHandler {
     private void handleDelete(HttpExchange exchange) throws IOException {
         int studentId = getIdFromPath(exchange, 2);
         if (studentId == -1) return;
-        String role = getRoleFromHeader(exchange);
-        if (role == null) return;
-        if (!role.equals("admin")) {
-            sendResponse(exchange, 403, Map.of("error", "Forbidden: Admins only"));
-            return;
-        }
+        if (!isAuthorized(exchange, studentId)) return;
 
         StudentDao studentDao = new StudentDao();
         boolean deleted = studentDao.deleteStudent(studentId);

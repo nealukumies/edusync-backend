@@ -2,6 +2,7 @@ package server;
 
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpServer;
+import service.AuthService;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -18,7 +19,7 @@ public class Server {
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
 
         HttpContext loginContext = server.createContext("/login");
-        loginContext.setHandler(new LoginHandler());
+        loginContext.setHandler(new LoginHandler(new AuthService()));
 
         HttpContext studentsContext = server.createContext("/students");
         studentsContext.setHandler(new StudentHandler());
