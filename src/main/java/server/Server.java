@@ -2,6 +2,7 @@ package server;
 
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpServer;
+import database.CourseDao;
 import database.StudentDao;
 import service.AuthService;
 
@@ -26,7 +27,7 @@ public class Server {
         studentsContext.setHandler(new StudentHandler(new StudentDao()));
 
         HttpContext coursesContext = server.createContext("/courses");
-        coursesContext.setHandler(new CourseHandler());
+        coursesContext.setHandler(new CourseHandler(new CourseDao()));
 
         HttpContext assignmentsContext = server.createContext("/assignments");
         assignmentsContext.setHandler(new AssignmentHandler());

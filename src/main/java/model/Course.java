@@ -43,4 +43,7 @@ public class Course {
     public Date getEndDate() {
         return endDate;
     }
+    public void setCourseName(String name) {this.courseName = name;}
+    public void setStartDate(Date startDate) {this.startDate = startDate;}
+    public void setEndDate(Date endDate) {this.endDate = endDate;}
 }

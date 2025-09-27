@@ -10,6 +10,11 @@ import java.util.List;
 import java.util.Map;
 
 public class CourseHandler extends BaseHandler {
+    private CourseDao courseDao;
+
+    public CourseHandler(CourseDao courseDao) {
+        this.courseDao = courseDao;
+    }
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
@@ -34,7 +39,6 @@ public class CourseHandler extends BaseHandler {
 
     private void handleGet(HttpExchange exchange) throws IOException {
         String[] pathParts = exchange.getRequestURI().getPath().split("/");
-        CourseDao courseDao = new CourseDao();
 
         // Handle /courses/students/{studentId}
         if (pathParts.length == 4 && pathParts[2].equals("students")) {
@@ -92,7 +96,6 @@ public class CourseHandler extends BaseHandler {
             sendResponse(exchange, 400, Map.of("error", "Course name, start date, and end date are required"));
             return;
         }
-        CourseDao courseDao = new CourseDao();
         Course course  = courseDao.addCourse(studentId, courseName, sqlStartDate, sqlEndDate);
         if (course == null) {
             sendResponse(exchange, 500, Map.of("error", "Failed to add course"));
@@ -106,7 +109,7 @@ public class CourseHandler extends BaseHandler {
         if (studentId == -1) return;
         int courseId = getIdFromPath(exchange, 2);
         if (courseId == -1) return;
-        CourseDao courseDao = new CourseDao();
+
         Course course = courseDao.getCourseById(courseId);
         if (course == null) {
             sendResponse(exchange, 404, Map.of("error", "Course not found"));
@@ -131,7 +134,6 @@ public class CourseHandler extends BaseHandler {
         Map<String, String> requestMap = parseJsonBody(exchange);
         if (requestMap == null) { return; }
 
-        CourseDao courseDao = new CourseDao();
         Course existingCourse = courseDao.getCourseById(courseId);
         if (existingCourse == null) {
             sendResponse(exchange, 404, Map.of("error", "Course not found"));
