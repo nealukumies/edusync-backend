@@ -10,7 +10,7 @@ public class Assignment {
     private Integer courseId;
     private String title;
     private String description;
-    private Date deadline;
+    private String deadline;
     private Status status;
 
     public Assignment(int assignmentId, int studentId, Integer courseId, String title, String description, Date deadline, Status status) {
@@ -19,7 +19,7 @@ public class Assignment {
         this.courseId = courseId; //note that courseId is nullable in the database
         this.title = title;
         this.description = description;
-        this.deadline = deadline;
+        this.deadline = DateFormater.formatDateToString(deadline);
         this.status = status;
     }
 
@@ -39,7 +39,7 @@ public class Assignment {
         return description;
     }
     public Date getDeadline() {
-        return deadline;
+        return DateFormater.parseStringToDate(deadline);
     }
     public Status getStatus() {
         return status;

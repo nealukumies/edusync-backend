@@ -6,15 +6,15 @@ public class Course {
     private int courseId;
     private int studentId;
     private String courseName;
-    private Date startDate;
-    private Date endDate;
+    private String startDate;
+    private String endDate;
 
     public Course(int courseId, int studentId, String courseName, Date startDate, Date endDate) {
         this.courseId = courseId;
         this.studentId = studentId;
         this.courseName = courseName;
-        this.startDate = startDate;
-        this.endDate = endDate;
+        this.startDate = DateFormater.formatDateToString(startDate);
+        this.endDate = DateFormater.formatDateToString(endDate);
     }
 
     @Override
@@ -38,9 +38,9 @@ public class Course {
         return courseName;
     }
     public Date getStartDate() {
-        return startDate;
+        return DateFormater.parseStringToDate(startDate);
     }
     public Date getEndDate() {
-        return endDate;
+        return DateFormater.parseStringToDate(endDate);
     }
 }
