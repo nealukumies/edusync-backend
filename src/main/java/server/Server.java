@@ -3,6 +3,7 @@ package server;
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpServer;
 import database.CourseDao;
+import database.ScheduleDao;
 import database.StudentDao;
 import service.AuthService;
 
@@ -33,7 +34,7 @@ public class Server {
         assignmentsContext.setHandler(new AssignmentHandler());
 
         HttpContext scheduleContext = server.createContext("/schedules");
-        scheduleContext.setHandler(new ScheduleHandler());
+        scheduleContext.setHandler(new ScheduleHandler(new ScheduleDao(), new CourseDao()));
 
         server.start();
         System.out.println("Server started on port " + port);

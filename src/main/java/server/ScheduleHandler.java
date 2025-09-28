@@ -13,6 +13,13 @@ import java.util.List;
 import java.util.Map;
 
 public class ScheduleHandler extends BaseHandler {
+    private ScheduleDao scheduleDao;
+    private CourseDao courseDao;
+
+    public ScheduleHandler(ScheduleDao scheduleDao, CourseDao courseDao) {
+        this.scheduleDao = scheduleDao;
+        this.courseDao = courseDao;
+    }
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
@@ -37,7 +44,6 @@ public class ScheduleHandler extends BaseHandler {
 
     private void handleGet(HttpExchange exchange) throws IOException {
         String[] pathParts = exchange.getRequestURI().getPath().split("/");
-        ScheduleDao scheduleDao = new ScheduleDao();
 
         // Handle /schedules/courses/{courseId}
         if (pathParts.length == 4 && pathParts[2].equals("courses")) {
@@ -74,8 +80,7 @@ public class ScheduleHandler extends BaseHandler {
             sendResponse(exchange, 404, "Schedule not found");
             return;
         }
-        System.out.println("Sending schedule response before null check: " + schedule);
-        sendResponse(exchange, 201, schedule);
+        sendResponse(exchange, 200, schedule);
     }
 
     private void handlePost(HttpExchange exchange) throws IOException {
@@ -127,7 +132,6 @@ public class ScheduleHandler extends BaseHandler {
             return;
         }
 
-        ScheduleDao scheduleDao = new ScheduleDao();
         Schedule schedule = scheduleDao.insertSchedule(courseId, weekday, start, end);
         if (schedule == null) {
             sendResponse(exchange, 500, Map.of("error", "Failed to add schedule"));
@@ -139,7 +143,7 @@ public class ScheduleHandler extends BaseHandler {
     private void handleDelete(HttpExchange exchange) throws IOException {
         int scheduleId = getIdFromPath(exchange, 2);
         if (scheduleId == -1) return;
-        ScheduleDao scheduleDao = new ScheduleDao();
+
         Schedule schedule = scheduleDao.getSchedule(scheduleId);
         if (schedule == null) {
             sendResponse(exchange, 404, "Schedule not found");
@@ -162,7 +166,6 @@ public class ScheduleHandler extends BaseHandler {
         int scheduleId = getIdFromPath(exchange, 2);
         if (scheduleId == -1) return;
 
-        ScheduleDao scheduleDao = new ScheduleDao();
         Schedule existingSchedule = scheduleDao.getSchedule(scheduleId);
         if (existingSchedule == null) {
             sendResponse(exchange, 404, "Schedule not found");
@@ -170,18 +173,23 @@ public class ScheduleHandler extends BaseHandler {
         }
 
         int courseId = existingSchedule.getCourseId();
-        CourseDao courseDao = new CourseDao();
         Course course = courseDao.getCourseById(courseId);
+        if (course == null) {
+            sendResponse(exchange, 404, "course not found");
+            return;
+        }
         int studentId = course.getStudentId();
         if (!isAuthorized(exchange, studentId)) return;
 
         Map<String, String> requestMap = parseJsonBody(exchange);
-        if (requestMap == null) return;
+        if (requestMap == null){
+            sendResponse(exchange, 400, Map.of("error", "invalid json"));
+            return;
+        }
 
         LocalTime start = existingSchedule.getStartTime();
         LocalTime end = existingSchedule.getEndTime();
         Weekday weekday = existingSchedule.getWeekday();
-
 
         try {
             String startTimeStr = requestMap.get("start_time");
@@ -198,10 +206,6 @@ public class ScheduleHandler extends BaseHandler {
 
         if (!start.isBefore(end)) {
             sendResponse(exchange, 400, Map.of("error", "start_time must be before end_time"));
-            return;
-        }
-        if (weekday == null) {
-            sendResponse(exchange, 400, Map.of("error", "weekday is required"));
             return;
         }
 
