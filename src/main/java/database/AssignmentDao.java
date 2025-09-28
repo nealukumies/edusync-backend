@@ -25,7 +25,7 @@ public class AssignmentDao {
      * @param deadline
      * @return Assignment object or null
      */
-    public Assignment insertAssignment(int studentId, Integer courseId, String title, String description, Date deadline) {
+    public Assignment insertAssignment(int studentId, Integer courseId, String title, String description, Timestamp deadline) {
         Connection conn = MariaDBConnection.getConnection();
         String sql = "INSERT INTO assignments (student_id, course_id, title, description, deadline) VALUES (?, ?, ?, ?, ?)";
         try{
@@ -38,7 +38,7 @@ public class AssignmentDao {
             }
             ps.setString(3, title);
             ps.setString(4, description);
-            ps.setDate(5, deadline);
+            ps.setTimestamp(5, deadline);
             int rows = ps.executeUpdate();
             ResultSet rs = ps.getGeneratedKeys();
             if (rs.next()) {
@@ -74,7 +74,7 @@ public class AssignmentDao {
                 int id = rs.getInt("assignment_id");
                 String title = rs.getString("title");
                 String description = rs.getString("description");
-                Date deadline = rs.getDate("deadline");
+                Timestamp deadline = rs.getTimestamp("deadline");
                 Integer courseId = rs.getObject("course_id") != null ? rs.getInt("course_id") : null;
                 Status status = Status.fromDbValue(rs.getString("status"));
                 assignments.add(new Assignment(id, studentId, courseId, title, description, deadline, status));
@@ -130,7 +130,7 @@ public class AssignmentDao {
                 Integer courseId = rs.getObject("course_id") != null ? rs.getInt("course_id") : null;
                 String title = rs.getString("title");
                 String description = rs.getString("description");
-                Date deadline = rs.getDate("deadline");
+                Timestamp deadline = rs.getTimestamp("deadline");
                 Status status = Status.fromDbValue(rs.getString("status"));
                 return new Assignment(assignmentId, studentId, courseId, title, description, deadline, status);
             }
@@ -160,14 +160,14 @@ public class AssignmentDao {
         }
     }
 
-    public boolean updateAssignment(int assignmentId, String title, String description, Date deadline, Integer courseId) {
+    public boolean updateAssignment(int assignmentId, String title, String description, Timestamp deadline, Integer courseId) {
         Connection conn = MariaDBConnection.getConnection();
         String sql = "UPDATE assignments SET title = ?, description = ?, deadline = ?, course_id = ? WHERE assignment_id = ?";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, title);
             ps.setString(2, description);
-            ps.setDate(3, deadline);
+            ps.setTimestamp(3, deadline);
             if (courseId != null) {
                 ps.setInt(4, courseId);
             } else {
