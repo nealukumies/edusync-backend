@@ -2,6 +2,7 @@ package server;
 
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpServer;
+import database.AssignmentDao;
 import database.CourseDao;
 import database.ScheduleDao;
 import database.StudentDao;
@@ -31,7 +32,7 @@ public class Server {
         coursesContext.setHandler(new CourseHandler(new CourseDao()));
 
         HttpContext assignmentsContext = server.createContext("/assignments");
-        assignmentsContext.setHandler(new AssignmentHandler());
+        assignmentsContext.setHandler(new AssignmentHandler(new AssignmentDao()));
 
         HttpContext scheduleContext = server.createContext("/schedules");
         scheduleContext.setHandler(new ScheduleHandler(new ScheduleDao(), new CourseDao()));

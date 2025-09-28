@@ -25,7 +25,7 @@ public class ScheduleHandlerTest {
     @BeforeEach
     public void setUp() {
            this.mockDao = mock(ScheduleDao.class);
-              this.mockCourseDao = mock(CourseDao.class);
+           this.mockCourseDao = mock(CourseDao.class);
            this.scheduleHandler = new ScheduleHandler(mockDao, mockCourseDao);
     }
 
