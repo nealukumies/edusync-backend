@@ -2,6 +2,7 @@
 
 package model;
 
+import java.sql.Timestamp;
 import java.util.Date;
 
 public class Assignment {
@@ -10,16 +11,17 @@ public class Assignment {
     private Integer courseId;
     private String title;
     private String description;
-    private Date deadline;
+    private String deadline;
     private Status status;
 
-    public Assignment(int assignmentId, int studentId, Integer courseId, String title, String description, Date deadline, Status status) {
+    public Assignment(int assignmentId, int studentId, Integer courseId, String title, String description, Timestamp deadline, Status status) {
         this.assignmentId = assignmentId;
         this.studentId = studentId;
         this.courseId = courseId; //note that courseId is nullable in the database
         this.title = title;
         this.description = description;
-        this.deadline = deadline;
+        System.out.println(deadline);
+        this.deadline = DateFormater.formatTimestampToString(deadline);
         this.status = status;
     }
 
@@ -39,7 +41,7 @@ public class Assignment {
         return description;
     }
     public Date getDeadline() {
-        return deadline;
+        return DateFormater.parseStringToTimestamp(deadline);
     }
     public Status getStatus() {
         return status;

@@ -6,9 +6,8 @@ import model.Assignment;
 import model.Status;
 
 import java.io.IOException;
-import java.sql.Date;
-import java.util.ArrayList;
 import java.util.List;
+import java.sql.Timestamp;
 import java.util.Map;
 
 public class AssignmentHandler extends BaseHandler {
@@ -82,10 +81,10 @@ public class AssignmentHandler extends BaseHandler {
         String description = requestMap.get("description");
         String deadline = requestMap.get("deadline");
 
-        Date sqlDeadline = null;
+        Timestamp sqlDeadline = null;
         try {
             if (deadline != null) {
-                sqlDeadline = Date.valueOf(deadline);
+                sqlDeadline = Timestamp.valueOf(deadline);
             }
         } catch (IllegalArgumentException e) {
             sendResponse(exchange, 400, Map.of("Error", "Invalid date format. Use YYYY-MM-DD"));
@@ -140,12 +139,12 @@ public class AssignmentHandler extends BaseHandler {
 
         String newTitle = requestMap.getOrDefault("title", existingAssignment.getTitle());
         String newDescription = requestMap.getOrDefault("description", existingAssignment.getDescription());
-        java.sql.Date newDeadline = existingAssignment.getDeadline() != null
-                ? new java.sql.Date(existingAssignment.getDeadline().getTime())
+        Timestamp newDeadline = existingAssignment.getDeadline() != null
+                ? new Timestamp(existingAssignment.getDeadline().getTime())
                 : null;
         if (requestMap.get("deadline") != null) {
             try {
-                newDeadline = java.sql.Date.valueOf(requestMap.get("deadline"));
+                newDeadline = java.sql.Timestamp.valueOf(requestMap.get("deadline"));
             } catch (IllegalArgumentException e) {
                 sendResponse(exchange, 400, Map.of("error", "Invalid date format. Use YYYY-MM-DD"));
                 return;
