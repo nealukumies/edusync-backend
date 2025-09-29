@@ -40,8 +40,9 @@ public class Assignment {
     public String getDescription() {
         return description;
     }
-    public Date getDeadline() {
-        return DateFormater.parseStringToTimestamp(deadline);
+    public Timestamp getDeadline() {
+        Date d = DateFormater.parseStringToTimestamp(deadline);
+        return d != null ? new Timestamp(d.getTime()) : null;
     }
     public Status getStatus() {
         return status;

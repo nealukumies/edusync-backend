@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import server.testutils.MockHttpExchange;
 
 import java.sql.Date;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -26,7 +27,7 @@ public class AssignmentHandlerTest {
 
     @Test
     public void testHandleGetAssignmentById() {
-        Assignment assignment = new Assignment(1, 1, 1, "Test Assignment", "Description", Date.valueOf("2024-12-31"), Status.PENDING);
+        Assignment assignment = new Assignment(1, 1, 1, "Test Assignment", "Description", Timestamp.valueOf("2024-12-31 23:59:59"), Status.PENDING);
         when(mockDao.getAssignmentById(1)).thenReturn(assignment);
         MockHttpExchange exchange = new MockHttpExchange("GET", "/assignments/1", "");
         exchange.withHeader("student_id", "1").withHeader("role", "user");
@@ -42,7 +43,7 @@ public class AssignmentHandlerTest {
 
     @Test
     public void testHandleGetAssignmentByIdUnauthorized() {
-        Assignment assignment = new Assignment(1, 1, 1, "Test Assignment", "Description", Date.valueOf("2024-12-31"), Status.PENDING);
+        Assignment assignment = new Assignment(1, 1, 1, "Test Assignment", "Description", Timestamp.valueOf("2024-12-31 23:59:59"), Status.PENDING);
         when(mockDao.getAssignmentById(1)).thenReturn(assignment);
         MockHttpExchange exchange = new MockHttpExchange("GET", "/assignments/1", "");
         exchange.withHeader("student_id", "2").withHeader("role", "user");
@@ -58,8 +59,8 @@ public class AssignmentHandlerTest {
 
     @Test
     public void testHandleGetAssignmentsByStudentId() {
-        Assignment assignment1 = new Assignment(1, 1, 1, "Assignment 1", "Description 1", Date.valueOf("2024-12-31"), Status.PENDING);
-        Assignment assignment2 = new Assignment(2, 1, 2, "Assignment 2", "Description 2", Date.valueOf("2024-11-30"), Status.COMPLETED);
+        Assignment assignment1 = new Assignment(1, 1, 1, "Assignment 1", "Description 1", Timestamp.valueOf("2024-12-31 09:00:00"), Status.PENDING);
+        Assignment assignment2 = new Assignment(2, 1, 2, "Assignment 2", "Description 2", Timestamp.valueOf("2024-11-30 13:00:00"), Status.COMPLETED);
         ArrayList<Assignment> assignments = new ArrayList<>();
         assignments.add(assignment1);
         assignments.add(assignment2);
@@ -79,7 +80,7 @@ public class AssignmentHandlerTest {
 
     @Test
     public void testHandleGetAssignmentsByStudentIdUnauthorized() {
-        Assignment assignment1 = new Assignment(1, 1, 1, "Assignment 1", "Description 1", Date.valueOf("2024-12-31"), Status.PENDING);
+        Assignment assignment1 = new Assignment(1, 1, 1, "Assignment 1", "Description 1", Timestamp.valueOf("2024-12-31 12:45:00"), Status.PENDING);
         ArrayList<Assignment> assignments = new ArrayList<>();
         assignments.add(assignment1);
         when(mockDao.getAssignments(1)).thenReturn(assignments);
@@ -125,12 +126,12 @@ public class AssignmentHandlerTest {
 
     @Test
     public void testHandlePostAssignment() {
-        String body = "{\"course_id\":\"1\",\"title\":\"New Assignment\",\"description\":\"New Description\",\"deadline\":\"2024-12-31\"}";
+        String body = "{\"course_id\":\"1\",\"title\":\"New Assignment\",\"description\":\"New Description\",\"deadline\":\"2024-12-31 00:00:00\"}";
         MockHttpExchange exchange = new MockHttpExchange("POST", "/assignments/", body);
         exchange.withHeader("student_id", "1").withHeader("role", "user");
 
-        Assignment newAssignment = new Assignment(1, 1, 1, "New Assignment", "New Description", Date.valueOf("2024-12-31"), Status.PENDING);
-        when(mockDao.insertAssignment(1, 1, "New Assignment", "New Description", Date.valueOf("2024-12-31"))).thenReturn(newAssignment);
+        Assignment newAssignment = new Assignment(1, 1, 1, "New Assignment", "New Description", Timestamp.valueOf("2024-12-31 00:00:00"), Status.PENDING);
+        when(mockDao.insertAssignment(1, 1, "New Assignment", "New Description", Timestamp.valueOf("2024-12-31 00:00:00"))).thenReturn(newAssignment);
 
         try {
             handler.handle(exchange);
@@ -144,7 +145,7 @@ public class AssignmentHandlerTest {
 
     @Test
     public void testHandlePostAssignmentMissingFields() {
-        String body = "{\"course_id\":\"1\",\"description\":\"New Description\",\"deadline\":\"2024-12-31\"}";
+        String body = "{\"course_id\":\"1\",\"description\":\"New Description\",\"deadline\":\"2024-12-31 12:20:00\"}";
         MockHttpExchange exchange = new MockHttpExchange("POST", "/assignments/", body);
         exchange.withHeader("student_id", "1").withHeader("role", "user");
 
@@ -176,7 +177,7 @@ public class AssignmentHandlerTest {
 
     @Test
     public void testHandleDeleteAssignment() {
-        Assignment assignment = new Assignment(1, 1, 1, "Test Assignment", "Description", Date.valueOf("2024-12-31"), Status.PENDING);
+        Assignment assignment = new Assignment(1, 1, 1, "Test Assignment", "Description", Timestamp.valueOf("2024-12-31 16:45:00"), Status.PENDING);
         when(mockDao.getAssignmentById(1)).thenReturn(assignment);
         when(mockDao.deleteAssignment(1)).thenReturn(true);
         MockHttpExchange exchange = new MockHttpExchange("DELETE", "/assignments/1", "");
@@ -193,7 +194,7 @@ public class AssignmentHandlerTest {
 
     @Test
     public void testHandleDeleteAssignmentUnauthorized() {
-        Assignment assignment = new Assignment(1, 1, 1, "Test Assignment", "Description", Date.valueOf("2024-12-31"), Status.PENDING);
+        Assignment assignment = new Assignment(1, 1, 1, "Test Assignment", "Description", Timestamp.valueOf("2024-12-31 13:30:30"), Status.PENDING);
         when(mockDao.getAssignmentById(1)).thenReturn(assignment);
         MockHttpExchange exchange = new MockHttpExchange("DELETE", "/assignments/1", "");
         exchange.withHeader("student_id", "2").withHeader("role", "user");
@@ -224,10 +225,10 @@ public class AssignmentHandlerTest {
 
     @Test
     public void testHandleUpdateAssignment() {
-        String body = "{\"title\":\"Updated Assignment\",\"description\":\"Updated Description\",\"deadline\":\"2024-11-30\"}";
-        Assignment existingAssignment = new Assignment(1, 1, 1, "Old Assignment", "Old Description", Date.valueOf("2024-12-31"), Status.PENDING);
-        Assignment updatedAssignment = new Assignment(1, 1, 1, "Updated Assignment", "Updated Description", Date.valueOf("2024-11-30"), Status.PENDING);
-        when(mockDao.updateAssignment(1, "Updated Assignment", "Updated Description", Date.valueOf("2024-11-30"), 1)).thenReturn(true);
+        String body = "{\"title\":\"Updated Assignment\",\"description\":\"Updated Description\",\"deadline\":\"2024-11-30 12:30:00\"}";
+        Assignment existingAssignment = new Assignment(1, 1, 1, "Old Assignment", "Old Description", Timestamp.valueOf("2024-12-31 12:30:00"), Status.PENDING);
+        Assignment updatedAssignment = new Assignment(1, 1, 1, "Updated Assignment", "Updated Description", Timestamp.valueOf("2024-11-30 12:30:00"), Status.PENDING);
+        when(mockDao.updateAssignment(1, "Updated Assignment", "Updated Description", Timestamp.valueOf("2024-11-30 12:30:00"), 1)).thenReturn(true);
         when(mockDao.getAssignmentById(1)).thenReturn(existingAssignment).thenReturn(updatedAssignment);
         MockHttpExchange exchange = new MockHttpExchange("PUT", "/assignments/1", body);
         exchange.withHeader("student_id", "1").withHeader("role", "user");
@@ -275,7 +276,7 @@ public class AssignmentHandlerTest {
     @Test
     public void testHandleUpdateAssignmentUnauthorized() {
         String body = "{\"title\":\"Updated Assignment\"}";
-        Assignment existingAssignment = new Assignment(1, 1, 1, "Old Assignment", "Old Description", Date.valueOf("2024-12-31"), Status.PENDING);
+        Assignment existingAssignment = new Assignment(1, 1, 1, "Old Assignment", "Old Description", Timestamp.valueOf("2024-12-31 23:59:59"), Status.PENDING);
         when(mockDao.getAssignmentById(1)).thenReturn(existingAssignment);
         MockHttpExchange exchange = new MockHttpExchange("PUT", "/assignments/1", body);
         exchange.withHeader("student_id", "2").withHeader("role", "user");
@@ -292,7 +293,7 @@ public class AssignmentHandlerTest {
     @Test
     public void testHandleUpdateAssignmentInvalidDate() {
         String body = "{\"deadline\":\"2024-31-12\"}";
-        Assignment existingAssignment = new Assignment(1, 1, 1, "Old Assignment", "Old Description", Date.valueOf("2024-12-31"), Status.PENDING);
+        Assignment existingAssignment = new Assignment(1, 1, 1, "Old Assignment", "Old Description", Timestamp.valueOf("2024-12-31 23:59:59"), Status.PENDING);
         when(mockDao.getAssignmentById(1)).thenReturn(existingAssignment);
         MockHttpExchange exchange = new MockHttpExchange("PUT", "/assignments/1", body);
         exchange.withHeader("student_id", "1").withHeader("role", "user");
@@ -309,7 +310,7 @@ public class AssignmentHandlerTest {
     @Test
     public void testHandleUpdateAssignmentInvalidCourseId() {
         String body = "{\"course_id\":\"abc\"}";
-        Assignment existingAssignment = new Assignment(1, 1, 1, "Old Assignment", "Old Description", Date.valueOf("2024-12-31"), Status.PENDING);
+        Assignment existingAssignment = new Assignment(1, 1, 1, "Old Assignment", "Old Description", Timestamp.valueOf("2024-12-31 23:59:59"), Status.PENDING);
         when(mockDao.getAssignmentById(1)).thenReturn(existingAssignment);
         MockHttpExchange exchange = new MockHttpExchange("PUT", "/assignments/1", body);
         exchange.withHeader("student_id", "1").withHeader("role", "user");
@@ -326,8 +327,8 @@ public class AssignmentHandlerTest {
     @Test
     public void testHandleUpdateAssignmentStatus(){
         String body = "{\"status\":\"completed\"}";
-        Assignment existingAssignment = new Assignment(1, 1, 1, "Old Assignment", "Old Description", Date.valueOf("2024-12-31"), Status.PENDING);
-        Assignment updatedAssignment = new Assignment(1, 1, 1, "Old Assignment", "Old Description", Date.valueOf("2024-12-31"), Status.COMPLETED);
+        Assignment existingAssignment = new Assignment(1, 1, 1, "Old Assignment", "Old Description", Timestamp.valueOf("2024-12-31 13:00:00"), Status.PENDING);
+        Assignment updatedAssignment = new Assignment(1, 1, 1, "Old Assignment", "Old Description", Timestamp.valueOf("2024-12-31 13:00:00"), Status.COMPLETED);
         when(mockDao.setStatus(1, Status.COMPLETED)).thenReturn(true);
         when(mockDao.getAssignmentById(1)).thenReturn(existingAssignment).thenReturn(updatedAssignment);
         MockHttpExchange exchange = new MockHttpExchange("PUT", "/assignments/1", body);
@@ -345,9 +346,9 @@ public class AssignmentHandlerTest {
     @Test
     public void testHandleUpdateAssignmentAndStatus() {
         String body = "{\"title\":\"Updated Assignment\",\"status\":\"completed\"}";
-        Assignment existingAssignment = new Assignment(1, 1, 1, "Old Assignment", "Old Description", Date.valueOf("2024-12-31"), Status.PENDING);
-        Assignment updatedAssignment = new Assignment(1, 1, 1, "Updated Assignment", "Old Description", Date.valueOf("2024-12-31"), Status.COMPLETED);
-        when(mockDao.updateAssignment(1, "Updated Assignment", "Old Description", Date.valueOf("2024-12-31"), 1)).thenReturn(true);
+        Assignment existingAssignment = new Assignment(1, 1, 1, "Old Assignment", "Old Description", Timestamp.valueOf("2024-12-31 12:45:00"), Status.PENDING);
+        Assignment updatedAssignment = new Assignment(1, 1, 1, "Updated Assignment", "Old Description", Timestamp.valueOf("2024-12-31 12:45:00"), Status.COMPLETED);
+        when(mockDao.updateAssignment(1, "Updated Assignment", "Old Description", Timestamp.valueOf("2024-12-31 12:45:00"), 1)).thenReturn(true);
         when(mockDao.setStatus(1, Status.COMPLETED)).thenReturn(true);
         when(mockDao.getAssignmentById(1)).thenReturn(existingAssignment).thenReturn(updatedAssignment);
         MockHttpExchange exchange = new MockHttpExchange("PUT", "/assignments/1", body);
