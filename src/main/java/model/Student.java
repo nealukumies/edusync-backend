@@ -30,4 +30,6 @@ public class Student {
     public String getRole() {
         return role;
     }
+    public void setName(String name) {this.name=name;}
+    public void setEmail(String email) {this.email=email;}
 }

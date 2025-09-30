@@ -43,4 +43,11 @@ public class Course {
     public Date getEndDate() {
         return DateFormater.parseStringToDate(endDate);
     }
+    public void setCourseName(String name) {this.courseName = name;}
+    public void setStartDate(Date startDate) {
+        this.startDate = DateFormater.formatDateToString(startDate);
+    }
+    public void setEndDate(Date endDate) {
+        this.endDate = DateFormater.formatDateToString(endDate);
+    }
 }

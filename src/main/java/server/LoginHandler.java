@@ -8,7 +8,11 @@ import java.io.IOException;
 import java.util.Map;
 
 public class LoginHandler extends BaseHandler {
-    private final AuthService authService = new AuthService();
+    private final AuthService authService;
+
+    public LoginHandler(AuthService authService) {
+        this.authService = authService;
+    }
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {

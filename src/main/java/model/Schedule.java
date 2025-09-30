@@ -44,4 +44,9 @@ public class Schedule {
     public LocalTime getEndTime() {
         return endTime;
     }
+    public void setScheduleId(int scheduleId) {this.scheduleId = scheduleId;}
+    public void setCourseId(int courseId) {this.courseId = courseId;}
+    public void setWeekday(Weekday weekday) {this.weekday = weekday;}
+    public void setStartTime(LocalTime startTime) {this.startTime = startTime;}
+    public void setEndTime(LocalTime endTime) {this.endTime = endTime;}
 }
