@@ -14,12 +14,18 @@ public class StudentHandlerTest {
     private StudentHandler handler;
     private StudentDao mockDao;
 
+    /**
+     * Sets up the test environment before each test case. Mocks the StudentDao and initializes the StudentHandler with it.
+     */
     @BeforeEach
     void setup() {
         this.mockDao = mock(StudentDao.class);
         this.handler = new StudentHandler(mockDao);
     }
 
+    /**
+     * Tests the GET /students/{id} endpoint for successful retrieval of a student record.
+     */
     @Test
     void testGetStudent() {
         Student student = new Student(1, "Test", "test@test.fi", "user");
@@ -36,6 +42,9 @@ public class StudentHandlerTest {
         assertTrue(json.contains("Test"));
     }
 
+    /**
+     * Tests the GET /students/{id} endpoint for unauthorized access when a student tries to access another student's record.
+     */
     @Test
     void testGetStudentUnauthorizedAccess() {
         MockHttpExchange exchange = new MockHttpExchange("GET", "/students/1", "");
@@ -48,6 +57,9 @@ public class StudentHandlerTest {
         assertEquals(403, exchange.getResponseCode());
     }
 
+    /**
+     * Tests the GET /students/{id} endpoint for handling the case when a student record is not found.
+     */
     @Test
     void testStudentNotFound() {
         when(mockDao.getStudentById(999)).thenReturn(null);
@@ -61,6 +73,9 @@ public class StudentHandlerTest {
         assertEquals(404, exchange.getResponseCode());
     }
 
+    /**
+     * Tests the POST /students endpoint for successful creation of a new student record.
+     */
     @Test
     void testPostStudent() {
         Student newStudent = new Student(2, "Testeri", "testeri@email.com", "user");
@@ -77,6 +92,9 @@ public class StudentHandlerTest {
         assertTrue(json.contains("Testeri"));
     }
 
+    /**
+     * Tests the POST /students endpoint for handling the case when required fields are missing in the request body.
+     */
     @Test
     void testPostStudentNoName() {
         String requestBody = "{\"email\":\"tester@tester.fi\",\"password\":\"password\"}";
@@ -91,6 +109,9 @@ public class StudentHandlerTest {
         assertTrue(json.contains("Name, email, password, and role are required"));
     }
 
+    /**
+     * Tests the POST /students endpoint for handling the case when the email is already in use.
+     */
     @Test
     void testPostStudentDuplicateEmail() {
         when(mockDao.getStudent("tester@email.fi")).thenReturn(new Student(1, "Existing", "tester@email.fi", "user"));
@@ -106,6 +127,9 @@ public class StudentHandlerTest {
         assertTrue(json.contains("Email already in use"));
     }
 
+    /**
+     * Tests the DELETE /students/{id} endpoint for successful deletion of a student record.
+     */
     @Test
     void testHandleDeleteStudent() {
         when(mockDao.deleteStudent(1)).thenReturn(true);
@@ -121,6 +145,9 @@ public class StudentHandlerTest {
         assertTrue(json.contains("Student deleted successfully"));
     }
 
+    /**
+     * Tests the DELETE /students/{id} endpoint for handling the case when trying to delete a non-existent student record.
+     */
     @Test
     void testHandleDeleteNonExistentStudent() {
         when(mockDao.deleteStudent(999)).thenReturn(false);
@@ -136,6 +163,9 @@ public class StudentHandlerTest {
         assertTrue(json.contains("Student not found"));
     }
 
+    /**
+     * Tests the DELETE /students/{id} endpoint for unauthorized access when a student tries to delete another student's record.
+     */
     @Test
     void testHandleDeleteUnauthorized() {
         MockHttpExchange exchange = new MockHttpExchange("DELETE", "/students/1", "");
@@ -148,6 +178,9 @@ public class StudentHandlerTest {
         assertEquals(403, exchange.getResponseCode());
     }
 
+    /**
+     * Tests the PUT /students/{id} endpoint for successful update of a student's name.
+     */
     @Test
     void testSuccessfulNameUpdate() {
         Student student = new Student(1, "Old", "old@test.fi", "user");
@@ -170,6 +203,9 @@ public class StudentHandlerTest {
         assertTrue(json.contains("New"));
     }
 
+    /**
+     * Tests the PUT /students/{id} endpoint for handling the case when no name or email is provided in the request body.
+     */
     @Test
     void testNameUpdateNoNameProvided() {
         MockHttpExchange exchange = new MockHttpExchange("PUT", "/students/1", "{}");
@@ -184,6 +220,9 @@ public class StudentHandlerTest {
         assertTrue(json.contains("At least one of name or email must be provided"));
     }
 
+    /**
+     * Tests the PUT /students/{id} endpoint for successful update of a student's email.
+     */
     @Test
     void testEmailUpdate() {
         Student student = new Student(1, "Old", "old@test.fi", "user");
@@ -206,6 +245,9 @@ public class StudentHandlerTest {
         assertTrue(json.contains("new@test.fi"));
     }
 
+    /**
+     * Tests the PUT /students/{id} endpoint for handling the case when no name or email is provided in the request body.
+     */
     @Test
     void testEmailUpdateNoEmailProvided() {
         MockHttpExchange exchange = new MockHttpExchange("PUT", "/students/1", "{}");
@@ -220,6 +262,9 @@ public class StudentHandlerTest {
         assertTrue(json.contains("At least one of name or email must be provided"));
     }
 
+    /**
+     * Tests the PUT /students/{id} endpoint for handling the case when trying to update to an email that is already in use by another student.
+     */
     @Test
     void testUpdateDuplicateEmail() {
         Student student = new Student(2, "NumberOne", "one@test.fi", "user");
@@ -237,6 +282,9 @@ public class StudentHandlerTest {
         assertTrue(json.contains("Email already in use"));
     }
 
+    /**
+     * Tests the PUT /students/{id} endpoint for unauthorized access when a student tries to update another student's record.
+     */
     @Test
     void testUpdateStudentUnauthorized() {
         MockHttpExchange exchange = new MockHttpExchange("PUT", "/students/1", "{\"name\":\"NewName\"}");
@@ -249,6 +297,9 @@ public class StudentHandlerTest {
         assertEquals(403, exchange.getResponseCode());
     }
 
+    /**
+     * Tests the PUT /students/{id} endpoint for handling the case when trying to update a non-existent student record.
+     */
     @Test
     void testUpdateStudentInvalidStudentId() {
         when(mockDao.getStudentById(999)).thenReturn(null);
@@ -264,6 +315,9 @@ public class StudentHandlerTest {
         assertTrue(json.contains("Student not found"));
     }
 
+    /**
+     * Tests the PUT /students/{id} endpoint for handling the case when no changes are made during the update (i.e., the new values are the same as the existing ones).
+     */
     @Test
     void testStudentNotUpdated() {
         when(mockDao.updateStudentName(1, "Old")).thenReturn(false);

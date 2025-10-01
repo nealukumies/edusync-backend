@@ -1,3 +1,7 @@
+/**
+ * Course class represents a course taken by a student.
+ */
+
 package model;
 
 import java.util.Date;

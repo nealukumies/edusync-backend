@@ -1,3 +1,6 @@
+/**
+ * This class handles HTTP requests related to course management.
+ */
 package server;
 
 import com.sun.net.httpserver.HttpExchange;
@@ -12,10 +15,21 @@ import java.util.Map;
 public class CourseHandler extends BaseHandler {
     private CourseDao courseDao;
 
+    /**
+     * Constructor for CourseHandler. Data access object (DAO) is injected via constructor.
+     * @param courseDao
+     */
     public CourseHandler(CourseDao courseDao) {
         this.courseDao = courseDao;
     }
 
+    /**
+     * Handles incoming HTTP requests and routes them to the appropriate method
+     * based on the HTTP method (GET, POST, DELETE, PUT).
+     * @param exchange the exchange containing the request from the
+     *                 client and used to send the response
+     * @throws IOException
+     */
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         String method = exchange.getRequestMethod();
@@ -37,6 +51,13 @@ public class CourseHandler extends BaseHandler {
         }
     }
 
+    /**
+     * Handles GET requests for courses.
+     * Supports fetching courses by student ID or course ID.
+     * Authorization checks ensure students can only access their own courses.
+     * @param exchange
+     * @throws IOException
+     */
     private void handleGet(HttpExchange exchange) throws IOException {
         String[] pathParts = exchange.getRequestURI().getPath().split("/");
 
@@ -68,6 +89,13 @@ public class CourseHandler extends BaseHandler {
         sendResponse(exchange, 200, course);
     }
 
+    /**
+     * Handles POST requests to add a new course.
+     * Expects JSON body with course_name, start_date, and end_date.
+     * Validates input and returns appropriate HTTP responses.
+     * @param exchange
+     * @throws IOException
+     */
     private void handlePost(HttpExchange exchange) throws IOException {
         if (!isMethod(exchange, "POST")) { return; }
 
@@ -104,6 +132,14 @@ public class CourseHandler extends BaseHandler {
         sendResponse(exchange, 201, course);
     }
 
+    /**
+     * Handles DELETE requests to remove a course.
+     * Validates that the course exists and that the requesting student is authorized to delete it.
+     * Returns appropriate HTTP responses based on the outcome.
+     * Authorization is checked via the student_id header.
+     * @param exchange
+     * @throws IOException
+     */
     private void handleDelete(HttpExchange exchange) throws IOException {
         int studentId = getIdFromHeader(exchange);
         if (studentId == -1) return;
@@ -127,6 +163,15 @@ public class CourseHandler extends BaseHandler {
         sendResponse(exchange, 200, Map.of("message", "Course deleted successfully"));
     }
 
+    /**
+     * Handles PUT requests to update an existing course.
+     * Expects JSON body with fields to update: course_name, start_date, end_date.
+     * Validates input and checks authorization before updating.
+     * Returns appropriate HTTP responses based on the outcome.
+     * Authorization is checked via the student_id header.
+     * @param exchange
+     * @throws IOException
+     */
     private void handlePut(HttpExchange exchange) throws IOException {
         int courseId = getIdFromPath(exchange, 2);
         if (courseId == -1) return;

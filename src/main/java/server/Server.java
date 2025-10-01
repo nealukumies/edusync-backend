@@ -1,3 +1,6 @@
+/**
+ * Server class to handle HTTP requests for a student course management system.
+ */
 package server;
 
 import com.sun.net.httpserver.HttpContext;
@@ -19,11 +22,15 @@ public class Server {
         this.port = port;
     }
 
+    /**
+     * Starts the HTTP server and sets up contexts for different endpoints.
+     * @throws IOException
+     */
     public void runServer() throws IOException {
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
 
         HttpContext loginContext = server.createContext("/login");
-        loginContext.setHandler(new LoginHandler(new AuthService()));
+        loginContext.setHandler(new LoginHandler(new AuthService(new StudentDao())));
 
         HttpContext studentsContext = server.createContext("/students");
         studentsContext.setHandler(new StudentHandler(new StudentDao()));

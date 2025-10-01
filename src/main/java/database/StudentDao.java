@@ -121,20 +121,50 @@ public class StudentDao {
 
     /**
      * Deletes a student by student ID. Returns true if deletion was successful, false otherwise.
+     * Deletes related assignments and courses as well.
      * @param studentId
      * @return
      */
     public boolean deleteStudent(int studentId) {
         Connection conn = MariaDBConnection.getConnection();
-        String sql = "DELETE FROM students WHERE student_id = ?;";
         try {
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setInt(1, studentId);
-            int rows = ps.executeUpdate();
+            conn.setAutoCommit(false); // start transaction
+
+            // Delete assignments
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "DELETE FROM assignments WHERE student_id = ?")) {
+                ps.setInt(1, studentId);
+                ps.executeUpdate();
+            }
+
+            // Delete courses
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "DELETE FROM courses WHERE student_id = ?")) {
+                ps.setInt(1, studentId);
+                ps.executeUpdate();
+            }
+
+            // Delete student
+            int rows;
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "DELETE FROM students WHERE student_id = ?")) {
+                ps.setInt(1, studentId);
+                rows = ps.executeUpdate();
+            }
+
+            conn.commit();
             return rows > 0;
+
         } catch (SQLException e) {
-            System.out.println("Error deleting student.");
+            try { conn.rollback(); } catch (SQLException ex) {
+                System.out.println("Error during rollback: " + ex.getMessage());
+            }
+            System.out.println("Error deleting student and related data: " + e.getMessage());
             return false;
+        } finally {
+            try { conn.setAutoCommit(true); } catch (SQLException ex) {
+                System.out.println("Error resetting auto-commit: " + ex.getMessage());
+            }
         }
     }
 

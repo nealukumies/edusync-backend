@@ -12,12 +12,18 @@ public class LoginHandlerTest{
     private AuthService fakeAuthService;
     private LoginHandler handler;
 
+    /**
+     * Sets up the test environment before each test case. Mocks the AuthService and initializes the LoginHandler.
+     */
     @BeforeEach
     void setup() {
         fakeAuthService = mock(AuthService.class);
         handler = new LoginHandler(fakeAuthService);
     }
 
+    /**
+     * Tests handling of unsupported HTTP methods. Expects a 405 Method Not Allowed response.
+     */
     @Test
     void wrongMethodTest() {
         MockHttpExchange exchange = new MockHttpExchange("GET", "/login", "");
@@ -30,6 +36,9 @@ public class LoginHandlerTest{
         assertTrue(exchange.getResponseBodyAsString().contains("Method Not Allowed"));
     }
 
+    /**
+     * Tests handling of requests with missing email or password fields. Expects a 400 Bad Request response.
+     */
     @Test
     void missingDetailsTest() {
         String body = "{}";
@@ -43,6 +52,9 @@ public class LoginHandlerTest{
         assertTrue(exchange.getResponseBodyAsString().contains("Email and password are required"));
     }
 
+    /**
+     * Tests a successful login attempt with valid credentials. Expects a 200 OK response with student details.
+     */
     @Test
     void successfulLoginTest() {
         when(fakeAuthService.tryLogin("test@example.com", "password"))
@@ -58,6 +70,9 @@ public class LoginHandlerTest{
         }
     }
 
+    /**
+     * Tests handling of login attempts with invalid credentials. Expects a 401 Unauthorized response.
+     */
     @Test
     void invalidCredentialsTest() {
         when(fakeAuthService.tryLogin("wrong@email.com", "wrongpass"))

@@ -17,12 +17,18 @@ public class CourseHandlerTest {
     private CourseHandler courseHandler;
     private CourseDao mockDao;
 
+    /**
+     * Setup before each test by creating a mock DAO and injecting it into the handler.
+     */
     @BeforeEach
     public void setup() {
         this.mockDao = mock(CourseDao.class);
         this.courseHandler = new CourseHandler(mockDao);
     }
 
+    /**
+     * Test fetching a course by ID successfully.
+     */
     @Test
     public void testGetCourseById() {
         Course course = new Course(1, 1, "Test 101", Date.valueOf("2023-09-01"), Date.valueOf("2024-05-31"));
@@ -39,6 +45,9 @@ public class CourseHandlerTest {
         assertTrue(json.contains("Test 101"));
     }
 
+    /**
+     * Test fetching a course by ID when the user is not authorized (different student).
+     */
     @Test
     public void testGetCourseUnauthorized() {
         Course course = new Course(1, 1, "Test 101", Date.valueOf("2026-09-01"), Date.valueOf("2026-05-31"));
@@ -53,6 +62,9 @@ public class CourseHandlerTest {
         assertEquals(403, exchange.getResponseCode());
     }
 
+    /**
+     * Test fetching a course by ID when the course does not exist.
+     */
     @Test
     public void testCourseNotFound() {
         when(mockDao.getCourseById(999)).thenReturn(null);
@@ -66,6 +78,9 @@ public class CourseHandlerTest {
         assertEquals(404, exchange.getResponseCode());
     }
 
+    /**
+     * Test fetching all courses for a student successfully.
+     */
     @Test
     public void testGetCoursesForStudent() {
         Course course1 = new Course(1, 1, "Test 101", Date.valueOf("2025-09-01"), Date.valueOf("2026-05-31"));
@@ -87,6 +102,9 @@ public class CourseHandlerTest {
         assertTrue(json.contains("Test 102"));
     }
 
+    /**
+     * Test fetching all courses for a student when the user is not authorized (different student).
+     */
     @Test
     public void testGetCoursesForStudentUnauthorized() {
         MockHttpExchange exchange = new MockHttpExchange("GET", "/courses/students/1", "");
@@ -99,6 +117,9 @@ public class CourseHandlerTest {
         assertEquals(403, exchange.getResponseCode());
     }
 
+    /**
+     * Test fetching all courses for a student when no courses exist.
+     */
     @Test
     public void testNoCoursesForStudent() {
         when(mockDao.getAllCourses(1)).thenReturn(new ArrayList<>());
@@ -112,6 +133,9 @@ public class CourseHandlerTest {
         assertEquals(404, exchange.getResponseCode());
     }
 
+    /**
+     * Test creating a new course successfully.
+     */
     @Test
     public void testPostCourse(){
         String body = "{\"course_name\":\"New Test Course\",\"start_date\":\"2025-09-01\",\"end_date\":\"2026-05-31\"}";
@@ -129,6 +153,9 @@ public class CourseHandlerTest {
         assertTrue(json.contains("New Test Course"));
     }
 
+    /**
+     * Test creating a new course with missing required fields.
+     */
     @Test
     public void testPostCourseMissingFields(){
         String body = "{\"course_name\":\"New Test Course\",\"start_date\":\"2025-09-01\"}";
@@ -142,6 +169,9 @@ public class CourseHandlerTest {
         assertEquals(400, exchange.getResponseCode());
     }
 
+    /**
+     * Test creating a new course with invalid date format.
+     */
     @Test
     public void testPostCourseInvalidDate(){
         String body = "{\"course_name\":\"New Test Course\",\"start_date\":\"2025-09-01\",\"end_date\":\"2026-31-05\"}";
@@ -155,6 +185,9 @@ public class CourseHandlerTest {
         assertEquals(400, exchange.getResponseCode());
     }
 
+    /**
+     * Test creating a new course where the start date is after the end date.
+     */
     @Test
     public void testPostCourseStartDateAfterEndDate(){
         String body = "{\"course_name\":\"New Test Course\",\"start_date\":\"2026-09-01\",\"end_date\":\"2025-05-31\"}";
@@ -168,6 +201,9 @@ public class CourseHandlerTest {
         assertEquals(500, exchange.getResponseCode());
     }
 
+    /**
+     * Test deleting a course successfully.
+     */
     @Test
     public void testDeleteCourse(){
         Course course = new Course(1, 1, "Test 101", Date.valueOf("2025-09-01"), Date.valueOf("2026-05-31"));
@@ -185,6 +221,9 @@ public class CourseHandlerTest {
         assertTrue(json.contains("Course deleted successfully"));
     }
 
+    /**
+     * Test deleting a course when the user is not authorized (different student).
+     */
     @Test
     public void testDeleteCourseUnauthorized(){
         Course course = new Course(1, 1, "Test 101", Date.valueOf("2025-09-01"), Date.valueOf("2026-05-31"));
@@ -201,6 +240,9 @@ public class CourseHandlerTest {
         assertTrue(json.contains("Forbidden"));
     }
 
+    /**
+     * Test deleting a course that does not exist.
+     */
     @Test
     public void testDeleteCourseNotFound(){
         when(mockDao.getCourseById(999)).thenReturn(null);
@@ -216,6 +258,9 @@ public class CourseHandlerTest {
         assertTrue(json.contains("Course not found"));
     }
 
+    /**
+     * Test updating a course successfully.
+     */
     @Test
     public void testUpdateCourse() {
         Course course = new Course(1, 1, "Old Course", Date.valueOf("2025-09-01"), Date.valueOf("2026-05-31"));
@@ -241,6 +286,9 @@ public class CourseHandlerTest {
         assertTrue(json.contains("Updated"));
     }
 
+    /**
+     * Test updating a course that does not exist.
+     */
     @Test
     public void testUpdateCourseMissingCourse() {
         when(mockDao.getCourseById(1)).thenReturn(null);
@@ -258,6 +306,9 @@ public class CourseHandlerTest {
         assertTrue(json.contains("Course not found"));
     }
 
+    /**
+     * Test updating a course when the user is not authorized (different student).
+     */
     @Test
     public void testUpdateCourseUnauthorized() {
         Course course = new Course(1, 1, "Old Course", Date.valueOf("2025-09-01"), Date.valueOf("2026-05-31"));
@@ -276,6 +327,9 @@ public class CourseHandlerTest {
         assertTrue(json.contains("Forbidden"));
     }
 
+    /**
+     * Test updating a course with invalid date format.
+     */
     @Test
     public void testUpdateCourseInvalidDate() {
         Course course = new Course(1, 1, "Old Course", Date.valueOf("2025-09-01"), Date.valueOf("2026-05-31"));
@@ -294,6 +348,9 @@ public class CourseHandlerTest {
         assertTrue(json.contains("Invalid date format"));
     }
 
+    /**
+     * Test updating a course where the start date is after the end date.
+     */
     @Test
     public void testUpdateCourseStartDateAfterEndDate() {
         Course course = new Course(1, 1, "Old Course", Date.valueOf("2025-09-01"), Date.valueOf("2026-05-31"));
@@ -312,6 +369,9 @@ public class CourseHandlerTest {
         assertTrue(json.contains("Failed to update course"));
     }
 
+    /**
+     * Test updating a course when the DAO update operation fails.
+     */
     @Test
     public void testUpdateCourseFailure() {
         Course course = new Course(1, 1, "Old Course", Date.valueOf("2025-09-01"), Date.valueOf("2026-05-31"));

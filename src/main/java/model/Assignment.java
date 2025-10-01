@@ -1,4 +1,7 @@
-// This class represents an assignment entity in the system.
+
+/**
+ * This class represents an assignment entity in the system.
+ */
 
 package model;
 

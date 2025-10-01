@@ -3,10 +3,17 @@ import server.Server;
 
 import java.io.IOException;
 
-
+/**
+ * Main class to start the server.
+ */
 public class Main {
     private static Dotenv dotenv = Dotenv.load();
 
+    /**
+     * Main method to start the server.
+     * Reads the port from environment variables and initializes the server.
+     * throws IOException if server fails to start.
+     */
     public static void main(String[] args) throws IOException {
         int port = Integer.parseInt(dotenv.get("PORT"));
         Server server = new Server(port);

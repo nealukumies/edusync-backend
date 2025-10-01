@@ -55,7 +55,7 @@ pipeline {
                     bat "docker build -t ${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG} ."
                 }
             }
-        }   // ✅ close this stage before starting the next
+        }
 
         stage('Push Docker Image to Docker Hub') {
             steps {

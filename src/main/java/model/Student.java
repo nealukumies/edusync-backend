@@ -1,3 +1,6 @@
+/**
+ * Student class representing a student entity.
+ */
 package model;
 
 public class Student {
