@@ -5,7 +5,6 @@ pipeline {
     }
 
     environment {
-        DB_URL = "jdbc:mariadb://db4free.net:3306/edusync"
         DB_CRED = credentials('edusync-db-user')
         PORT = "8000"
 
@@ -20,6 +19,17 @@ pipeline {
     }
 
     stages {
+
+    stage('Prepare .env') {
+        steps {
+            bat """
+            echo DB_URL=jdbc:mariadb://db4free.net:3306/edusync > .env
+            echo DB_USER=%DB_CRED_USR% >> .env
+            echo DB_PASSWORD=%DB_CRED_PSW% >> .env
+            echo PORT=%PORT% >> .env
+            """
+        }
+    }
         stage('checking') {
             steps {
                 git branch: 'main', url: 'https://github.com/nealukumies/edusync-backend.git'
