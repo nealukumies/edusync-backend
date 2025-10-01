@@ -1,3 +1,7 @@
+/**
+ * This class provides common functionalities for handling HTTP requests and responses,
+ * including JSON serialization, method validation, request parsing, and authorization checks.
+ */
 package server;
 
 import com.google.gson.*;
@@ -23,7 +27,13 @@ public abstract class BaseHandler implements HttpHandler {
                 .create();
     }
 
-
+    /**
+     * Sends a JSON response with the given status code and response object.
+     * @param exchange
+     * @param statusCode
+     * @param responseObj
+     * @throws IOException
+     */
         protected void sendResponse(HttpExchange exchange, int statusCode, Object responseObj) throws IOException {
         String jsonResponse = gson.toJson(responseObj);
         exchange.getResponseHeaders().set("Content-Type", "application/json");
@@ -34,6 +44,14 @@ public abstract class BaseHandler implements HttpHandler {
         }
     }
 
+    /**
+     * Validates that the request method matches the expected method.
+     * If not, sends a 405 Method Not Allowed response.
+     * @param exchange
+     * @param method
+     * @return true if the method matches, false otherwise
+     * @throws IOException
+     */
     protected boolean isMethod(HttpExchange exchange, String method) throws IOException {
         if (!exchange.getRequestMethod().equalsIgnoreCase(method)) {
             sendResponse(exchange, 405, Map.of("error", "Method Not Allowed"));
@@ -42,6 +60,13 @@ public abstract class BaseHandler implements HttpHandler {
         return true;
     }
 
+    /**
+     * Parses the JSON body of the request into a Map.
+     * If parsing fails, sends a 400 Bad Request response.
+     * @param exchange
+     * @return
+     * @throws IOException
+     */
     protected Map<String, String> parseJsonBody(HttpExchange exchange) throws IOException {
         String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
         try {
@@ -53,6 +78,14 @@ public abstract class BaseHandler implements HttpHandler {
     }
 
 
+    /**
+     * Extracts an integer ID from the request path at the specified index.
+     * If the ID is missing or invalid, sends a 400 Bad Request response.
+     * @param exchange
+     * @param index
+     * @return
+     * @throws IOException
+     */
     protected int getIdFromPath(HttpExchange exchange, int index) throws IOException {
         String[] pathParts = exchange.getRequestURI().getPath().split("/");
 
@@ -68,6 +101,13 @@ public abstract class BaseHandler implements HttpHandler {
         }
     }
 
+    /**
+     * Extracts the student ID from the request headers.
+     * If the ID is missing or invalid, sends a 400 Bad Request or 401 Unauthorized response.
+     * @param exchange
+     * @return
+     * @throws IOException
+     */
     protected int getIdFromHeader(HttpExchange exchange) throws IOException {
         String studentIdStr = exchange.getRequestHeaders().getFirst("student_id");
         if (studentIdStr == null) {
@@ -82,6 +122,13 @@ public abstract class BaseHandler implements HttpHandler {
         }
     }
 
+    /**
+     * Extracts the role from the request headers.
+     * If the role is missing, sends a 401 Unauthorized response.
+     * @param exchange
+     * @return
+     * @throws IOException
+     */
     protected String getRoleFromHeader(HttpExchange exchange) throws IOException {
         String role = exchange.getRequestHeaders().getFirst("role");
         if (role == null) {
@@ -91,6 +138,16 @@ public abstract class BaseHandler implements HttpHandler {
         return role;
     }
 
+    /**
+     * Checks if the requester is authorized to access or modify the resource
+     * associated with the given student ID.
+     * Admins have full access, while users can only access their own resources.
+     * If unauthorized, sends a 401 Unauthorized or 403 Forbidden response.
+     * @param exchange
+     * @param studentId
+     * @return
+     * @throws IOException
+     */
     protected boolean isAuthorized(HttpExchange exchange, int studentId) throws IOException {
         String role = getRoleFromHeader(exchange);
         if (role == null) {

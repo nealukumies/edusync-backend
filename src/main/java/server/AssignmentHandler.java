@@ -1,3 +1,7 @@
+/**
+ * This class handles HTTP requests related to assignments.
+ */
+
 package server;
 
 import com.sun.net.httpserver.HttpExchange;
@@ -13,9 +17,22 @@ import java.util.Map;
 public class AssignmentHandler extends BaseHandler {
     private AssignmentDao assignmentDao;
 
+    /**
+     * Constructor for AssignmentHandler.
+     *
+     * @param assignmentDao The AssignmentDao instance for database operations.
+     */
     public AssignmentHandler(AssignmentDao assignmentDao) {
         this.assignmentDao = assignmentDao;
     }
+
+    /**
+     * Handles incoming HTTP requests and routes them to the appropriate method
+     * based on the HTTP method (GET, POST, DELETE, PUT).
+     * @param exchange the exchange containing the request from the
+     *                 client and used to send the response
+     * @throws IOException
+     */
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         String method = exchange.getRequestMethod();
@@ -37,6 +54,12 @@ public class AssignmentHandler extends BaseHandler {
         }
     }
 
+    /**
+     * Handles GET requests for assignments.
+     * Supports fetching assignments by student ID or assignment ID.
+     * @param exchange
+     * @throws IOException
+     */
     private void handleGet(HttpExchange exchange) throws IOException {
         String[] pathParts = exchange.getRequestURI().getPath().split("/");
 
@@ -70,6 +93,13 @@ public class AssignmentHandler extends BaseHandler {
         sendResponse(exchange, 200, assignment);
     }
 
+    /**
+     * Handles POST requests to create a new assignment.
+     * Expects a JSON body with course_id, title, description, and deadline.
+     * Authorization is checked via the student_id header.
+     * @param exchange
+     * @throws IOException
+     */
     private void handlePost(HttpExchange exchange) throws IOException {
         Map<String, String> requestMap = parseJsonBody(exchange);
         if (requestMap == null) { return; }
@@ -100,6 +130,13 @@ public class AssignmentHandler extends BaseHandler {
         sendResponse(exchange, 201, newAssignment);
     }
 
+    /**
+     * Handles DELETE requests to remove an assignment by its ID.
+     * Expects the assignment ID in the URL path as /assignments/{assignmentId}.
+     * Authorization is checked to ensure the requester owns the assignment.
+     * @param exchange
+     * @throws IOException
+     */
     private void handleDelete(HttpExchange exchange) throws IOException {
         int assignmentId = getIdFromPath(exchange, 2);
         if (assignmentId == -1) return;
@@ -119,6 +156,15 @@ public class AssignmentHandler extends BaseHandler {
         sendResponse(exchange, 200, Map.of("message", "Assignment deleted successfully"));
     }
 
+    /**
+     * Handles PUT requests to update an existing assignment.
+     * Expects the assignment ID in the URL path as /assignments/{assignmentId}.
+     * The request body can contain any of the fields: title, description, deadline, course_id, status.
+     * Only the fields provided in the request body will be updated.
+     * Authorization is checked to ensure the requester owns the assignment.
+     * @param exchange
+     * @throws IOException
+     */
     private void handlePut(HttpExchange exchange) throws IOException {
         int assignmentId = getIdFromPath(exchange, 2);
         if (assignmentId == -1) return;

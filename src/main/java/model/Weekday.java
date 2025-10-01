@@ -1,3 +1,6 @@
+/**
+ * Enum representing the days of the week.
+ */
 package model;
 
 public enum Weekday {

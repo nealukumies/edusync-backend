@@ -1,3 +1,6 @@
+/**
+ * This class handles HTTP requests related to schedules.
+ */
 package server;
 
 import com.sun.net.httpserver.HttpExchange;
@@ -16,11 +19,23 @@ public class ScheduleHandler extends BaseHandler {
     private ScheduleDao scheduleDao;
     private CourseDao courseDao;
 
+    /**
+     * Constructor for ScheduleHandler. Data access objects (DAOs) are injected via constructor.
+     * @param scheduleDao
+     * @param courseDao
+     */
     public ScheduleHandler(ScheduleDao scheduleDao, CourseDao courseDao) {
         this.scheduleDao = scheduleDao;
         this.courseDao = courseDao;
     }
 
+    /**
+     * Handles incoming HTTP requests and routes them to the appropriate method
+     * based on the HTTP method (GET, POST, DELETE, PUT).
+     * @param exchange the exchange containing the request from the
+     *                 client and used to send the response
+     * @throws IOException
+     */
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         String method = exchange.getRequestMethod();
@@ -42,6 +57,13 @@ public class ScheduleHandler extends BaseHandler {
         }
     }
 
+    /**
+     * Handles GET requests for schedules.
+     * Supports fetching schedules by course ID, student ID, or schedule ID.
+     * Authorization checks ensure students can only access their own schedules.
+     * @param exchange
+     * @throws IOException
+     */
     private void handleGet(HttpExchange exchange) throws IOException {
         String[] pathParts = exchange.getRequestURI().getPath().split("/");
 
@@ -83,6 +105,14 @@ public class ScheduleHandler extends BaseHandler {
         sendResponse(exchange, 200, schedule);
     }
 
+    /**
+     * Handles POST requests to create a new schedule.
+     * Expects a JSON body with course_id, weekday, start_time, and end_time.
+     * Validates input and checks authorization before creating the schedule.
+     * Returns appropriate HTTP responses based on the outcome. Success returns 201 Created and the created schedule.
+     * @param exchange
+     * @throws IOException
+     */
     private void handlePost(HttpExchange exchange) throws IOException {
         Map<String, String> requestMap = parseJsonBody(exchange);
         if (requestMap == null) { return; }
@@ -140,6 +170,14 @@ public class ScheduleHandler extends BaseHandler {
         sendResponse(exchange, 201, schedule);
     }
 
+    /**
+     * Handles DELETE requests to remove a schedule by its ID.
+     * Expects the schedule ID in the URL path as /schedules/{scheduleId}.
+     * Authorization is checked to ensure the requester owns the schedule.
+     * Returns appropriate HTTP responses based on the outcome.
+     * @param exchange
+     * @throws IOException
+     */
     private void handleDelete(HttpExchange exchange) throws IOException {
         int scheduleId = getIdFromPath(exchange, 2);
         if (scheduleId == -1) return;
@@ -162,6 +200,14 @@ public class ScheduleHandler extends BaseHandler {
         sendResponse(exchange, 200, Map.of("message", "Schedule deleted successfully"));
     }
 
+    /**
+     * Handles PUT requests to update an existing schedule.
+     * Expects a JSON body with fields to update: start_time, end_time, and/or weekday.
+     * Validates input and checks authorization before updating.
+     * Returns appropriate HTTP responses based on the outcome.
+     * @param exchange
+     * @throws IOException
+     */
     private void handlePut(HttpExchange exchange) throws IOException {
         int scheduleId = getIdFromPath(exchange, 2);
         if (scheduleId == -1) return;

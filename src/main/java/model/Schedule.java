@@ -1,3 +1,6 @@
+/**
+ * This class represents a schedule entry for a course, including the day of the week and start/end times.
+ */
 package model;
 
 import java.time.LocalTime;

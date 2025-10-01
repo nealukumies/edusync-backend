@@ -1,3 +1,8 @@
+/**
+ * This class provides utility methods for formatting and parsing dates and timestamps.
+ */
+
+
 package model;
 
 import java.text.SimpleDateFormat;

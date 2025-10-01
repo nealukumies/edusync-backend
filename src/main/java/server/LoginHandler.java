@@ -1,3 +1,6 @@
+/**
+ * This class handles login requests for students.
+ */
 package server;
 
 import com.sun.net.httpserver.HttpExchange;
@@ -10,10 +13,21 @@ import java.util.Map;
 public class LoginHandler extends BaseHandler {
     private final AuthService authService;
 
+    /**
+     * Constructor for LoginHandler.
+     * @param authService The AuthService instance for authentication operations.
+     */
     public LoginHandler(AuthService authService) {
         this.authService = authService;
     }
 
+    /**
+     * Handles incoming HTTP requests for login.
+     * Only supports POST method for login attempts.
+     * @param exchange the exchange containing the request from the
+     *                 client and used to send the response
+     * @throws IOException
+     */
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         if (!isMethod(exchange, "POST")) { return; }
@@ -39,6 +53,5 @@ public class LoginHandler extends BaseHandler {
         } else {
             sendResponse(exchange, 401, Map.of("error", "Invalid email or password"));
         }
-
 }
 }
