@@ -19,12 +19,18 @@ public class AssignmentHandlerTest {
     private AssignmentHandler handler;
     private AssignmentDao mockDao;
 
+    /**
+     * Setup before each test.
+     */
     @BeforeEach
     public void setUp() {
         mockDao = mock(AssignmentDao.class);
         handler = new AssignmentHandler(mockDao);
     }
 
+    /**
+     * Test handling GET request for assignment by ID.
+     */
     @Test
     public void testHandleGetAssignmentById() {
         Assignment assignment = new Assignment(1, 1, 1, "Test Assignment", "Description", Timestamp.valueOf("2024-12-31 23:59:59"), Status.PENDING);
@@ -41,6 +47,9 @@ public class AssignmentHandlerTest {
         assertTrue(response.contains("Test Assignment"));
     }
 
+    /**
+     * Test handling GET request for assignment by ID when unauthorized.
+     */
     @Test
     public void testHandleGetAssignmentByIdUnauthorized() {
         Assignment assignment = new Assignment(1, 1, 1, "Test Assignment", "Description", Timestamp.valueOf("2024-12-31 23:59:59"), Status.PENDING);
@@ -57,6 +66,9 @@ public class AssignmentHandlerTest {
         assertTrue(response.contains("Forbidden"));
     }
 
+    /**
+     * Test handling GET request for assignments by student ID.
+     */
     @Test
     public void testHandleGetAssignmentsByStudentId() {
         Assignment assignment1 = new Assignment(1, 1, 1, "Assignment 1", "Description 1", Timestamp.valueOf("2024-12-31 09:00:00"), Status.PENDING);
@@ -78,6 +90,9 @@ public class AssignmentHandlerTest {
         assertTrue(response.contains("Assignment 2"));
     }
 
+    /**
+     * Test handling GET request for assignments by student ID when unauthorized.
+     */
     @Test
     public void testHandleGetAssignmentsByStudentIdUnauthorized() {
         Assignment assignment1 = new Assignment(1, 1, 1, "Assignment 1", "Description 1", Timestamp.valueOf("2024-12-31 12:45:00"), Status.PENDING);
@@ -96,7 +111,9 @@ public class AssignmentHandlerTest {
         assertTrue(response.contains("Forbidden"));
     }
 
-
+    /**
+     * Test handling GET request for assignment with no ID in path.
+     */
     @Test
     public void testHandleGetAssignmentNoId() {
         MockHttpExchange exchange = new MockHttpExchange("GET", "/assignments/", "");
@@ -109,6 +126,9 @@ public class AssignmentHandlerTest {
         assertEquals(400, exchange.getResponseCode());
     }
 
+    /**
+     * Test handling GET request for assignment that does not exist.
+     */
     @Test
     public void testHandleGetAssignmentNotFound() {
         when(mockDao.getAssignmentById(999)).thenReturn(null);
@@ -124,6 +144,9 @@ public class AssignmentHandlerTest {
         assertTrue(response.contains("Assignment not found"));
     }
 
+    /**
+     * Test handling POST request to create a new assignment.
+     */
     @Test
     public void testHandlePostAssignment() {
         String body = "{\"course_id\":\"1\",\"title\":\"New Assignment\",\"description\":\"New Description\",\"deadline\":\"2024-12-31 00:00:00\"}";
@@ -143,6 +166,9 @@ public class AssignmentHandlerTest {
         assertTrue(response.contains("New Assignment"));
     }
 
+    /**
+     * Test handling POST request to create a new assignment with missing fields.
+     */
     @Test
     public void testHandlePostAssignmentMissingFields() {
         String body = "{\"course_id\":\"1\",\"description\":\"New Description\",\"deadline\":\"2024-12-31 12:20:00\"}";
@@ -159,6 +185,9 @@ public class AssignmentHandlerTest {
         assertTrue(response.contains("Title, and deadline are required"));
     }
 
+    /**
+     * Test handling POST request to create a new assignment with invalid date format.
+     */
     @Test
     public void testhandlePostAssignmentInvalidDate() {
         String body = "{\"course_id\":\"1\",\"title\":\"New Assignment\",\"description\":\"New Description\",\"deadline\":\"2024-31-12\"}";
@@ -175,6 +204,9 @@ public class AssignmentHandlerTest {
         assertTrue(response.contains("Invalid date format"));
     }
 
+    /**
+     * Test handling DELETE request to delete an assignment.
+     */
     @Test
     public void testHandleDeleteAssignment() {
         Assignment assignment = new Assignment(1, 1, 1, "Test Assignment", "Description", Timestamp.valueOf("2024-12-31 16:45:00"), Status.PENDING);
@@ -192,6 +224,9 @@ public class AssignmentHandlerTest {
         assertTrue(response.contains("Assignment deleted successfully"));
     }
 
+    /**
+     * Test handling DELETE request to delete an assignment when unauthorized.
+     */
     @Test
     public void testHandleDeleteAssignmentUnauthorized() {
         Assignment assignment = new Assignment(1, 1, 1, "Test Assignment", "Description", Timestamp.valueOf("2024-12-31 13:30:30"), Status.PENDING);
@@ -208,6 +243,9 @@ public class AssignmentHandlerTest {
         assertTrue(response.contains("Forbidden"));
     }
 
+    /**
+     * Test handling DELETE request to delete an assignment that does not exist.
+     */
     @Test
     public void testHandleDeleteAssignmentNotFound() {
         when(mockDao.getAssignmentById(999)).thenReturn(null);
@@ -223,6 +261,9 @@ public class AssignmentHandlerTest {
         assertTrue(response.contains("Assignment not found"));
     }
 
+    /**
+     * Test handling PUT request to update an assignment.
+     */
     @Test
     public void testHandleUpdateAssignment() {
         String body = "{\"title\":\"Updated Assignment\",\"description\":\"Updated Description\",\"deadline\":\"2024-11-30 12:30:00\"}";
@@ -242,6 +283,9 @@ public class AssignmentHandlerTest {
         assertTrue(response.contains("Updated Assignment"));
     }
 
+    /**
+     * Test handling PUT request to update an assignment with invalid JSON.
+     */
     @Test
     public void testHandleUpdateAssignmentInvalidJson() {
         String body = "invalid json";
@@ -257,6 +301,9 @@ public class AssignmentHandlerTest {
         assertTrue(response.contains("invalid json"));
     }
 
+    /**
+     * Test handling PUT request to update an assignment that does not exist.
+     */
     @Test
     public void testHandleUpdateAssignmentNotFound() {
         String body = "{\"title\":\"Updated Assignment\"}";
@@ -273,6 +320,9 @@ public class AssignmentHandlerTest {
         assertTrue(response.contains("Assignment not found"));
     }
 
+    /**
+     * Test handling PUT request to update an assignment when unauthorized.
+     */
     @Test
     public void testHandleUpdateAssignmentUnauthorized() {
         String body = "{\"title\":\"Updated Assignment\"}";
@@ -290,6 +340,9 @@ public class AssignmentHandlerTest {
         assertTrue(response.contains("Forbidden"));
     }
 
+    /**
+     * Test handling PUT request to update an assignment with invalid date format.
+     */
     @Test
     public void testHandleUpdateAssignmentInvalidDate() {
         String body = "{\"deadline\":\"2024-31-12\"}";
@@ -307,6 +360,9 @@ public class AssignmentHandlerTest {
         assertTrue(response.contains("Invalid date format"));
     }
 
+    /**
+     * Test handling PUT request to update an assignment with invalid course ID.
+     */
     @Test
     public void testHandleUpdateAssignmentInvalidCourseId() {
         String body = "{\"course_id\":\"abc\"}";
@@ -324,6 +380,9 @@ public class AssignmentHandlerTest {
         assertTrue(response.contains("Invalid course_id"));
     }
 
+    /**
+     * Test handling PUT request to update an assignment's status.
+     */
     @Test
     public void testHandleUpdateAssignmentStatus(){
         String body = "{\"status\":\"completed\"}";
@@ -343,6 +402,9 @@ public class AssignmentHandlerTest {
         assertTrue(response.contains("COMPLETED"));
     }
 
+    /**
+     * Test handling PUT request to update an assignment's title and status.
+     */
     @Test
     public void testHandleUpdateAssignmentAndStatus() {
         String body = "{\"title\":\"Updated Assignment\",\"status\":\"completed\"}";
