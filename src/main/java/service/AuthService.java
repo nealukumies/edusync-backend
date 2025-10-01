@@ -8,6 +8,14 @@ import model.Student;
 import org.mindrot.jbcrypt.BCrypt;
 
 public class AuthService {
+    private StudentDao dao;
+
+    /**
+     * Constructor for AuthService. Initializes the StudentDao instance.
+     */
+    public AuthService(StudentDao studentDao) {
+        this.dao = studentDao;
+    }
 
     /**
      * Attempts to log in a user with the provided email and password.
@@ -17,7 +25,6 @@ public class AuthService {
      * @return Student - the authenticated Student object, or null if authentication fails
      */
     public Student tryLogin(String email, String password) {
-        StudentDao dao = new StudentDao();
         String storedHash = dao.getPasswordHash(email);
 
         if (storedHash != null && verifyPassword(password, storedHash)) {

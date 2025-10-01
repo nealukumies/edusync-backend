@@ -8,6 +8,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mindrot.jbcrypt.BCrypt;
+import service.AuthService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -177,5 +179,19 @@ class StudentDaoTest {
         insertedStudents.add(studentId);
         boolean updateResult = studentDao.updateStudentEmail(studentId, null);
         assertFalse(updateResult, "Update should fail with null email");
+    }
+
+    /**
+     * Test retrieving a student's password hash. The hash should be retrieved and should match the original password.
+     */
+    @Test
+    void testGetStudentPasswordHash() {
+        Student student = studentDao.addStudent("TestUser", "test@email.fi", "securepassword");
+        int studentId = student.getId();
+        insertedStudents.add(studentId);
+        String passwordHash = studentDao.getPasswordHash("test@email.fi");
+        assertNotNull(passwordHash, "Password hash should be retrieved");
+        AuthService authService = new AuthService(studentDao);
+        assertTrue(authService.verifyPassword("securepassword", passwordHash), "Password hash should match the original password");
     }
 }

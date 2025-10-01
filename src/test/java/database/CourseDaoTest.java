@@ -118,6 +118,9 @@ class CourseDaoTest {
         assertNull(course, "Course should be null for non-existent ID");
     }
 
+    /**
+     * Test retrieving all courses for a specific student. The correct number of courses should be returned.
+     */
     @Test
     void testGetCoursesForStudent() {
         StudentDao studentDao = new StudentDao();

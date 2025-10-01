@@ -5,4 +5,4 @@ WORKDIR /app
 COPY pom.xml /app
 COPY . /app
 RUN mvn package
-CMD ["java", "-jar", "target/my-project-1.0-SNAPSHOT.jar"]
+CMD ["java", "-jar", "target/edusync-server.jar"]
