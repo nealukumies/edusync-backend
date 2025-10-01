@@ -15,7 +15,8 @@ public class Main {
      * throws IOException if server fails to start.
      */
     public static void main(String[] args) throws IOException {
-        int port = Integer.parseInt(dotenv.get("PORT"));
+        String portStr = dotenv.get("PORT");
+        int port = (portStr != null) ? Integer.parseInt(portStr) : 8000;
         Server server = new Server(port);
         server.runServer();
     }
