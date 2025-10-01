@@ -5,11 +5,18 @@ pipeline {
     }
 
     environment {
+        DB_URL = "jdbc:mariadb://db4free.net:3306/edusync"
+        DB_CRED = credentials('edusync-db-user')
+        PORT = "8000"
+
         PATH = "C:\\Program Files\\Docker\\Docker\\resources\\bin;${env.PATH}"
+
 
         DOCKERHUB_CREDENTIALS_ID = 'Docker_Hub'
         DOCKERHUB_REPO = 'oonnea/otp1_edusync_backend'
         DOCKER_IMAGE_TAG = 'latest'
+
+
     }
 
     stages {
@@ -27,7 +34,7 @@ pipeline {
 
         stage('Test') {
             steps {
-                bat 'mvn test'
+                bat "mvn test -Ddb.url=${env.DB_URL} -Ddb.user=${env.DB_CRED_USR} -Ddb.pass=${env.DB_CRED_PSW}"
             }
         }
 
