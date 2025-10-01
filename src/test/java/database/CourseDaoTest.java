@@ -4,6 +4,7 @@
 package database;
 
 import model.Course;
+import model.Student;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -115,6 +116,23 @@ class CourseDaoTest {
     void getCourseByInvalidId() {
         Course course = courseDao.getCourseById(-200);
         assertNull(course, "Course should be null for non-existent ID");
+    }
+
+    @Test
+    void testGetCoursesForStudent() {
+        StudentDao studentDao = new StudentDao();
+        Student student = studentDao.addStudent("Test Student", "course@test.fi", "testpass");
+
+       int id = student.getId();
+       Course course1 = courseDao.addCourse(id, "Math101", Date.valueOf("2025-01-01"), Date.valueOf("2025-06-01"));
+       Course course2 = courseDao.addCourse(id, "History101", Date.valueOf("2025-02-01"), Date.valueOf("2025-07-01"));
+       insertedCourses.add(course1.getCourseId());
+       insertedCourses.add(course2.getCourseId());
+
+       List<Course> courses = courseDao.getAllCourses(id);
+       assertNotNull(courses, "Courses list should not be null");
+       assertEquals(2, courses.size(), "Should retrieve 2 courses for the student");
+       studentDao.deleteStudent(id);
     }
 
     /**
