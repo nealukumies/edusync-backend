@@ -1,5 +1,6 @@
+package server;
+
 import io.github.cdimascio.dotenv.Dotenv;
-import server.Server;
 
 import java.io.IOException;
 
