@@ -68,7 +68,7 @@ pipeline {
 
                 stage('Upload Coverage to WebDisk') {
                     steps {
-                        withCredentials([usernamePassword(credentialsId: 'metroweb'', usernameVariable: 'WEB_USER', passwordVariable: 'WEB_PASS')]) {
+                        withCredentials([usernamePassword(credentialsId: 'metroweb, usernameVariable: 'WEB_USER', passwordVariable: 'WEB_PASS')]) {
                             sh '''
                                 REPORT_DIR="target/site/jacoco"
                                 TARGET_URL="https://users.metropolia.fi/~neal/otp1/coverage/${BUILD_NUMBER}/"
