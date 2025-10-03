@@ -6,7 +6,7 @@ Frontend repository: [EduSync](https://github.com/nealukumies/edusync)
 
 API endpoints: [API guide](API.md)
 
-JavaDoc: [JavaDoc](https://users.metropolia.fi/~neal/edusync_javadoc/index.html)
+JavaDoc: [JavaDoc](https://users.metropolia.fi/~neal/otp1/edusync_javadoc/)
 
 ---
 
@@ -105,5 +105,7 @@ mvn jacoco:report
 ``` 
 This will execute all tests and generate a code coverage report in the `target/site/jacoco` directory.
 The report can be viewed by opening the `index.html` file in a web browser.
+The code coverage report is also generated automatically in the Jenkins pipeline. 
+Instruction coverage is 86% in the latest build (2025-10-03): [View Report](https://users.metropolia.fi/~neal/otp1/coverage/)
 
 ---
