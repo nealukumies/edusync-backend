@@ -68,29 +68,31 @@ pipeline {
 
                 stage('Upload Coverage to WebDisk') {
                     steps {
-                        withCredentials([usernamePassword(credentialsId: 'metroweb, usernameVariable: 'WEB_USER', passwordVariable: 'WEB_PASS')]) {
-                            sh '''
-                                REPORT_DIR="target/site/jacoco"
-                                TARGET_URL="https://users.metropolia.fi/~neal/otp1/coverage/${BUILD_NUMBER}/"
-
-                                # Create directory for this build
-                                curl -u $WEB_USER:$WEB_PASS -X MKCOL "$TARGET_URL" || true
-
-                                # Upload files
-                                find $REPORT_DIR -type f | while read file; do
-                                  RELATIVE_PATH=${file#$REPORT_DIR/}
-                                  DEST_URL="$TARGET_URL$RELATIVE_PATH"
-
-                                  # Ensure subdirectory exists
-                                  curl -u $WEB_USER:$WEB_PASS -X MKCOL "$(dirname $DEST_URL)" || true
-
-                                  # Upload file
-                                  curl -u $WEB_USER:$WEB_PASS -T "$file" "$DEST_URL"
-                                done
-                            '''
+                        withCredentials([usernamePassword(credentialsId: 'metroweb', usernameVariable: 'WEB_USER', passwordVariable: 'WEB_PASS')]) {
+                            bat """
+                                powershell -Command ^
+                                \$ReportDir = 'target\\\\site\\\\jacoco'; ^
+                                \$TargetUrl = 'https://users.metropolia.fi/~neal/otp1/coverage/${BUILD_NUMBER}/'; ^
+                                ^
+                                # Create directory (MKCOL) ^
+                                curl -u $env:WEB_USER + ':' + $env:WEB_PASS -X MKCOL \$TargetUrl || Write-Host 'Directory may already exist'; ^
+                                ^
+                                # Loop through all files recursively and upload ^
+                                Get-ChildItem -Path \$ReportDir -Recurse -File | ForEach-Object { ^
+                                    \$RelativePath = $_.FullName.Substring(\$ReportDir.Length + 1) -replace '\\\\','/'; ^
+                                    \$DestUrl = \$TargetUrl + \$RelativePath; ^
+                                    # Ensure subfolders exist ^
+                                    \$DestDir = [System.IO.Path]::GetDirectoryName(\$DestUrl); ^
+                                    curl -u $env:WEB_USER + ':' + $env:WEB_PASS -X MKCOL \$DestDir || Write-Host 'Subfolder may already exist'; ^
+                                    # Upload file ^
+                                    curl -u $env:WEB_USER + ':' + $env:WEB_PASS -T $_.FullName \$DestUrl; ^
+                                }
+                            """
                         }
                     }
                 }
+
+
 
         stage('Build Docker Image') {
             steps {
