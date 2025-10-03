@@ -66,6 +66,32 @@ pipeline {
             }
         }
 
+                stage('Upload Coverage to WebDisk') {
+                    steps {
+                        withCredentials([usernamePassword(credentialsId: 'metroweb'', usernameVariable: 'WEB_USER', passwordVariable: 'WEB_PASS')]) {
+                            sh '''
+                                REPORT_DIR="target/site/jacoco"
+                                TARGET_URL="https://users.metropolia.fi/~neal/otp1/coverage/${BUILD_NUMBER}/"
+
+                                # Create directory for this build
+                                curl -u $WEB_USER:$WEB_PASS -X MKCOL "$TARGET_URL" || true
+
+                                # Upload files
+                                find $REPORT_DIR -type f | while read file; do
+                                  RELATIVE_PATH=${file#$REPORT_DIR/}
+                                  DEST_URL="$TARGET_URL$RELATIVE_PATH"
+
+                                  # Ensure subdirectory exists
+                                  curl -u $WEB_USER:$WEB_PASS -X MKCOL "$(dirname $DEST_URL)" || true
+
+                                  # Upload file
+                                  curl -u $WEB_USER:$WEB_PASS -T "$file" "$DEST_URL"
+                                done
+                            '''
+                        }
+                    }
+                }
+
         stage('Build Docker Image') {
             steps {
                 script {
