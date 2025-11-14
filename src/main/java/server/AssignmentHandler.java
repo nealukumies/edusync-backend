@@ -69,7 +69,7 @@ public class AssignmentHandler extends BaseHandler {
         String[] pathParts = exchange.getRequestURI().getPath().split("/");
 
         // Handle /assignments/students/{studentId}
-        if (pathParts.length == 4 && pathParts[2].equals("students")) {
+        if (pathParts.length == 4 && "students".equals(pathParts[2])) {
             int studentId = getIdFromPath(exchange, 3);
             if (studentId == -1) return;
             if (!isAuthorized(exchange, studentId)) return;

@@ -67,7 +67,7 @@ public class CourseHandler extends BaseHandler {
         String[] pathParts = exchange.getRequestURI().getPath().split("/");
 
         // Handle /courses/students/{studentId}
-        if (pathParts.length == 4 && pathParts[2].equals("students")) {
+        if (pathParts[2].equals("students") && pathParts.length == 4) {
             int studentId = getIdFromPath(exchange, 3);
             if (studentId == -1) return;
             if (!isAuthorized(exchange, studentId)) return;

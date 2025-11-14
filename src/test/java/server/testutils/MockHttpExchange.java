@@ -17,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 public class MockHttpExchange extends HttpExchange {
     private String method;
     private URI uri;
+    @SuppressWarnings("PMD.UseInterfaceForDeclarations")
     private Headers requestHeaders;
     private InputStream requestBody;
     private ByteArrayOutputStream responseBody;
@@ -90,8 +91,7 @@ public class MockHttpExchange extends HttpExchange {
     public InetSocketAddress getLocalAddress() {return null;}
     @Override
     public String getProtocol() {return "";}
-
-
+    @Override
     public int getResponseCode() {
         return responseCode;
     }

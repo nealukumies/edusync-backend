@@ -77,7 +77,7 @@ public class ScheduleHandler extends BaseHandler {
         String[] pathParts = exchange.getRequestURI().getPath().split("/");
 
         // Handle /schedules/courses/{courseId}
-        if (pathParts.length == 4 && pathParts[2].equals("courses")) {
+        if (pathParts[2].equals("courses") && pathParts.length == 4) {
             int courseId = getIdFromPath(exchange, 3);
             if (courseId == -1) return;
             List<Schedule> schedules = scheduleDao.getAllSchedulesForCourse(courseId);
@@ -90,7 +90,7 @@ public class ScheduleHandler extends BaseHandler {
         }
 
         //handle /schedules/students/{studentId}
-        if (pathParts.length == 4 && pathParts[2].equals("students")) {
+        if (pathParts[2].equals("students") && pathParts.length == 4) {
             int studentId = getIdFromPath(exchange, 3);
             if (studentId == -1) return;
             if (!isAuthorized(exchange, studentId)) return;

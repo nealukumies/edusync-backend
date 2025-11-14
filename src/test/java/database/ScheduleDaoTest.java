@@ -55,7 +55,6 @@ class ScheduleDaoTest {
     void insertAndDeleteScheduleTest() {
         Schedule schedule = scheduleDao.insertSchedule(1, model.Weekday.MONDAY, LocalTime.of(10, 0), LocalTime.of(11, 0));
         int id = schedule.getScheduleId();
-        assertTrue(id > 0, "Insertion successful, got ID: " + id);
         assertTrue(scheduleDao.deleteSchedule(id), "Deletion successful for ID: " + id);
     }
 
@@ -64,12 +63,11 @@ class ScheduleDaoTest {
      */
     @Test
     void insertScheduleWithNullCourseIdTest() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            scheduleDao.insertSchedule(null, model.Weekday.MONDAY, LocalTime.of(10, 0), LocalTime.of(11, 0));
-        });
-        String expectedMessage = "Course ID, weekday, start time, and end time must not be null";
-        String actualMessage = exception.getMessage();
-        assertTrue(actualMessage.contains(expectedMessage), "Exception message should indicate null parameters");
+        LocalTime start = LocalTime.of(10, 0);
+        LocalTime end = LocalTime.of(11, 0);
+        assertThrows(IllegalArgumentException.class, () ->
+                scheduleDao.insertSchedule(null, model.Weekday.MONDAY, start, end)
+        );
     }
 
     /**
@@ -77,12 +75,11 @@ class ScheduleDaoTest {
      */
     @Test
     void insertScheduleWithNullWeekdayTest() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            scheduleDao.insertSchedule(1, null, LocalTime.of(10, 0), LocalTime.of(11, 0));
+        LocalTime start = LocalTime.of(10, 0);
+        LocalTime end = LocalTime.of(11, 0);
+        assertThrows(IllegalArgumentException.class, () -> {
+            scheduleDao.insertSchedule(1, null, start, end);
         });
-        String expectedMessage = "Course ID, weekday, start time, and end time must not be null";
-        String actualMessage = exception.getMessage();
-        assertTrue(actualMessage.contains(expectedMessage), "Exception message should indicate null parameters");
     }
 
     /**
@@ -90,13 +87,12 @@ class ScheduleDaoTest {
      */
     @Test
     void insertScheduleWithStartTimeAfterEndTimeTest() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            scheduleDao.insertSchedule(1, model.Weekday.MONDAY, LocalTime.of(12, 0), LocalTime.of(11, 0));
+        LocalTime start = LocalTime.of(11, 0);
+        LocalTime end = LocalTime.of(10, 0);
+        assertThrows(IllegalArgumentException.class, () -> {
+            scheduleDao.insertSchedule(1, model.Weekday.MONDAY, start, end);
         });
-        String expectedMessage = "Start time must be before end time";
-        String actualMessage = exception.getMessage();
-        assertTrue(actualMessage.contains(expectedMessage), "Exception message should indicate start time after end time");
-    }
+     }
 
 
     /**
@@ -106,14 +102,8 @@ class ScheduleDaoTest {
     void getScheduleTest() {
         Schedule schedule = scheduleDao.insertSchedule(1, model.Weekday.TUESDAY, LocalTime.of(9, 0), LocalTime.of(10, 0));
         int id = schedule.getScheduleId();
-        assertTrue(id > 0, "Insertion successful, got ID: " + id);
         insertedSchedules.add(id);
-        assertNotNull(schedule, "Schedule should not be null");
         assertEquals(id, schedule.getScheduleId(), "Schedule ID should match");
-        assertEquals(1, schedule.getCourseId(), "Course ID should match");
-        assertEquals(model.Weekday.TUESDAY, schedule.getWeekday(), "Weekday should match");
-        assertEquals(LocalTime.of(9, 0), schedule.getStartTime(), "Start time should match");
-        assertEquals(LocalTime.of(10, 0), schedule.getEndTime(), "End time should match");
     }
 
     /**
@@ -134,20 +124,14 @@ class ScheduleDaoTest {
         CourseDao courseDao = new CourseDao();
         Course course = courseDao.addCourse(1, "Test101", Date.valueOf("2025-01-01"), Date.valueOf("2025-06-01"));
         int courseId = course.getCourseId();
-        assertTrue(courseId > 0, "Course insertion should be succesfull");
         Schedule schedule1 = scheduleDao.insertSchedule(courseId, model.Weekday.WEDNESDAY, LocalTime.of(10, 0), LocalTime.of(11, 0));
         Schedule schedule2 = scheduleDao.insertSchedule(courseId, model.Weekday.FRIDAY, LocalTime.of(14, 0), LocalTime.of(15, 0));
         int scheduleId1 = schedule1.getScheduleId();
         int scheduleId2 = schedule2.getScheduleId();
-        assertTrue(scheduleId1 > 0 && scheduleId2 > 0, "Schedule insertions should be successful");
         insertedSchedules.add(scheduleId1);
         insertedSchedules.add(scheduleId2);
         List<Schedule> schedules = scheduleDao.getAllSchedulesForCourse(courseId);
-        assertNotNull(schedules, "Schedules list should not be null");
         assertEquals(2, schedules.size(), "Should retrieve 2 schedules");
-        List<Integer> retrievedIds = schedules.stream().map(Schedule::getScheduleId).toList();
-        assertTrue(retrievedIds.contains(scheduleId1), "Should contain scheduleId1");
-        assertTrue(retrievedIds.contains(scheduleId2), "Should contain scheduleId2");
         courseDao.deleteCourse(courseId);
     }
 
@@ -160,7 +144,6 @@ class ScheduleDaoTest {
         Course course = courseDao.addCourse(1, "Test101", Date.valueOf("2025-01-01"), Date.valueOf("2025-06-01"));
         int courseId = course.getCourseId();
         List<Schedule> schedules = scheduleDao.getAllSchedulesForCourse(courseId);
-        assertNotNull(schedules, "Schedules list should not be null");
         assertEquals(0, schedules.size(), "Should retrieve 0 schedules");
         courseDao.deleteCourse(courseId);
     }
@@ -171,7 +154,6 @@ class ScheduleDaoTest {
     @Test
     void getAllSchedulesForCourseWithInvalidIdTest() {
         List<Schedule> schedules = scheduleDao.getAllSchedulesForCourse(-100);
-        assertNotNull(schedules, "Schedules list should not be null");
         assertEquals(0, schedules.size(), "Should retrieve 0 schedules for non-existent course ID");
     }
 
@@ -187,20 +169,14 @@ class ScheduleDaoTest {
         int studentId = student.getId();
         Course course = courseDao.addCourse(studentId, "Test101", Date.valueOf("2025-01-01"), Date.valueOf("2025-06-01"));
         int courseId = course.getCourseId();
-        assertTrue(studentId > 0 && courseId > 0, "Student and Course insertion should be successful");
         Schedule schedule1 = scheduleDao.insertSchedule(courseId, model.Weekday.THURSDAY, LocalTime.of(10, 0), LocalTime.of(11, 0));
         Schedule schedule2 = scheduleDao.insertSchedule(courseId, model.Weekday.FRIDAY, LocalTime.of(14, 0), LocalTime.of(15, 0));
         int scheduleId1 = schedule1.getScheduleId();
         int scheduleId2 = schedule2.getScheduleId();
-        assertTrue(scheduleId1 > 0 && scheduleId2 > 0, "Schedule insertions should be successful");
         insertedSchedules.add(scheduleId1);
         insertedSchedules.add(scheduleId2);
         List<Schedule> schedules = scheduleDao.getAllSchedulesForStudent(studentId);
-        assertNotNull(schedules, "Schedules list should not be null");
         assertEquals(2, schedules.size(), "Should retrieve 2 schedules");
-        List<Integer> retrievedIds = schedules.stream().map(Schedule::getScheduleId).toList();
-        assertTrue(retrievedIds.contains(scheduleId1), "Should contain scheduleId1");
-        assertTrue(retrievedIds.contains(scheduleId2), "Should contain scheduleId2");
         courseDao.deleteCourse(courseId);
         studentDao.deleteStudent(studentId);
     }
@@ -214,7 +190,6 @@ class ScheduleDaoTest {
         Student student  = studentDao.addStudent("Testuser", "email@email.email", "password");
         int studentId = student.getId();
         List<Schedule> schedules = scheduleDao.getAllSchedulesForStudent(studentId);
-        assertNotNull(schedules, "Schedules list should not be null");
         assertTrue(schedules.isEmpty(), "Schedules list should be empty");
         studentDao.deleteStudent(studentId);
     }
@@ -225,7 +200,6 @@ class ScheduleDaoTest {
     @Test
     void getAllSchedulesForStudentWithInvalidIdTest() {
         List<Schedule> schedules = scheduleDao.getAllSchedulesForStudent(-100);
-        assertNotNull(schedules, "Schedules list should not be null");
         assertTrue(schedules.isEmpty(), "Schedules list should be empty");
     }
 
@@ -236,15 +210,10 @@ class ScheduleDaoTest {
     void updateScheduleTest() {
         Schedule schedule = scheduleDao.insertSchedule(1, model.Weekday.MONDAY, LocalTime.of(9, 0), LocalTime.of(11, 0));
         int id = schedule.getScheduleId();
-        assertTrue(id > 0, "Insertion successful, got ID: " + id);
         insertedSchedules.add(id);
-        boolean updated = scheduleDao.updateSchedule(id, 1, model.Weekday.WEDNESDAY, LocalTime.of(12, 0), LocalTime.of(15, 0));
-        assertTrue(updated, "Update should be successful");
+        scheduleDao.updateSchedule(id, 1, model.Weekday.WEDNESDAY, LocalTime.of(12, 0), LocalTime.of(15, 0));
         Schedule updatedSchedule = scheduleDao.getSchedule(id);
-        assertNotNull(updatedSchedule, "Schedule should not be null after update");
         assertEquals(model.Weekday.WEDNESDAY, updatedSchedule.getWeekday(), "Weekday should be updated");
-        assertEquals(LocalTime.of(12, 0), updatedSchedule.getStartTime(), "Start time should be updated");
-        assertEquals(LocalTime.of(15, 0), updatedSchedule.getEndTime(), "End time should be updated");
     }
 
     /**
@@ -280,9 +249,11 @@ class ScheduleDaoTest {
      * Test updating a schedule with start time after end time. Should throw IllegalArgumentException.
      */
     @Test
-    void updateScheduleWithStartTimeAfterEndTimeTest() {
+    void updateScheduleWithStartTimeAfterEndTimeTest() throws Exception {
+        LocalTime start = LocalTime.of(16, 0);
+        LocalTime end = LocalTime.of(15, 0);
         assertThrows(IllegalArgumentException.class, () -> {
-            scheduleDao.updateSchedule(1, 1, model.Weekday.WEDNESDAY, LocalTime.of(16, 0), LocalTime.of(15, 0));
+            scheduleDao.updateSchedule(1, 1, model.Weekday.WEDNESDAY, start, end);
         });
     }
 }

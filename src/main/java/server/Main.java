@@ -8,7 +8,6 @@ import java.io.IOException;
  * Main class to start the server.
  */
 public class Main {
-    private static Dotenv dotenv = Dotenv.load();
 
     /**
      * Main method to start the server.

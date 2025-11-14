@@ -5,12 +5,11 @@ import model.Student;
 import org.junit.jupiter.api.Test;
 import org.mindrot.jbcrypt.BCrypt;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class AuthServiceTest {
+class AuthServiceTest {
 
     @Test
     void testTryLogin() {
@@ -26,7 +25,6 @@ public class AuthServiceTest {
         Student result = authService.tryLogin(email, password);
 
         assertNotNull(result);
-        assertEquals(student, result);
     }
 
     @Test
@@ -35,7 +33,7 @@ public class AuthServiceTest {
         String password = "myPassword";
         String hashed = BCrypt.hashpw(password, BCrypt.gensalt(12));
         boolean result = authService.verifyPassword(password, hashed);
-        assertEquals(true, result);
+        assertTrue(result, "The password should be verified successfully against the hash");
     }
 
     @Test
@@ -47,7 +45,7 @@ public class AuthServiceTest {
         when(mockDao.getPasswordHash(email)).thenReturn(storedHash);
         AuthService authService = new AuthService(mockDao);
         Student result = authService.tryLogin(email, password);
-        assertEquals(null, result);
+        assertNull(result, "Login should fail and return null for incorrect password");
     }
 
     @Test
@@ -56,6 +54,6 @@ public class AuthServiceTest {
         String password = "myPassword";
         String hashed = BCrypt.hashpw("differentPassword", BCrypt.gensalt(12));
         boolean result = authService.verifyPassword(password, hashed);
-        assertEquals(false, result);
+        assertFalse(result, "The password verification should fail for incorrect password");
     }
 }

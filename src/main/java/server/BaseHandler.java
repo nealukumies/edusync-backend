@@ -160,7 +160,7 @@ public abstract class BaseHandler implements HttpHandler {
             sendResponse(exchange, 401, Map.of("error", "Unauthorized: Missing student id in header"));
             return false;
         }
-        if (role.equals("user") && studentId != headerId) {
+        if ("user".equals(role) && studentId != headerId) {
             sendResponse(exchange, 403, Map.of("error", "Forbidden: Insufficient permissions"));
             return false;
         }

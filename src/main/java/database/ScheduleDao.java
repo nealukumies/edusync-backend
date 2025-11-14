@@ -13,6 +13,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -116,10 +117,10 @@ public class ScheduleDao {
      * @param courseId
      * @return ArrayList<Schedule>
      */
-    public ArrayList<Schedule> getAllSchedulesForCourse(int courseId) {
+    public List<Schedule> getAllSchedulesForCourse(int courseId) {
         Connection conn = MariaDBConnection.getConnection();
         String sql = "SELECT * FROM schedule WHERE course_id = ?;";
-        ArrayList<Schedule> schedules = new ArrayList<>();
+        List<Schedule> schedules = new ArrayList<>();
         try (PreparedStatement ps = conn.prepareStatement(sql)){
             ps.setInt(1, courseId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -148,13 +149,13 @@ public class ScheduleDao {
      * @return ArrayList<Schedule>
      */
 
-    public ArrayList<Schedule> getAllSchedulesForStudent(int studentId) {
+    public List<Schedule> getAllSchedulesForStudent(int studentId) {
         Connection conn = MariaDBConnection.getConnection();
         String sql = "SELECT s.schedule_id, s.course_id, s.weekday, s.start_time, s.end_time " +
                      "FROM schedule s " +
                      "JOIN courses c ON s.course_id = c.course_id " +
                      "WHERE c.student_id = ?;";
-        ArrayList<Schedule> schedules = new ArrayList<>();
+        List<Schedule> schedules = new ArrayList<>();
         try (PreparedStatement ps = conn.prepareStatement(sql)){
             ps.setInt(1, studentId);
             try (ResultSet rs = ps.executeQuery()) {

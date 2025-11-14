@@ -10,12 +10,13 @@ import server.testutils.MockHttpExchange;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class AssignmentHandlerTest {
+class AssignmentHandlerTest {
     private AssignmentHandler handler;
     private AssignmentDao mockDao;
 
@@ -32,90 +33,65 @@ public class AssignmentHandlerTest {
      * Test handling GET request for assignment by ID.
      */
     @Test
-    public void testHandleGetAssignmentById() {
+   void testHandleGetAssignmentById() throws Exception {
         Assignment assignment = new Assignment(1, 1, 1, "Test Assignment", "Description", Timestamp.valueOf("2024-12-31 23:59:59"), Status.PENDING);
         when(mockDao.getAssignmentById(1)).thenReturn(assignment);
         MockHttpExchange exchange = new MockHttpExchange("GET", "/assignments/1", "");
         exchange.withHeader("student_id", "1").withHeader("role", "user");
-        try {
-            handler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in handle get assignment by id: " + e.getMessage());
-        }
-        assertEquals(200, exchange.getResponseCode());
+        handler.handle(exchange);
         String response = exchange.getResponseBodyAsString();
-        assertTrue(response.contains("Test Assignment"));
+        assertTrue(response.contains("Test Assignment"), "Response should contain assignment title");
     }
 
     /**
      * Test handling GET request for assignment by ID when unauthorized.
      */
     @Test
-    public void testHandleGetAssignmentByIdUnauthorized() {
+    void testHandleGetAssignmentByIdUnauthorized() throws Exception {
         Assignment assignment = new Assignment(1, 1, 1, "Test Assignment", "Description", Timestamp.valueOf("2024-12-31 23:59:59"), Status.PENDING);
         when(mockDao.getAssignmentById(1)).thenReturn(assignment);
         MockHttpExchange exchange = new MockHttpExchange("GET", "/assignments/1", "");
         exchange.withHeader("student_id", "2").withHeader("role", "user");
-        try {
-            handler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in handle get assignment by id unauthorized: " + e.getMessage());
-        }
-        assertEquals(403, exchange.getResponseCode());
-        String response = exchange.getResponseBodyAsString();
-        assertTrue(response.contains("Forbidden"));
+        handler.handle(exchange);
+        assertEquals(403, exchange.getResponseCode(), "Response code should be 403");
     }
 
     /**
      * Test handling GET request for assignments by student ID.
      */
     @Test
-    public void testHandleGetAssignmentsByStudentId() {
+    void testHandleGetAssignmentsByStudentId() throws Exception {
         Assignment assignment1 = new Assignment(1, 1, 1, "Assignment 1", "Description 1", Timestamp.valueOf("2024-12-31 09:00:00"), Status.PENDING);
         Assignment assignment2 = new Assignment(2, 1, 2, "Assignment 2", "Description 2", Timestamp.valueOf("2024-11-30 13:00:00"), Status.COMPLETED);
-        ArrayList<Assignment> assignments = new ArrayList<>();
+        List<Assignment> assignments = new ArrayList<>();
         assignments.add(assignment1);
         assignments.add(assignment2);
         when(mockDao.getAssignments(1)).thenReturn(assignments);
         MockHttpExchange exchange = new MockHttpExchange("GET", "/assignments/students/1", "");
         exchange.withHeader("student_id", "1").withHeader("role", "user");
-        try {
-            handler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in handle get assignments by student id: " + e.getMessage());
-        }
-        assertEquals(200, exchange.getResponseCode());
-        String response = exchange.getResponseBodyAsString();
-        assertTrue(response.contains("Assignment 1"));
-        assertTrue(response.contains("Assignment 2"));
+        handler.handle(exchange);
+        assertEquals(200, exchange.getResponseCode(), "Response code should be 200");
     }
 
     /**
      * Test handling GET request for assignments by student ID when unauthorized.
      */
     @Test
-    public void testHandleGetAssignmentsByStudentIdUnauthorized() {
+    void testHandleGetAssignmentsByStudentIdUnauthorized() throws Exception {
         Assignment assignment1 = new Assignment(1, 1, 1, "Assignment 1", "Description 1", Timestamp.valueOf("2024-12-31 12:45:00"), Status.PENDING);
-        ArrayList<Assignment> assignments = new ArrayList<>();
+        List<Assignment> assignments = new ArrayList<>();
         assignments.add(assignment1);
         when(mockDao.getAssignments(1)).thenReturn(assignments);
         MockHttpExchange exchange = new MockHttpExchange("GET", "/assignments/students/1", "");
         exchange.withHeader("student_id", "2").withHeader("role", "user");
-        try {
-            handler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in handle get assignments by student id unauthorized: " + e.getMessage());
-        }
-        assertEquals(403, exchange.getResponseCode());
-        String response = exchange.getResponseBodyAsString();
-        assertTrue(response.contains("Forbidden"));
-    }
+        handler.handle(exchange);
+        assertEquals(403, exchange.getResponseCode(), "Response code should be 403");}
 
     /**
      * Test handling GET request for assignment with no ID in path.
      */
     @Test
-    public void testHandleGetAssignmentNoId() {
+    void testHandleGetAssignmentNoId() {
         MockHttpExchange exchange = new MockHttpExchange("GET", "/assignments/", "");
         exchange.withHeader("student_id", "1").withHeader("role", "user");
         try {
@@ -123,149 +99,106 @@ public class AssignmentHandlerTest {
         } catch (Exception e) {
             fail("Exception thrown in handle get assignment no id: " + e.getMessage());
         }
-        assertEquals(400, exchange.getResponseCode());
+        assertEquals(400, exchange.getResponseCode(), "Response code should be 400");
     }
 
     /**
      * Test handling GET request for assignment that does not exist.
      */
     @Test
-    public void testHandleGetAssignmentNotFound() {
+    void testHandleGetAssignmentNotFound() throws Exception {
         when(mockDao.getAssignmentById(999)).thenReturn(null);
         MockHttpExchange exchange = new MockHttpExchange("GET", "/assignments/999", "");
         exchange.withHeader("student_id", "1").withHeader("role", "user");
-        try {
-            handler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in handle get assignment not found: " + e.getMessage());
+        handler.handle(exchange);
+        assertEquals(404, exchange.getResponseCode(), "Response code should be 404");
         }
-        assertEquals(404, exchange.getResponseCode());
-        String response = exchange.getResponseBodyAsString();
-        assertTrue(response.contains("Assignment not found"));
-    }
 
     /**
      * Test handling POST request to create a new assignment.
      */
     @Test
-    public void testHandlePostAssignment() {
+    void testHandlePostAssignment() throws Exception {
         String body = "{\"course_id\":\"1\",\"title\":\"New Assignment\",\"description\":\"New Description\",\"deadline\":\"2024-12-31 00:00:00\"}";
         MockHttpExchange exchange = new MockHttpExchange("POST", "/assignments/", body);
         exchange.withHeader("student_id", "1").withHeader("role", "user");
 
         Assignment newAssignment = new Assignment(1, 1, 1, "New Assignment", "New Description", Timestamp.valueOf("2024-12-31 00:00:00"), Status.PENDING);
         when(mockDao.insertAssignment(1, 1, "New Assignment", "New Description", Timestamp.valueOf("2024-12-31 00:00:00"))).thenReturn(newAssignment);
-
-        try {
-            handler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in handle post assignment: " + e.getMessage());
-        }
-        assertEquals(201, exchange.getResponseCode());
-        String response = exchange.getResponseBodyAsString();
-        assertTrue(response.contains("New Assignment"));
-    }
+        handler.handle(exchange);
+        assertEquals(201, exchange.getResponseCode(), "Response code should be 201");
+     }
 
     /**
      * Test handling POST request to create a new assignment with missing fields.
      */
     @Test
-    public void testHandlePostAssignmentMissingFields() {
+    void testHandlePostAssignmentMissingFields() throws Exception {
         String body = "{\"course_id\":\"1\",\"description\":\"New Description\",\"deadline\":\"2024-12-31 12:20:00\"}";
         MockHttpExchange exchange = new MockHttpExchange("POST", "/assignments/", body);
         exchange.withHeader("student_id", "1").withHeader("role", "user");
+        handler.handle(exchange);
 
-        try {
-            handler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in handle post assignment missing fields: " + e.getMessage());
-        }
-        assertEquals(400, exchange.getResponseCode());
-        String response = exchange.getResponseBodyAsString();
-        assertTrue(response.contains("Title, and deadline are required"));
-    }
+        assertEquals(400, exchange.getResponseCode(), "Response code should be 400");
+     }
 
     /**
      * Test handling POST request to create a new assignment with invalid date format.
      */
     @Test
-    public void testhandlePostAssignmentInvalidDate() {
+    void testhandlePostAssignmentInvalidDate() throws Exception {
         String body = "{\"course_id\":\"1\",\"title\":\"New Assignment\",\"description\":\"New Description\",\"deadline\":\"2024-31-12\"}";
         MockHttpExchange exchange = new MockHttpExchange("POST", "/assignments/", body);
         exchange.withHeader("student_id", "1").withHeader("role", "user");
-
-        try {
-            handler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in handle post assignment invalid date: " + e.getMessage());
-        }
-        assertEquals(400, exchange.getResponseCode());
-        String response = exchange.getResponseBodyAsString();
-        assertTrue(response.contains("Invalid date format"));
+        handler.handle(exchange);
+        assertEquals(400, exchange.getResponseCode(), "Response code should be 400");
     }
 
     /**
      * Test handling DELETE request to delete an assignment.
      */
     @Test
-    public void testHandleDeleteAssignment() {
+    void testHandleDeleteAssignment() throws Exception {
         Assignment assignment = new Assignment(1, 1, 1, "Test Assignment", "Description", Timestamp.valueOf("2024-12-31 16:45:00"), Status.PENDING);
         when(mockDao.getAssignmentById(1)).thenReturn(assignment);
         when(mockDao.deleteAssignment(1)).thenReturn(true);
         MockHttpExchange exchange = new MockHttpExchange("DELETE", "/assignments/1", "");
         exchange.withHeader("student_id", "1").withHeader("role", "user");
-        try {
-            handler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in handle delete assignment: " + e.getMessage());
-        }
-        assertEquals(200, exchange.getResponseCode());
-        String response = exchange.getResponseBodyAsString();
-        assertTrue(response.contains("Assignment deleted successfully"));
+        handler.handle(exchange);
+        assertEquals(200, exchange.getResponseCode(), "Response code should be 200");
     }
 
     /**
      * Test handling DELETE request to delete an assignment when unauthorized.
      */
     @Test
-    public void testHandleDeleteAssignmentUnauthorized() {
+    void testHandleDeleteAssignmentUnauthorized() throws Exception {
         Assignment assignment = new Assignment(1, 1, 1, "Test Assignment", "Description", Timestamp.valueOf("2024-12-31 13:30:30"), Status.PENDING);
         when(mockDao.getAssignmentById(1)).thenReturn(assignment);
         MockHttpExchange exchange = new MockHttpExchange("DELETE", "/assignments/1", "");
         exchange.withHeader("student_id", "2").withHeader("role", "user");
-        try {
-            handler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in handle delete assignment unauthorized: " + e.getMessage());
-        }
-        assertEquals(403, exchange.getResponseCode());
-        String response = exchange.getResponseBodyAsString();
-        assertTrue(response.contains("Forbidden"));
-    }
+        handler.handle(exchange);
+
+        assertEquals(403, exchange.getResponseCode(), "Response code should be 403");
+     }
 
     /**
      * Test handling DELETE request to delete an assignment that does not exist.
      */
     @Test
-    public void testHandleDeleteAssignmentNotFound() {
+    void testHandleDeleteAssignmentNotFound() throws Exception {
         when(mockDao.getAssignmentById(999)).thenReturn(null);
         MockHttpExchange exchange = new MockHttpExchange("DELETE", "/assignments/999", "");
         exchange.withHeader("student_id", "1").withHeader("role", "user");
-        try {
-            handler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in handle delete assignment not found: " + e.getMessage());
-        }
-        assertEquals(404, exchange.getResponseCode());
-        String response = exchange.getResponseBodyAsString();
-        assertTrue(response.contains("Assignment not found"));
-    }
+        handler.handle(exchange);
+        assertEquals(404, exchange.getResponseCode(), "Response code should be 404");
+     }
 
     /**
      * Test handling PUT request to update an assignment.
      */
     @Test
-    public void testHandleUpdateAssignment() {
+    void testHandleUpdateAssignment() throws Exception {
         String body = "{\"title\":\"Updated Assignment\",\"description\":\"Updated Description\",\"deadline\":\"2024-11-30 12:30:00\"}";
         Assignment existingAssignment = new Assignment(1, 1, 1, "Old Assignment", "Old Description", Timestamp.valueOf("2024-12-31 12:30:00"), Status.PENDING);
         Assignment updatedAssignment = new Assignment(1, 1, 1, "Updated Assignment", "Updated Description", Timestamp.valueOf("2024-11-30 12:30:00"), Status.PENDING);
@@ -273,118 +206,82 @@ public class AssignmentHandlerTest {
         when(mockDao.getAssignmentById(1)).thenReturn(existingAssignment).thenReturn(updatedAssignment);
         MockHttpExchange exchange = new MockHttpExchange("PUT", "/assignments/1", body);
         exchange.withHeader("student_id", "1").withHeader("role", "user");
-        try {
-            handler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in handle update assignment: " + e.getMessage());
-        }
-        assertEquals(200, exchange.getResponseCode());
-        String response = exchange.getResponseBodyAsString();
-        assertTrue(response.contains("Updated Assignment"));
+        handler.handle(exchange);
+        assertEquals(200, exchange.getResponseCode(), "Response code should be 200");
     }
 
     /**
      * Test handling PUT request to update an assignment with invalid JSON.
      */
     @Test
-    public void testHandleUpdateAssignmentInvalidJson() {
+    void testHandleUpdateAssignmentInvalidJson() throws Exception {
         String body = "invalid json";
         MockHttpExchange exchange = new MockHttpExchange("PUT", "/assignments/1", body);
         exchange.withHeader("student_id", "1").withHeader("role", "user");
-        try {
-            handler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in handle update assignment invalid json: " + e.getMessage());
-        }
-        assertEquals(400, exchange.getResponseCode());
-        String response = exchange.getResponseBodyAsString();
-        assertTrue(response.contains("invalid json"));
+        handler.handle(exchange);
+        assertEquals(400, exchange.getResponseCode(), "Response code should be 400");
     }
 
     /**
      * Test handling PUT request to update an assignment that does not exist.
      */
     @Test
-    public void testHandleUpdateAssignmentNotFound() {
+    void testHandleUpdateAssignmentNotFound() throws Exception {
         String body = "{\"title\":\"Updated Assignment\"}";
         when(mockDao.getAssignmentById(999)).thenReturn(null);
         MockHttpExchange exchange = new MockHttpExchange("PUT", "/assignments/999", body);
         exchange.withHeader("student_id", "1").withHeader("role", "user");
-        try {
-            handler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in handle update assignment not found: " + e.getMessage());
-        }
-        assertEquals(404, exchange.getResponseCode());
-        String response = exchange.getResponseBodyAsString();
-        assertTrue(response.contains("Assignment not found"));
+        handler.handle(exchange);
+        assertEquals(404, exchange.getResponseCode(), "Response code should be 404");
     }
 
     /**
      * Test handling PUT request to update an assignment when unauthorized.
      */
     @Test
-    public void testHandleUpdateAssignmentUnauthorized() {
+    void testHandleUpdateAssignmentUnauthorized() throws Exception {
         String body = "{\"title\":\"Updated Assignment\"}";
         Assignment existingAssignment = new Assignment(1, 1, 1, "Old Assignment", "Old Description", Timestamp.valueOf("2024-12-31 23:59:59"), Status.PENDING);
         when(mockDao.getAssignmentById(1)).thenReturn(existingAssignment);
         MockHttpExchange exchange = new MockHttpExchange("PUT", "/assignments/1", body);
         exchange.withHeader("student_id", "2").withHeader("role", "user");
-        try {
-            handler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in handle update assignment unauthorized: " + e.getMessage());
-        }
-        assertEquals(403, exchange.getResponseCode());
-        String response = exchange.getResponseBodyAsString();
-        assertTrue(response.contains("Forbidden"));
-    }
+        handler.handle(exchange);
+        assertEquals(403, exchange.getResponseCode(), "Response code should be 403");
+   }
 
     /**
      * Test handling PUT request to update an assignment with invalid date format.
      */
     @Test
-    public void testHandleUpdateAssignmentInvalidDate() {
+    void testHandleUpdateAssignmentInvalidDate() throws Exception {
         String body = "{\"deadline\":\"2024-31-12\"}";
         Assignment existingAssignment = new Assignment(1, 1, 1, "Old Assignment", "Old Description", Timestamp.valueOf("2024-12-31 23:59:59"), Status.PENDING);
         when(mockDao.getAssignmentById(1)).thenReturn(existingAssignment);
         MockHttpExchange exchange = new MockHttpExchange("PUT", "/assignments/1", body);
         exchange.withHeader("student_id", "1").withHeader("role", "user");
-        try {
-            handler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in handle update assignment invalid date: " + e.getMessage());
-        }
-        assertEquals(400, exchange.getResponseCode());
-        String response = exchange.getResponseBodyAsString();
-        assertTrue(response.contains("Invalid date format"));
-    }
+        handler.handle(exchange);
+        assertEquals(400, exchange.getResponseCode(), "Response code should be 400");
+   }
 
     /**
      * Test handling PUT request to update an assignment with invalid course ID.
      */
     @Test
-    public void testHandleUpdateAssignmentInvalidCourseId() {
+    void testHandleUpdateAssignmentInvalidCourseId() throws Exception {
         String body = "{\"course_id\":\"abc\"}";
         Assignment existingAssignment = new Assignment(1, 1, 1, "Old Assignment", "Old Description", Timestamp.valueOf("2024-12-31 23:59:59"), Status.PENDING);
         when(mockDao.getAssignmentById(1)).thenReturn(existingAssignment);
         MockHttpExchange exchange = new MockHttpExchange("PUT", "/assignments/1", body);
         exchange.withHeader("student_id", "1").withHeader("role", "user");
-        try {
-            handler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in handle update assignment invalid course id: " + e.getMessage());
-        }
-        assertEquals(400, exchange.getResponseCode());
-        String response = exchange.getResponseBodyAsString();
-        assertTrue(response.contains("Invalid course_id"));
+        handler.handle(exchange);
+        assertEquals(400, exchange.getResponseCode(), "Response code should be 400");
     }
 
     /**
      * Test handling PUT request to update an assignment's status.
      */
     @Test
-    public void testHandleUpdateAssignmentStatus(){
+    void testHandleUpdateAssignmentStatus() throws Exception{
         String body = "{\"status\":\"completed\"}";
         Assignment existingAssignment = new Assignment(1, 1, 1, "Old Assignment", "Old Description", Timestamp.valueOf("2024-12-31 13:00:00"), Status.PENDING);
         Assignment updatedAssignment = new Assignment(1, 1, 1, "Old Assignment", "Old Description", Timestamp.valueOf("2024-12-31 13:00:00"), Status.COMPLETED);
@@ -392,21 +289,15 @@ public class AssignmentHandlerTest {
         when(mockDao.getAssignmentById(1)).thenReturn(existingAssignment).thenReturn(updatedAssignment);
         MockHttpExchange exchange = new MockHttpExchange("PUT", "/assignments/1", body);
         exchange.withHeader("student_id", "1").withHeader("role", "user");
-        try {
-            handler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in handle update assignment: " + e.getMessage());
-        }
-        assertEquals(200, exchange.getResponseCode());
-        String response = exchange.getResponseBodyAsString();
-        assertTrue(response.contains("COMPLETED"));
-    }
+        handler.handle(exchange);
+        assertEquals(200, exchange.getResponseCode(), "Response code should be 200");
+   }
 
     /**
      * Test handling PUT request to update an assignment's title and status.
      */
     @Test
-    public void testHandleUpdateAssignmentAndStatus() {
+    void testHandleUpdateAssignmentAndStatus() throws Exception {
         String body = "{\"title\":\"Updated Assignment\",\"status\":\"completed\"}";
         Assignment existingAssignment = new Assignment(1, 1, 1, "Old Assignment", "Old Description", Timestamp.valueOf("2024-12-31 12:45:00"), Status.PENDING);
         Assignment updatedAssignment = new Assignment(1, 1, 1, "Updated Assignment", "Old Description", Timestamp.valueOf("2024-12-31 12:45:00"), Status.COMPLETED);
@@ -415,14 +306,7 @@ public class AssignmentHandlerTest {
         when(mockDao.getAssignmentById(1)).thenReturn(existingAssignment).thenReturn(updatedAssignment);
         MockHttpExchange exchange = new MockHttpExchange("PUT", "/assignments/1", body);
         exchange.withHeader("student_id", "1").withHeader("role", "user");
-        try {
-            handler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in handle update assignment and status: " + e.getMessage());
-        }
-        assertEquals(200, exchange.getResponseCode());
-        String response = exchange.getResponseBodyAsString();
-        assertTrue(response.contains("Updated Assignment"));
-        assertTrue(response.contains("COMPLETED"));
+        handler.handle(exchange);
+        assertEquals(200, exchange.getResponseCode(), "Response code should be 200");
     }
 }

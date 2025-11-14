@@ -4,10 +4,10 @@
 package database;
 
 import model.Course;
-import server.Server;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -85,8 +85,8 @@ public class CourseDao {
         }
     }
 
-    public ArrayList<Course> getAllCourses(int studentId) {
-        ArrayList<Course> courses = new ArrayList<>();
+    public List<Course> getAllCourses(int studentId) {
+        List<Course> courses = new ArrayList<>();
         Connection conn = MariaDBConnection.getConnection();
         String sql = "SELECT * FROM courses WHERE student_id = ?;";
         try (PreparedStatement ps = conn.prepareStatement(sql)){
@@ -107,7 +107,7 @@ public class CourseDao {
             if (logger.isLoggable(Level.SEVERE)) {
                 logger.log(Level.SEVERE, () -> "Failed to get all courses: " + e.getMessage());
             }
-            return null;
+            return courses;
         }
     }
 
@@ -168,8 +168,8 @@ public class CourseDao {
         }
 
         String sql = "UPDATE courses SET course_name = ?, start_date = ?, end_date = ? WHERE course_id = ?;";
-        try (Connection conn = MariaDBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        Connection conn = MariaDBConnection.getConnection();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, finalCourseName);
             ps.setDate(2, finalStartDate);

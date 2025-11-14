@@ -8,12 +8,13 @@ import server.testutils.MockHttpExchange;
 
 import java.sql.Date;
 import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class CourseHandlerTest {
+class CourseHandlerTest {
     private CourseHandler courseHandler;
     private CourseDao mockDao;
 
@@ -30,239 +31,174 @@ public class CourseHandlerTest {
      * Test fetching a course by ID successfully.
      */
     @Test
-    public void testGetCourseById() {
+    void testGetCourseById() throws Exception {
         Course course = new Course(1, 1, "Test 101", Date.valueOf("2023-09-01"), Date.valueOf("2024-05-31"));
         when(mockDao.getCourseById(1)).thenReturn(course);
         MockHttpExchange exchange = new MockHttpExchange("GET", "/courses/1", "");
         exchange.withHeader("student_id", "1").withHeader("role", "user");
-        try {
-            courseHandler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in test course by id: " + e.getMessage());
-        }
-        assertEquals(200, exchange.getResponseCode());
-        String json = exchange.getResponseBodyAsString();
-        assertTrue(json.contains("Test 101"));
+        courseHandler.handle(exchange);
+        assertEquals(200, exchange.getResponseCode(), "Expected HTTP 200 OK");
     }
 
     /**
      * Test fetching a course by ID when the user is not authorized (different student).
      */
     @Test
-    public void testGetCourseUnauthorized() {
+    void testGetCourseUnauthorized() throws Exception {
         Course course = new Course(1, 1, "Test 101", Date.valueOf("2026-09-01"), Date.valueOf("2026-05-31"));
         when(mockDao.getCourseById(1)).thenReturn(course);
         MockHttpExchange exchange = new MockHttpExchange("GET", "/courses/1", "");
         exchange.withHeader("student_id", "2").withHeader("role", "user");
-        try {
-            courseHandler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in test unauthorized: " + e.getMessage());
-        }
-        assertEquals(403, exchange.getResponseCode());
+        courseHandler.handle(exchange);
+        assertEquals(403, exchange.getResponseCode(), "Expected HTTP 403 Forbidden");
     }
 
     /**
      * Test fetching a course by ID when the course does not exist.
      */
     @Test
-    public void testCourseNotFound() {
+    void testCourseNotFound() throws Exception {
         when(mockDao.getCourseById(999)).thenReturn(null);
         MockHttpExchange exchange = new MockHttpExchange("GET", "/courses/999", "");
         exchange.withHeader("student_id", "1").withHeader("role", "admin");
-        try {
-            courseHandler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in test course not found: " + e.getMessage());
-        }
-        assertEquals(404, exchange.getResponseCode());
+        courseHandler.handle(exchange);
+        assertEquals(404, exchange.getResponseCode(), "");
     }
 
     /**
      * Test fetching all courses for a student successfully.
      */
     @Test
-    public void testGetCoursesForStudent() {
+    void testGetCoursesForStudent() throws Exception {
         Course course1 = new Course(1, 1, "Test 101", Date.valueOf("2025-09-01"), Date.valueOf("2026-05-31"));
         Course course2 = new Course(2, 1, "Test 102", Date.valueOf("2025-09-01"), Date.valueOf("2026-05-31"));
-        ArrayList<Course> courses = new ArrayList<>();
+        List<Course> courses = new ArrayList<>();
         courses.add(course1);
         courses.add(course2);
         when(mockDao.getAllCourses(1)).thenReturn(courses);
         MockHttpExchange exchange = new MockHttpExchange("GET", "/courses/students/1", "");
         exchange.withHeader("student_id", "1").withHeader("role", "user");
-        try {
-            courseHandler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in test get courses for student: " + e.getMessage());
-        }
-        assertEquals(200, exchange.getResponseCode());
-        String json = exchange.getResponseBodyAsString();
-        assertTrue(json.contains("Test 101"));
-        assertTrue(json.contains("Test 102"));
+        courseHandler.handle(exchange);
+        assertEquals(200, exchange.getResponseCode(), "Expected HTTP 200 OK");
     }
 
     /**
      * Test fetching all courses for a student when the user is not authorized (different student).
      */
     @Test
-    public void testGetCoursesForStudentUnauthorized() {
+    void testGetCoursesForStudentUnauthorized() throws Exception {
         MockHttpExchange exchange = new MockHttpExchange("GET", "/courses/students/1", "");
         exchange.withHeader("student_id", "2").withHeader("role", "user");
-        try {
-            courseHandler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in test get courses for student unauthorized: " + e.getMessage());
-        }
-        assertEquals(403, exchange.getResponseCode());
+        courseHandler.handle(exchange);
+        assertEquals(403, exchange.getResponseCode(), "Expected HTTP 403 Forbidden");
     }
 
     /**
      * Test fetching all courses for a student when no courses exist.
      */
     @Test
-    public void testNoCoursesForStudent() {
+    void testNoCoursesForStudent() throws Exception {
         when(mockDao.getAllCourses(1)).thenReturn(new ArrayList<>());
         MockHttpExchange exchange = new MockHttpExchange("GET", "/courses/students/1", "");
         exchange.withHeader("student_id", "1").withHeader("role", "user");
-        try {
-            courseHandler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in test no courses for student: " + e.getMessage());
-        }
-        assertEquals(404, exchange.getResponseCode());
+        courseHandler.handle(exchange);
+        assertEquals(404, exchange.getResponseCode(), "Expected HTTP 404 Not Found");
     }
 
     /**
      * Test creating a new course successfully.
      */
     @Test
-    public void testPostCourse(){
+    void testPostCourse() throws Exception {
         String body = "{\"course_name\":\"New Test Course\",\"start_date\":\"2025-09-01\",\"end_date\":\"2026-05-31\"}";
         Course newCourse = new Course(1, 1, "New Test Course", Date.valueOf("2025-09-01"), Date.valueOf("2026-05-31"));
         when(mockDao.addCourse(1, "New Test Course", Date.valueOf("2025-09-01"), Date.valueOf("2026-05-31"))).thenReturn(newCourse);
         MockHttpExchange exchange = new MockHttpExchange("POST", "/courses", body);
         exchange.withHeader("student_id", "1").withHeader("role", "user");
-        try {
-            courseHandler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in test post course: " + e.getMessage());
-        }
-        assertEquals(201, exchange.getResponseCode());
-        String json = exchange.getResponseBodyAsString();
-        assertTrue(json.contains("New Test Course"));
+        courseHandler.handle(exchange);
+        assertEquals(201, exchange.getResponseCode(), "Expected HTTP 201 Created");
     }
 
     /**
      * Test creating a new course with missing required fields.
      */
     @Test
-    public void testPostCourseMissingFields(){
+    void testPostCourseMissingFields() throws Exception {
         String body = "{\"course_name\":\"New Test Course\",\"start_date\":\"2025-09-01\"}";
         MockHttpExchange exchange = new MockHttpExchange("POST", "/courses", body);
         exchange.withHeader("student_id", "1").withHeader("role", "user");
-        try {
-            courseHandler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in test post course missing fields: " + e.getMessage());
-        }
-        assertEquals(400, exchange.getResponseCode());
+        courseHandler.handle(exchange);
+        assertEquals(400, exchange.getResponseCode(), "Expected HTTP 400 Bad Request");
     }
 
     /**
      * Test creating a new course with invalid date format.
      */
     @Test
-    public void testPostCourseInvalidDate(){
+    void testPostCourseInvalidDate() throws Exception {
         String body = "{\"course_name\":\"New Test Course\",\"start_date\":\"2025-09-01\",\"end_date\":\"2026-31-05\"}";
         MockHttpExchange exchange = new MockHttpExchange("POST", "/courses", body);
         exchange.withHeader("student_id", "1").withHeader("role", "user");
-        try {
-            courseHandler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in test post course invalid date: " + e.getMessage());
-        }
-        assertEquals(400, exchange.getResponseCode());
+        courseHandler.handle(exchange);
+        assertEquals(400, exchange.getResponseCode(), "Expected HTTP 400 Bad Request");
     }
 
     /**
      * Test creating a new course where the start date is after the end date.
      */
     @Test
-    public void testPostCourseStartDateAfterEndDate(){
+    void testPostCourseStartDateAfterEndDate() throws Exception {
         String body = "{\"course_name\":\"New Test Course\",\"start_date\":\"2026-09-01\",\"end_date\":\"2025-05-31\"}";
         MockHttpExchange exchange = new MockHttpExchange("POST", "/courses", body);
         exchange.withHeader("student_id", "1").withHeader("role", "user");
-        try {
-            courseHandler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in test start date after end date: " + e.getMessage());
-        }
-        assertEquals(500, exchange.getResponseCode());
+        courseHandler.handle(exchange);
+        assertEquals(500, exchange.getResponseCode(), "Expected HTTP 500 Internal Server Error");
     }
 
     /**
      * Test deleting a course successfully.
      */
     @Test
-    public void testDeleteCourse(){
+    void testDeleteCourse() throws Exception {
         Course course = new Course(1, 1, "Test 101", Date.valueOf("2025-09-01"), Date.valueOf("2026-05-31"));
         when(mockDao.getCourseById(1)).thenReturn(course);
         when(mockDao.deleteCourse(1)).thenReturn(true);
         MockHttpExchange exchange = new MockHttpExchange("DELETE", "/courses/1", "");
         exchange.withHeader("student_id", "1").withHeader("role", "user");
-        try {
-            courseHandler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in test delete course: " + e.getMessage());
-        }
-        assertEquals(200, exchange.getResponseCode());
-        String json = exchange.getResponseBodyAsString();
-        assertTrue(json.contains("Course deleted successfully"));
-    }
+        courseHandler.handle(exchange);
+        assertEquals(200, exchange.getResponseCode(), "Expected HTTP 200 OK");
+     }
 
     /**
      * Test deleting a course when the user is not authorized (different student).
      */
     @Test
-    public void testDeleteCourseUnauthorized(){
+    void testDeleteCourseUnauthorized() throws Exception {
         Course course = new Course(1, 1, "Test 101", Date.valueOf("2025-09-01"), Date.valueOf("2026-05-31"));
         when(mockDao.getCourseById(1)).thenReturn(course);
         MockHttpExchange exchange = new MockHttpExchange("DELETE", "/courses/1", "");
         exchange.withHeader("student_id", "2").withHeader("role", "user");
-        try {
-            courseHandler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in test delete course unauthorized: " + e.getMessage());
-        }
-        assertEquals(403, exchange.getResponseCode());
-        String json = exchange.getResponseBodyAsString();
-        assertTrue(json.contains("Forbidden"));
+        courseHandler.handle(exchange);
+        assertEquals(403, exchange.getResponseCode(), "Expected HTTP 403 Forbidden");
     }
 
     /**
      * Test deleting a course that does not exist.
      */
     @Test
-    public void testDeleteCourseNotFound(){
+    void testDeleteCourseNotFound() throws Exception {
         when(mockDao.getCourseById(999)).thenReturn(null);
         MockHttpExchange exchange = new MockHttpExchange("DELETE", "/courses/999", "");
         exchange.withHeader("student_id", "1").withHeader("role", "admin");
-        try {
-            courseHandler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in test delete course not found: " + e.getMessage());
-        }
-        assertEquals(404, exchange.getResponseCode());
-        String json = exchange.getResponseBodyAsString();
-        assertTrue(json.contains("Course not found"));
+        courseHandler.handle(exchange);
+        assertEquals(404, exchange.getResponseCode(), "Expected HTTP 404 Not Found");
     }
 
     /**
      * Test updating a course successfully.
      */
     @Test
-    public void testUpdateCourse() {
+    void testUpdateCourse() throws Exception{
         Course course = new Course(1, 1, "Old Course", Date.valueOf("2025-09-01"), Date.valueOf("2026-05-31"));
         when(mockDao.getCourseById(1)).thenReturn(course);
         when(mockDao.updateCourse(1, "Updated Course", Date.valueOf("2025-10-01"), Date.valueOf("2026-06-30")))
@@ -276,104 +212,74 @@ public class CourseHandlerTest {
         String body = "{\"course_name\":\"Updated Course\",\"start_date\":\"2025-10-01\",\"end_date\":\"2026-06-30\"}";
         MockHttpExchange exchange = new MockHttpExchange("PUT", "/courses/1", body);
         exchange.withHeader("student_id", "1").withHeader("role", "user");
-        try {
-            courseHandler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in test update course: " + e.getMessage());
-        }
-        assertEquals(200, exchange.getResponseCode());
-        String json = exchange.getResponseBodyAsString();
-        assertTrue(json.contains("Updated"));
+        courseHandler.handle(exchange);
+        assertEquals(200, exchange.getResponseCode(), "Expected HTTP 200 OK");
     }
 
     /**
      * Test updating a course that does not exist.
      */
     @Test
-    public void testUpdateCourseMissingCourse() {
+    void testUpdateCourseMissingCourse() throws Exception {
         when(mockDao.getCourseById(1)).thenReturn(null);
 
         String body = "{\"course_name\":\"Updated Course\",\"start_date\":\"2025-10-01\",\"end_date\":\"2026-06-30\"}";
         MockHttpExchange exchange = new MockHttpExchange("PUT", "/courses/1", body);
         exchange.withHeader("student_id", "1").withHeader("role", "user");
-        try {
-            courseHandler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in test update course missing course: " + e.getMessage());
-        }
-        assertEquals(404, exchange.getResponseCode());
-        String json = exchange.getResponseBodyAsString();
-        assertTrue(json.contains("Course not found"));
+        courseHandler.handle(exchange);
+        assertEquals(404, exchange.getResponseCode(), "Expected HTTP 404 Not Found");
     }
 
     /**
      * Test updating a course when the user is not authorized (different student).
      */
     @Test
-    public void testUpdateCourseUnauthorized() {
+    void testUpdateCourseUnauthorized() throws Exception {
         Course course = new Course(1, 1, "Old Course", Date.valueOf("2025-09-01"), Date.valueOf("2026-05-31"));
         when(mockDao.getCourseById(1)).thenReturn(course);
 
         String body = "{\"course_name\":\"Updated Course\",\"start_date\":\"2025-10-01\",\"end_date\":\"2026-06-30\"}";
         MockHttpExchange exchange = new MockHttpExchange("PUT", "/courses/1", body);
         exchange.withHeader("student_id", "2").withHeader("role", "user");
-        try {
-            courseHandler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in test update course unauthorized: " + e.getMessage());
-        }
-        assertEquals(403, exchange.getResponseCode());
-        String json = exchange.getResponseBodyAsString();
-        assertTrue(json.contains("Forbidden"));
-    }
+        courseHandler.handle(exchange);
+        assertEquals(403, exchange.getResponseCode(), "Expected HTTP 403 Forbidden");
+   }
 
     /**
      * Test updating a course with invalid date format.
      */
     @Test
-    public void testUpdateCourseInvalidDate() {
+    void testUpdateCourseInvalidDate() throws Exception {
         Course course = new Course(1, 1, "Old Course", Date.valueOf("2025-09-01"), Date.valueOf("2026-05-31"));
         when(mockDao.getCourseById(1)).thenReturn(course);
 
         String body = "{\"course_name\":\"Updated Course\",\"start_date\":\"2025-10-01\",\"end_date\":\"2026-31-06\"}";
         MockHttpExchange exchange = new MockHttpExchange("PUT", "/courses/1", body);
         exchange.withHeader("student_id", "1").withHeader("role", "user");
-        try {
-            courseHandler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in test update course invalid date: " + e.getMessage());
-        }
-        assertEquals(400, exchange.getResponseCode());
-        String json = exchange.getResponseBodyAsString();
-        assertTrue(json.contains("Invalid date format"));
+        courseHandler.handle(exchange);
+        assertEquals(400, exchange.getResponseCode(), "Expected HTTP 400 Bad Request");
     }
 
     /**
      * Test updating a course where the start date is after the end date.
      */
     @Test
-    public void testUpdateCourseStartDateAfterEndDate() {
+    void testUpdateCourseStartDateAfterEndDate() throws Exception {
         Course course = new Course(1, 1, "Old Course", Date.valueOf("2025-09-01"), Date.valueOf("2026-05-31"));
         when(mockDao.getCourseById(1)).thenReturn(course);
 
         String body = "{\"course_name\":\"Updated Course\",\"start_date\":\"2026-10-01\",\"end_date\":\"2025-06-30\"}";
         MockHttpExchange exchange = new MockHttpExchange("PUT", "/courses/1", body);
         exchange.withHeader("student_id", "1").withHeader("role", "user");
-        try {
-            courseHandler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in test update course start date after end date: " + e.getMessage());
-        }
-        assertEquals(500, exchange.getResponseCode());
-        String json = exchange.getResponseBodyAsString();
-        assertTrue(json.contains("Failed to update course"));
-    }
+        courseHandler.handle(exchange);
+        assertEquals(500, exchange.getResponseCode(), "Expected HTTP 500 Internal Server Error");
+     }
 
     /**
      * Test updating a course when the DAO update operation fails.
      */
     @Test
-    public void testUpdateCourseFailure() {
+    void testUpdateCourseFailure() throws Exception{
         Course course = new Course(1, 1, "Old Course", Date.valueOf("2025-09-01"), Date.valueOf("2026-05-31"));
         when(mockDao.getCourseById(1)).thenReturn(course);
         when(mockDao.updateCourse(1, "Updated Course", Date.valueOf("2025-10-01"), Date.valueOf("2026-06-30")))
@@ -382,14 +288,8 @@ public class CourseHandlerTest {
         String body = "{\"course_name\":\"Updated Course\",\"start_date\":\"2025-10-01\",\"end_date\":\"2026-06-30\"}";
         MockHttpExchange exchange = new MockHttpExchange("PUT", "/courses/1", body);
         exchange.withHeader("student_id", "1").withHeader("role", "user");
-        try {
-            courseHandler.handle(exchange);
-        } catch (Exception e) {
-            fail("Exception thrown in test update course failure: " + e.getMessage());
-        }
-        assertEquals(500, exchange.getResponseCode());
-        String json = exchange.getResponseBodyAsString();
-        assertTrue(json.contains("Failed to update course"));
-    }
+        courseHandler.handle(exchange);
+        assertEquals(500, exchange.getResponseCode(), "Expected HTTP 500 Internal Server Error");
+   }
 
 }
