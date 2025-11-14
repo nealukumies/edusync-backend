@@ -41,14 +41,14 @@ public class AssignmentHandler extends BaseHandler {
      * @throws IOException
      */
     protected void handleGet(HttpExchange exchange) throws IOException {
-        String[] pathParts = exchange.getRequestURI().getPath().split("/");
+        final String[] pathParts = exchange.getRequestURI().getPath().split("/");
 
         if (pathParts.length == 4 && "students".equals(pathParts[2])) {
-            int studentId = getIdFromPath(exchange, 3);
-            if (studentId == -1) return;
-            if (!isAuthorized(exchange, studentId)) return;
+            final int studentId = getIdFromPath(exchange, 3);
+            if (studentId == -1) {return;}
+            if (!isAuthorized(exchange, studentId)) {return;}
 
-            List<Assignment> assignments = assignmentDao.getAssignments(studentId);
+            final List<Assignment> assignments = assignmentDao.getAssignments(studentId);
             if (assignments == null || assignments.isEmpty()) {
                 sendResponse(exchange, 404, "No assignments found");
                 return;
@@ -57,16 +57,16 @@ public class AssignmentHandler extends BaseHandler {
             return;
         }
 
-        int assignmentId = getIdFromPath(exchange, 2);
-        if (assignmentId == -1) return;
+        final int assignmentId = getIdFromPath(exchange, 2);
+        if (assignmentId == -1) {return;}
 
-        Assignment assignment = assignmentDao.getAssignmentById(assignmentId);
+        final Assignment assignment = assignmentDao.getAssignmentById(assignmentId);
         if (assignment == null) {
             sendResponse(exchange, 404, "Assignment not found");
             return;
         }
-        int studentId = assignment.getStudentId();
-        if (!isAuthorized(exchange, studentId)) return;
+        final int studentId = assignment.getStudentId();
+        if (!isAuthorized(exchange, studentId)) {return;}
 
         sendResponse(exchange, 200, assignment);
     }
@@ -79,15 +79,15 @@ public class AssignmentHandler extends BaseHandler {
      * @throws IOException
      */
     protected void handlePost(HttpExchange exchange) throws IOException {
-        Map<String, String> requestMap = parseJsonBody(exchange);
+        final Map<String, String> requestMap = parseJsonBody(exchange);
         if (requestMap == null) { return; }
 
-        int studentId = getIdFromHeader(exchange);
+        final int studentId = getIdFromHeader(exchange);
 
-        int courseId = Integer.parseInt(requestMap.get("course_id"));
-        String title = requestMap.get("title");
-        String description = requestMap.get("description");
-        String deadline = requestMap.get("deadline");
+        final int courseId = Integer.parseInt(requestMap.get("course_id"));
+        final String title = requestMap.get("title");
+        final String description = requestMap.get("description");
+        final String deadline = requestMap.get("deadline");
 
         Timestamp sqlDeadline = null;
         try {
@@ -104,7 +104,7 @@ public class AssignmentHandler extends BaseHandler {
             return;
         }
 
-        Assignment newAssignment = assignmentDao.insertAssignment(studentId, courseId, title, description, sqlDeadline);
+        final Assignment newAssignment = assignmentDao.insertAssignment(studentId, courseId, title, description, sqlDeadline);
         sendResponse(exchange, 201, newAssignment);
     }
 
@@ -116,17 +116,17 @@ public class AssignmentHandler extends BaseHandler {
      * @throws IOException
      */
     protected void handleDelete(HttpExchange exchange) throws IOException {
-        int assignmentId = getIdFromPath(exchange, 2);
-        if (assignmentId == -1) return;
+        final int assignmentId = getIdFromPath(exchange, 2);
+        if (assignmentId == -1) {return;}
 
-        Assignment assignment = assignmentDao.getAssignmentById(assignmentId);
+        final Assignment assignment = assignmentDao.getAssignmentById(assignmentId);
         if (assignment == null) {
             sendResponse(exchange, 404, "Assignment not found");
             return;
         }
-        int assignmentStudentId = assignment.getStudentId();
-        if (!isAuthorized(exchange, assignmentStudentId)) return;
-        boolean success = assignmentDao.deleteAssignment(assignmentId);
+        final int assignmentStudentId = assignment.getStudentId();
+        if (!isAuthorized(exchange, assignmentStudentId)) {return;}
+        final boolean success = assignmentDao.deleteAssignment(assignmentId);
         if (!success) {
             sendResponse(exchange, 500, Map.of(ERROR_KEY, "Failed to delete assignment"));
             return;
@@ -144,25 +144,25 @@ public class AssignmentHandler extends BaseHandler {
      * @throws IOException
      */
     protected void handlePut(HttpExchange exchange) throws IOException {
-        int assignmentId = getIdFromPath(exchange, 2);
-        if (assignmentId == -1) return;
-        Map<String, String> requestMap = parseJsonBody(exchange);
+        final int assignmentId = getIdFromPath(exchange, 2);
+        if (assignmentId == -1) {return;}
+        final Map<String, String> requestMap = parseJsonBody(exchange);
         if (requestMap == null) {
             sendResponse(exchange, 400, Map.of(ERROR_KEY, "invalid json"));
             return;
         }
 
-        Assignment existingAssignment = assignmentDao.getAssignmentById(assignmentId);
+        final Assignment existingAssignment = assignmentDao.getAssignmentById(assignmentId);
         if (existingAssignment == null) {
             sendResponse(exchange, 404, "Assignment not found");
             return;
         }
 
-        int studentId = existingAssignment.getStudentId();
-        if (!isAuthorized(exchange, studentId)) return;
+        final int studentId = existingAssignment.getStudentId();
+        if (!isAuthorized(exchange, studentId)) {return;}
 
-        String newTitle = requestMap.getOrDefault("title", existingAssignment.getTitle());
-        String newDescription = requestMap.getOrDefault("description", existingAssignment.getDescription());
+        final String newTitle = requestMap.getOrDefault("title", existingAssignment.getTitle());
+        final String newDescription = requestMap.getOrDefault("description", existingAssignment.getDescription());
         Timestamp newDeadline = existingAssignment.getDeadline() != null
                 ? new Timestamp(existingAssignment.getDeadline().getTime())
                 : null;
@@ -178,8 +178,8 @@ public class AssignmentHandler extends BaseHandler {
         Integer newCourseId = existingAssignment.getCourseId();
         if (requestMap.get("course_id") != null) {
             try {
-                int parsedCourseId = Integer.parseInt(requestMap.get("course_id"));
-                if (parsedCourseId > 0) newCourseId = parsedCourseId;
+                final int parsedCourseId = Integer.parseInt(requestMap.get("course_id"));
+                if (parsedCourseId > 0) {newCourseId = parsedCourseId;}
             } catch (NumberFormatException e) {
                 sendResponse(exchange, 400, Map.of(ERROR_KEY, "Invalid course_id"));
                 return;
@@ -188,16 +188,16 @@ public class AssignmentHandler extends BaseHandler {
 
         boolean updated = false;
         if (requestMap.get("status") != null) {
-            Status status = Status.fromDbValue(requestMap.get("status"));
-            boolean statusUpdated = assignmentDao.updateStatus(assignmentId, status);
+            final Status status = Status.fromDbValue(requestMap.get("status"));
+            final boolean statusUpdated = assignmentDao.updateStatus(assignmentId, status);
             updated = updated || statusUpdated;
         }
 
-        boolean fieldsUpdated = assignmentDao.updateAssignment(assignmentId, newTitle, newDescription, newDeadline, newCourseId);
+        final boolean fieldsUpdated = assignmentDao.updateAssignment(assignmentId, newTitle, newDescription, newDeadline, newCourseId);
         updated = updated || fieldsUpdated;
 
         if (updated) {
-            Assignment updatedAssignment = assignmentDao.getAssignmentById(assignmentId);
+            final Assignment updatedAssignment = assignmentDao.getAssignmentById(assignmentId);
             sendResponse(exchange, 200, updatedAssignment);
         } else {
             sendResponse(exchange, 400, Map.of(ERROR_KEY, "No fields were updated"));

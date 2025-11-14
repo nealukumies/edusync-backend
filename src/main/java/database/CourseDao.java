@@ -22,6 +22,7 @@ public class CourseDao {
      * @param startDate
      * @param endDate
      */
+    @SuppressWarnings("PMD.MethodArgumentCouldBeFinal")
     public Course addCourse(int studentId, String courseName, Date startDate, Date endDate) {
         if (startDate != null && endDate != null && endDate.before(startDate)) {
             return null;
@@ -60,7 +61,7 @@ public class CourseDao {
      * @param courseId
      * @return
      */
-    public Course getCourseById(int courseId) {
+    public Course getCourseById(final int courseId) {
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "SELECT * FROM courses WHERE course_id = ?;";
         try (PreparedStatement ps = conn.prepareStatement(sql)){
@@ -86,7 +87,7 @@ public class CourseDao {
         }
     }
 
-    public List<Course> getAllCourses(int studentId) {
+    public List<Course> getAllCourses(final int studentId) {
         final List<Course> courses = new ArrayList<>();
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "SELECT * FROM courses WHERE student_id = ?;";
@@ -118,7 +119,7 @@ public class CourseDao {
      * @param courseId
      * @return boolean
      */
-    public boolean deleteCourse(int courseId) {
+    public boolean deleteCourse(final int courseId) {
         final Connection conn = MariaDBConnection.getConnection();
         final String sqlSchedules = "DELETE FROM schedule WHERE course_id = ?;";
         final String sqlCourse = "DELETE FROM courses WHERE course_id = ?;";
@@ -140,13 +141,23 @@ public class CourseDao {
         }
     }
 
+    /**
+     * Updates an existing course with new values. Only non-null parameters are updated.
+     * Returns true if the update was successful, false otherwise.
+     * @param courseId
+     * @param courseName
+     * @param startDate
+     * @param endDate
+     * @return
+     */
+    @SuppressWarnings("PMD.MethodArgumentCouldBeFinal")
     public boolean updateCourse(int courseId, String courseName, Date startDate, Date endDate) {
         final Course existingCourse = getCourseById(courseId);
-        if (existingCourse == null) return false;
+        if (existingCourse == null) {return false;}
 
         final String finalCourseName = courseName != null ? courseName : existingCourse.getCourseName();
 
-        Date finalStartDate;
+        final Date finalStartDate;
         if (startDate != null) {
             finalStartDate = startDate;
         } else if (existingCourse.getStartDate() != null) {
@@ -155,7 +166,7 @@ public class CourseDao {
             finalStartDate = null;
         }
 
-        Date finalEndDate;
+        final Date finalEndDate;
         if (endDate != null) {
             finalEndDate = endDate;
         } else if (existingCourse.getEndDate() != null) {

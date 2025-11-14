@@ -30,8 +30,7 @@ public class AuthService {
      * @return Student - the authenticated Student object, or null if authentication fails
      */
     public Student tryLogin(String email, String password) {
-        String storedHash = dao.getPasswordHash(email);
-
+        final String storedHash = dao.getPasswordHash(email);
         if (storedHash != null && verifyPassword(password, storedHash)) {
             return dao.getStudent(email);
         } else {

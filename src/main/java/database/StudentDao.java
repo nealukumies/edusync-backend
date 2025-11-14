@@ -23,6 +23,7 @@ public class StudentDao {
      * @param password
      * @return Student - the created Student object, or null if error occurs
      */
+    @SuppressWarnings("PMD.MethodArgumentCouldBeFinal")
     public Student addStudent(String name, String email, String password) {
         if (name == null || name.isEmpty() || email == null || email.isEmpty() || password == null || password.isEmpty()) {
             return null;
@@ -32,7 +33,7 @@ public class StudentDao {
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)){
             ps.setString(1, name);
             ps.setString(2, email);
-            String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(12));
+            final String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(12));
             ps.setString(3, hashedPassword);
             final int rows = ps.executeUpdate();
             if (rows > 0) {
@@ -56,7 +57,7 @@ public class StudentDao {
      * @param email
      * @return
      */
-    public Student getStudent(String email) {
+    public Student getStudent(final String email) {
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "SELECT student_id, name, email, role FROM students WHERE email = ?;";
         try (PreparedStatement ps = conn.prepareStatement(sql)){
@@ -84,7 +85,7 @@ public class StudentDao {
      * @return
      */
 
-    public Student getStudentById(int studentId) {
+    public Student getStudentById(final int studentId) {
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "SELECT name, email, role FROM students WHERE student_id = ?;";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -111,7 +112,7 @@ public class StudentDao {
      * @param email
      * @return String - password hash, or null if not found
      */
-    public String getPasswordHash(String email) {
+    public String getPasswordHash(final String email) {
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "SELECT password_hash FROM students WHERE email = ?;";
         try (PreparedStatement ps = conn.prepareStatement(sql)){
@@ -136,7 +137,7 @@ public class StudentDao {
      * @param studentId
      * @return
      */
-    public boolean deleteStudent(int studentId) {
+    public boolean deleteStudent(final int studentId) {
         final Connection conn = MariaDBConnection.getConnection();
         try {
             conn.setAutoCommit(false); // start transaction
@@ -185,6 +186,13 @@ public class StudentDao {
         }
     }
 
+    /**
+     * Updates a student's name. Returns true if update was successful, false otherwise.
+     * @param studentId
+     * @param newName
+     * @return
+     */
+    @SuppressWarnings("PMD.MethodArgumentCouldBeFinal")
     public boolean updateStudentName(int studentId, String newName) {
         if (newName == null || newName.isEmpty()) {
             return false;
@@ -204,6 +212,13 @@ public class StudentDao {
         }
     }
 
+    /**
+     * Updates a student's email. Returns true if update was successful, false otherwise.
+     * @param studentId
+     * @param newEmail
+     * @return
+     */
+    @SuppressWarnings("PMD.MethodArgumentCouldBeFinal")
     public boolean updateStudentEmail(int studentId, String newEmail) {
         if (newEmail == null || newEmail.isEmpty()) {
             return false;

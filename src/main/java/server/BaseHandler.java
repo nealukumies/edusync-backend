@@ -41,7 +41,7 @@ public abstract class BaseHandler implements HttpHandler {
      * @throws IOException
      */
         protected void sendResponse(HttpExchange exchange, int statusCode, Object responseObj) throws IOException {
-        String jsonResponse = gson.toJson(responseObj);
+            final String jsonResponse = gson.toJson(responseObj);
         exchange.getResponseHeaders().set("Content-Type", "application/json");
         exchange.sendResponseHeaders(statusCode, jsonResponse.getBytes(StandardCharsets.UTF_8).length);
         try (OutputStream os = exchange.getResponseBody()) {
@@ -74,7 +74,7 @@ public abstract class BaseHandler implements HttpHandler {
      * @throws IOException
      */
     protected Map<String, String> parseJsonBody(HttpExchange exchange) throws IOException {
-        String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+        final String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
         try {
             return gson.fromJson(body, Map.class);
         } catch (Exception e) {
@@ -93,7 +93,7 @@ public abstract class BaseHandler implements HttpHandler {
      * @throws IOException
      */
     protected int getIdFromPath(HttpExchange exchange, int index) throws IOException {
-        String[] pathParts = exchange.getRequestURI().getPath().split("/");
+        final String[] pathParts = exchange.getRequestURI().getPath().split("/");
 
         if (pathParts.length <= index) {
             sendResponse(exchange, 400, Map.of(ERROR_KEY, "Bad Request: Missing ID in path"));
@@ -115,7 +115,7 @@ public abstract class BaseHandler implements HttpHandler {
      * @throws IOException
      */
     protected int getIdFromHeader(HttpExchange exchange) throws IOException {
-        String studentIdStr = exchange.getRequestHeaders().getFirst("student_id");
+        final String studentIdStr = exchange.getRequestHeaders().getFirst("student_id");
         if (studentIdStr == null) {
             sendResponse(exchange, 401, Map.of(ERROR_KEY, "Unauthorized: Missing Student ID header"));
             return -1;
@@ -136,7 +136,7 @@ public abstract class BaseHandler implements HttpHandler {
      * @throws IOException
      */
     protected String getRoleFromHeader(HttpExchange exchange) throws IOException {
-        String role = exchange.getRequestHeaders().getFirst("role");
+        final String role = exchange.getRequestHeaders().getFirst("role");
         if (role == null) {
             sendResponse(exchange, 401, Map.of(ERROR_KEY, "Unauthorized: Missing role header"));
             return null;
@@ -155,13 +155,13 @@ public abstract class BaseHandler implements HttpHandler {
      * @throws IOException
      */
     protected boolean isAuthorized(HttpExchange exchange, int studentId) throws IOException {
-        String role = getRoleFromHeader(exchange);
+        final String role = getRoleFromHeader(exchange);
         if (role == null) {
             sendResponse(exchange, 401, Map.of(ERROR_KEY, "Unauthorized: Missing role header"));
             return false;
         }
 
-        int headerId = getIdFromHeader(exchange);
+        final int headerId = getIdFromHeader(exchange);
         if (headerId == -1) {
             sendResponse(exchange, 401, Map.of(ERROR_KEY, "Unauthorized: Missing student id in header"));
             return false;
@@ -175,7 +175,7 @@ public abstract class BaseHandler implements HttpHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        String method = exchange.getRequestMethod().toUpperCase();
+        final String method = exchange.getRequestMethod().toUpperCase();
         switch (method) {
             case GET -> handleGet(exchange);
             case POST -> handlePost(exchange);
@@ -185,9 +185,17 @@ public abstract class BaseHandler implements HttpHandler {
         }
     }
 
-    protected void handleGet(HttpExchange exchange) throws IOException {}
-    protected void handlePost(HttpExchange exchange) throws IOException {}
-    protected void handlePut(HttpExchange exchange) throws IOException {}
-    protected void handleDelete(HttpExchange exchange) throws IOException {}
+    protected void handleGet(HttpExchange exchange) throws IOException{
+        sendResponse(exchange, 405, Map.of(ERROR_KEY, "GET not allowed"));
+    }
+    protected void handlePost(HttpExchange exchange) throws IOException{
+        sendResponse(exchange, 405, Map.of(ERROR_KEY, "POST not allowed"));
+    }
+    protected void handlePut(HttpExchange exchange) throws IOException{
+        sendResponse(exchange, 405, Map.of(ERROR_KEY, "PUT not allowed"));
+    }
+    protected void handleDelete(HttpExchange exchange) throws IOException{
+        sendResponse(exchange, 405, Map.of(ERROR_KEY, "DELETE not allowed"));
+    }
 
 }

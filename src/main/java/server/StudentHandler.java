@@ -38,11 +38,11 @@ public class StudentHandler extends BaseHandler {
      */
     protected void handleGet(HttpExchange exchange) throws IOException {
 
-        int studentId = getIdFromPath(exchange, 2);
-        if (studentId == -1) return;
-        if (!isAuthorized(exchange, studentId)) return;
+        final int studentId = getIdFromPath(exchange, 2);
+        if (studentId == -1) {return;}
+        if (!isAuthorized(exchange, studentId)) {return;}
 
-        Student student = studentDao.getStudentById(studentId);
+        final Student student = studentDao.getStudentById(studentId);
         if (student == null) {
             sendResponse(exchange, 404, "Student not found");
             return;
@@ -61,12 +61,12 @@ public class StudentHandler extends BaseHandler {
     protected void handlePost(HttpExchange exchange) throws IOException {
         if (!isMethod(exchange, "POST")) { return; }
 
-        Map<String, String> requestMap = parseJsonBody(exchange);
+        final Map<String, String> requestMap = parseJsonBody(exchange);
         if (requestMap == null) { return; }
 
-        String name = requestMap.get("name");
-        String email = requestMap.get("email");
-        String password = requestMap.get("password");
+        final String name = requestMap.get("name");
+        final String email = requestMap.get("email");
+        final String password = requestMap.get("password");
 
         if (name == null || email == null || password == null) {
             sendResponse(exchange, 400, Map.of(ERROR_KEY, "Name, email, password, and role are required"));
@@ -78,7 +78,7 @@ public class StudentHandler extends BaseHandler {
             return;
         }
 
-        Student newStudent = studentDao.addStudent(name, email, password);
+        final Student newStudent = studentDao.addStudent(name, email, password);
         sendResponse(exchange, 201, newStudent);
     }
 
@@ -90,11 +90,11 @@ public class StudentHandler extends BaseHandler {
      * @throws IOException
      */
     protected void handleDelete(HttpExchange exchange) throws IOException {
-        int studentId = getIdFromPath(exchange, 2);
-        if (studentId == -1) return;
-        if (!isAuthorized(exchange, studentId)) return;
+        final int studentId = getIdFromPath(exchange, 2);
+        if (studentId == -1) {return;}
+        if (!isAuthorized(exchange, studentId)) {return;}
 
-        boolean deleted = studentDao.deleteStudent(studentId);
+        final boolean deleted = studentDao.deleteStudent(studentId);
         if (!deleted) {
             sendResponse(exchange, 404, Map.of(ERROR_KEY, "Student not found"));
             return;
@@ -112,15 +112,15 @@ public class StudentHandler extends BaseHandler {
      * @throws IOException
      */
     protected void handlePut(HttpExchange exchange) throws IOException {
-        int studentId = getIdFromPath(exchange, 2);
-        if (studentId == -1) return;
-        if (!isAuthorized(exchange, studentId)) return;
+        final int studentId = getIdFromPath(exchange, 2);
+        if (studentId == -1) {return;}
+        if (!isAuthorized(exchange, studentId)) {return;}
 
-        Map<String, String> requestMap = parseJsonBody(exchange);
+        final Map<String, String> requestMap = parseJsonBody(exchange);
         if (requestMap == null) { return; }
 
-        String newName = requestMap.get("name");
-        String newEmail = requestMap.get("email");
+        final String newName = requestMap.get("name");
+        final String newEmail = requestMap.get("email");
 
         if (newName == null && newEmail == null) {
             sendResponse(exchange, 400, Map.of(ERROR_KEY, "At least one of name or email must be provided"));
@@ -128,7 +128,7 @@ public class StudentHandler extends BaseHandler {
         }
 
         if (newEmail != null) {
-            Student existingStudent = studentDao.getStudent(newEmail);
+            final Student existingStudent = studentDao.getStudent(newEmail);
             if (existingStudent != null && existingStudent.getId() != studentId) {
                 sendResponse(exchange, 409, Map.of(ERROR_KEY, "Email already in use by another student"));
                 return;
@@ -147,7 +147,7 @@ public class StudentHandler extends BaseHandler {
             return;
         }
 
-        Student updatedStudent = studentDao.getStudentById(studentId);
+        final Student updatedStudent = studentDao.getStudentById(studentId);
         sendResponse(exchange, 200, updatedStudent);
     }
 }

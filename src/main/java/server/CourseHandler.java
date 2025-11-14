@@ -38,14 +38,14 @@ public class CourseHandler extends BaseHandler {
      * @throws IOException
      */
     protected void handleGet(HttpExchange exchange) throws IOException {
-        String[] pathParts = exchange.getRequestURI().getPath().split("/");
+        final String[] pathParts = exchange.getRequestURI().getPath().split("/");
 
         // Handle /courses/students/{studentId}
         if ("students".equals(pathParts[2]) && pathParts.length == 4) {
-            int studentId = getIdFromPath(exchange, 3);
-            if (studentId == -1) return;
-            if (!isAuthorized(exchange, studentId)) return;
-            List<Course> courses = courseDao.getAllCourses(studentId);
+            final int studentId = getIdFromPath(exchange, 3);
+            if (studentId == -1) {return;}
+            if (!isAuthorized(exchange, studentId)) {return;}
+            final List<Course> courses = courseDao.getAllCourses(studentId);
             if (courses == null || courses.isEmpty()) {
                 sendResponse(exchange, 404, "No courses found for this student");
                 return;
@@ -54,17 +54,16 @@ public class CourseHandler extends BaseHandler {
             return;
         }
 
-        // Handle /courses/{courseId}
-        int courseId = getIdFromPath(exchange, 2);
-        if (courseId == -1) return;
+        final int courseId = getIdFromPath(exchange, 2);
+        if (courseId == -1) {return;}
 
-        Course course = courseDao.getCourseById(courseId);
+        final Course course = courseDao.getCourseById(courseId);
         if (course == null) {
             sendResponse(exchange, 404, "Course not found");
             return;
         }
-        int studentId = course.getStudentId();
-        if (!isAuthorized(exchange, studentId)) return;
+        final int studentId = course.getStudentId();
+        if (!isAuthorized(exchange, studentId)) {return;}
         sendResponse(exchange, 200, course);
     }
 
@@ -78,14 +77,14 @@ public class CourseHandler extends BaseHandler {
     protected void handlePost(HttpExchange exchange) throws IOException {
         if (!isMethod(exchange, "POST")) { return; }
 
-        Map<String, String> requestMap = parseJsonBody(exchange);
+        final Map<String, String> requestMap = parseJsonBody(exchange);
         if (requestMap == null) { return; }
 
-        int studentId = getIdFromHeader(exchange);
-        if (studentId == -1) return;
-        String courseName = requestMap.get("course_name");
-        String startDate = requestMap.get("start_date");
-        String endDate = requestMap.get("end_date");
+        final int studentId = getIdFromHeader(exchange);
+        if (studentId == -1) {return;}
+        final String courseName = requestMap.get("course_name");
+        final String startDate = requestMap.get("start_date");
+        final String endDate = requestMap.get("end_date");
 
         Date sqlStartDate = null;
         Date sqlEndDate = null;
@@ -103,7 +102,7 @@ public class CourseHandler extends BaseHandler {
             sendResponse(exchange, 400, Map.of(ERROR_KEY, "Course name, start date, and end date are required"));
             return;
         }
-        Course course  = courseDao.addCourse(studentId, courseName, sqlStartDate, sqlEndDate);
+        final Course course  = courseDao.addCourse(studentId, courseName, sqlStartDate, sqlEndDate);
         if (course == null) {
             sendResponse(exchange, 500, Map.of(ERROR_KEY, "Failed to add course"));
             return;
@@ -120,12 +119,12 @@ public class CourseHandler extends BaseHandler {
      * @throws IOException
      */
     protected void handleDelete(HttpExchange exchange) throws IOException {
-        int studentId = getIdFromHeader(exchange);
-        if (studentId == -1) return;
-        int courseId = getIdFromPath(exchange, 2);
-        if (courseId == -1) return;
+        final int studentId = getIdFromHeader(exchange);
+        if (studentId == -1) {return;}
+        final int courseId = getIdFromPath(exchange, 2);
+        if (courseId == -1) {return;}
 
-        Course course = courseDao.getCourseById(courseId);
+        final Course course = courseDao.getCourseById(courseId);
         if (course == null) {
             sendResponse(exchange, 404, Map.of(ERROR_KEY, "Course not found"));
             return;
@@ -134,7 +133,7 @@ public class CourseHandler extends BaseHandler {
             sendResponse(exchange, 403, Map.of(ERROR_KEY, "Forbidden: You can only delete your own courses"));
             return;
         }
-        boolean deleted = courseDao.deleteCourse(courseId);
+        final boolean deleted = courseDao.deleteCourse(courseId);
         if (!deleted) {
             sendResponse(exchange, 500, Map.of(ERROR_KEY, "Failed to delete course"));
             return;
@@ -152,22 +151,22 @@ public class CourseHandler extends BaseHandler {
      * @throws IOException
      */
     protected void handlePut(HttpExchange exchange) throws IOException {
-        int courseId = getIdFromPath(exchange, 2);
-        if (courseId == -1) return;
+        final int courseId = getIdFromPath(exchange, 2);
+        if (courseId == -1) {return;}
 
-        Map<String, String> requestMap = parseJsonBody(exchange);
+        final Map<String, String> requestMap = parseJsonBody(exchange);
         if (requestMap == null) { return; }
 
-        Course existingCourse = courseDao.getCourseById(courseId);
+        final Course existingCourse = courseDao.getCourseById(courseId);
         if (existingCourse == null) {
             sendResponse(exchange, 404, Map.of(ERROR_KEY, "Course not found"));
             return;
         }
 
-        int studentId = existingCourse.getStudentId();
-        if (!isAuthorized(exchange, studentId)) return;
+        final int studentId = existingCourse.getStudentId();
+        if (!isAuthorized(exchange, studentId)) {return;}
 
-        String courseName = requestMap.getOrDefault("course_name", existingCourse.getCourseName());
+        final String courseName = requestMap.getOrDefault("course_name", existingCourse.getCourseName());
 
         Date sqlStartDate = existingCourse.getStartDate() != null ?
                 new java.sql.Date(existingCourse.getStartDate().getTime()) : null;
@@ -185,9 +184,9 @@ public class CourseHandler extends BaseHandler {
             return;
         }
 
-        boolean updatedCourse = courseDao.updateCourse(courseId, courseName, sqlStartDate, sqlEndDate);
+        final boolean updatedCourse = courseDao.updateCourse(courseId, courseName, sqlStartDate, sqlEndDate);
         if (updatedCourse) {
-            Course updated = courseDao.getCourseById(courseId);
+            final Course updated = courseDao.getCourseById(courseId);
             sendResponse(exchange, 200, updated);
         } else {
             sendResponse(exchange, 500, Map.of(ERROR_KEY, "Failed to update course"));

@@ -30,6 +30,7 @@ public class ScheduleDao {
      * @param endTime
      * @return Schedule object or null
      */
+    @SuppressWarnings("PMD.MethodArgumentCouldBeFinal")
     public Schedule insertSchedule(Integer courseId, Weekday weekday, LocalTime startTime, LocalTime endTime) {
         if (courseId == null || weekday == null || startTime == null || endTime == null) {
             throw new IllegalArgumentException("Course ID, weekday, start time, and end time must not be null");
@@ -69,12 +70,12 @@ public class ScheduleDao {
      * @param scheduleId
      * @return boolean
      */
-    public boolean deleteSchedule(int scheduleId) {
+    public boolean deleteSchedule(final int scheduleId) {
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "DELETE FROM schedule WHERE schedule_id = ?;";
         try (PreparedStatement ps = conn.prepareStatement(sql)){
             ps.setInt(1, scheduleId);
-            int rows = ps.executeUpdate();
+            final int rows = ps.executeUpdate();
             return rows > 0; // Return true if a row was deleted
         } catch (SQLException e) {
             if (LOGGER.isLoggable(Level.SEVERE)) {
@@ -89,7 +90,7 @@ public class ScheduleDao {
      * @param scheduleId
      * @return Schedule
      */
-    public Schedule getSchedule(int scheduleId) {
+    public Schedule getSchedule(final int scheduleId) {
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "SELECT * FROM schedule WHERE schedule_id = ?;";
         try (PreparedStatement ps = conn.prepareStatement(sql)){
@@ -117,7 +118,7 @@ public class ScheduleDao {
      * @param courseId
      * @return ArrayList<Schedule>
      */
-    public List<Schedule> getAllSchedulesForCourse(int courseId) {
+    public List<Schedule> getAllSchedulesForCourse(final int courseId) {
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "SELECT * FROM schedule WHERE course_id = ?;";
         final List<Schedule> schedules = new ArrayList<>();
@@ -149,7 +150,7 @@ public class ScheduleDao {
      * @return ArrayList<Schedule>
      */
 
-    public List<Schedule> getAllSchedulesForStudent(int studentId) {
+    public List<Schedule> getAllSchedulesForStudent(final int studentId) {
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "SELECT s.schedule_id, s.course_id, s.weekday, s.start_time, s.end_time " +
                      "FROM schedule s " +
@@ -187,6 +188,7 @@ public class ScheduleDao {
      * @param endTime
      * @return boolean
      */
+    @SuppressWarnings("PMD.MethodArgumentCouldBeFinal")
     public boolean updateSchedule(int scheduleId, Integer courseId, Weekday weekday, LocalTime startTime, LocalTime endTime) {
         if (courseId == null || weekday == null || startTime == null || endTime == null) {
             throw new IllegalArgumentException("Course ID, weekday, start time, and end time must not be null");

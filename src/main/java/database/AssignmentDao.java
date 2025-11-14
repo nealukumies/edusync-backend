@@ -29,6 +29,7 @@ public class AssignmentDao {
      * @param deadline
      * @return Assignment object or null
      */
+    @SuppressWarnings("PMD.MethodArgumentCouldBeFinal")
     public Assignment insertAssignment(int studentId, Integer courseId, String title, String description, Timestamp deadline) {
         final String sql = "INSERT INTO assignments (student_id, course_id, title, description, deadline) VALUES (?, ?, ?, ?, ?)";
         final Connection conn = MariaDBConnection.getConnection();
@@ -65,7 +66,7 @@ public class AssignmentDao {
      * @param studentId
      * @return List<Assignment>
      */
-    public List<Assignment> getAssignments(int studentId) {
+    public List<Assignment> getAssignments(final int studentId) {
         final List<Assignment> assignments = new ArrayList<>();
 
         final String sql = "SELECT * FROM assignments WHERE student_id = ?";
@@ -102,6 +103,7 @@ public class AssignmentDao {
      * @param status
      * @return boolean
      */
+    @SuppressWarnings("PMD.MethodArgumentCouldBeFinal")
     public boolean updateStatus(int assignmentId, Status status){
         if (status == null) {
             return false;
@@ -127,7 +129,7 @@ public class AssignmentDao {
      * @param assignmentId
      * @return Assignment
      */
-    public Assignment getAssignmentById(int assignmentId) {
+    public Assignment getAssignmentById(final int assignmentId) {
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "SELECT * FROM assignments WHERE assignment_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)){
@@ -158,7 +160,7 @@ public class AssignmentDao {
      * @param assignmentId
      * @return boolean
      */
-    public boolean deleteAssignment(int assignmentId) {
+    public boolean deleteAssignment(final int assignmentId) {
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "DELETE FROM assignments WHERE assignment_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)){
@@ -173,6 +175,17 @@ public class AssignmentDao {
         }
     }
 
+    /**
+     * Updates an existing assignment's details.
+     * Returns true if the update was successful, false otherwise.
+     * @param assignmentId
+     * @param title
+     * @param description
+     * @param deadline
+     * @param courseId
+     * @return
+     */
+    @SuppressWarnings("PMD.MethodArgumentCouldBeFinal")
     public boolean updateAssignment(int assignmentId, String title, String description, Timestamp deadline, Integer courseId) {
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "UPDATE assignments SET title = ?, description = ?, deadline = ?, course_id = ? WHERE assignment_id = ?";
@@ -186,7 +199,7 @@ public class AssignmentDao {
                 ps.setNull(4, Types.INTEGER);
             }
             ps.setInt(5, assignmentId);
-            int rows = ps.executeUpdate();
+            final int rows = ps.executeUpdate();
             return rows > 0;
         } catch (SQLException e) {
             if (LOGGER.isLoggable(Level.SEVERE)) {
