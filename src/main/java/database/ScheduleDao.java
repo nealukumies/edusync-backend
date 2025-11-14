@@ -5,6 +5,7 @@ package database;
 
 import model.Schedule;
 import model.Weekday;
+import server.Server;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -12,10 +13,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static java.sql.Time.valueOf;
 
 public class ScheduleDao {
+    private static final Logger logger = Logger.getLogger(ScheduleDao.class.getName());
 
     /**
      * Inserts a new schedule into the schedules table. Returns the created Schedule object, or null if insertion fails.
@@ -52,7 +56,9 @@ public class ScheduleDao {
             }
             return null; // Indicate no rows affected
         } catch (SQLException e) {
-            System.out.println("Error inserting schedule: " + e.getMessage());
+            if (logger.isLoggable(Level.SEVERE)) {
+                logger.log(Level.SEVERE, () -> "Failed to insert schedule: " + e.getMessage());
+            }
             return null; // Indicate failure
         }
     }
@@ -70,7 +76,9 @@ public class ScheduleDao {
             int rows = ps.executeUpdate();
             return rows > 0; // Return true if a row was deleted
         } catch (SQLException e) {
-            System.out.println("Error deleting schedule: " + e.getMessage());
+            if (logger.isLoggable(Level.SEVERE)) {
+                logger.log(Level.SEVERE, () -> "Failed to delete schedule: " + e.getMessage());
+            }
             return false; // Indicate failure
         }
     }
@@ -96,7 +104,9 @@ public class ScheduleDao {
             }
             return null; // Schedule not found
         } catch (SQLException e) {
-            System.out.println("Error retrieving schedule: " + e.getMessage());
+            if (logger.isLoggable(Level.SEVERE)) {
+                logger.log(Level.SEVERE, () -> "Failed to get schedule: " + e.getMessage());
+            }
             return null; // Indicate failure
         }
     }
@@ -115,16 +125,18 @@ public class ScheduleDao {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     int scheduleId = rs.getInt("schedule_id");
-                    courseId = rs.getInt("course_id");
+                    int dbCourseId = rs.getInt("course_id");
                     Weekday weekday = Weekday.valueOf(rs.getString("weekday").toUpperCase());
                     LocalTime startTime = rs.getTime("start_time").toLocalTime();
                     LocalTime endTime = rs.getTime("end_time").toLocalTime();
-                    schedules.add(new Schedule(scheduleId, courseId, weekday, startTime, endTime));
+                    schedules.add(new Schedule(scheduleId, dbCourseId, weekday, startTime, endTime));
                 }
             }
             return schedules;
         } catch (SQLException e) {
-            System.out.println("Error retrieving schedules: " + e.getMessage());
+            if (logger.isLoggable(Level.SEVERE)) {
+                logger.log(Level.SEVERE, () -> "Failed to get schedules for course: " + e.getMessage());
+            }
             return schedules; // Return empty list on failure
         }
     }
@@ -157,7 +169,9 @@ public class ScheduleDao {
             }
             return schedules;
         } catch (SQLException e) {
-            System.out.println("Error retrieving schedules for student: " + e.getMessage());
+            if (logger.isLoggable(Level.SEVERE)) {
+                logger.log(Level.SEVERE, () -> "Failed to get schedules for student: " + e.getMessage());
+            }
             return schedules; // Return empty list on failure
         }
     }
@@ -192,7 +206,9 @@ public class ScheduleDao {
             int rows = ps.executeUpdate();
             return rows > 0; // Return true if a row was updated
         } catch (SQLException e) {
-            System.out.println("Error updating schedule: " + e.getMessage());
+            if (logger.isLoggable(Level.SEVERE)) {
+                logger.log(Level.SEVERE, () -> "Failed to update schedule: " + e.getMessage());
+            }
             return false; // Indicate failure
         }
     }

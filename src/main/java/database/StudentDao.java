@@ -7,10 +7,15 @@ package database;
 
 import model.Student;
 import org.mindrot.jbcrypt.BCrypt;
+import server.Server;
+import server.StudentHandler;
 
 import java.sql.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class StudentDao {
+    private static final Logger logger = Logger.getLogger(StudentDao.class.getName());
 
     /**
      * Adds a new student to the database. Returns the Student object if successful, or null if insertion fails.
@@ -21,7 +26,6 @@ public class StudentDao {
      */
     public Student addStudent(String name, String email, String password) {
         if (name == null || name.isEmpty() || email == null || email.isEmpty() || password == null || password.isEmpty()) {
-            System.out.println("Error: Name, email and password cannot be null or empty.");
             return null;
         }
         Connection conn = MariaDBConnection.getConnection();
@@ -41,7 +45,9 @@ public class StudentDao {
                 }
             } return null; // Indicate failure
         } catch (SQLException e) {
-            System.out.println("Error adding student: " + e.getMessage());
+            if (logger.isLoggable(Level.SEVERE)) {
+                logger.log(Level.SEVERE, () -> "Failed to add student: " + e.getMessage());
+            }
             return null; // Indicate failure
         }
     }
@@ -66,7 +72,9 @@ public class StudentDao {
             }
             return null; // Student not found
         } catch (SQLException e) {
-            System.out.println("Error retrieving student ID: " + e.getMessage());
+            if (logger.isLoggable(Level.SEVERE)) {
+                logger.log(Level.SEVERE, () -> "Failed to get student: " + e.getMessage());
+            }
             return null;
         }
     }
@@ -92,7 +100,9 @@ public class StudentDao {
             }
             return null; // Student not found
         } catch (SQLException e) {
-            System.out.println("Error retrieving student: " + e.getMessage());
+            if (logger.isLoggable(Level.SEVERE)) {
+                logger.log(Level.SEVERE, () -> "Failed to get student: " + e.getMessage());
+            }
             return null;
         }
     }
@@ -114,7 +124,9 @@ public class StudentDao {
             }
             return null; // Student not found
         } catch (SQLException e) {
-            System.out.println("Error retrieving student password hash.");
+            if (logger.isLoggable(Level.SEVERE)) {
+                logger.log(Level.SEVERE, () -> "Failed to get password hash: " + e.getMessage());
+            }
             return null;
         }
     }
@@ -157,20 +169,25 @@ public class StudentDao {
 
         } catch (SQLException e) {
             try { conn.rollback(); } catch (SQLException ex) {
-                System.out.println("Error during rollback: " + ex.getMessage());
+                if (logger.isLoggable(Level.SEVERE)) {
+                    logger.log(Level.SEVERE, () -> "Failed to rollback: " + ex.getMessage());
+                }
             }
-            System.out.println("Error deleting student and related data: " + e.getMessage());
+            if (logger.isLoggable(Level.SEVERE)) {
+                logger.log(Level.SEVERE, () -> "Failed to delete student: " + e.getMessage());
+            }
             return false;
         } finally {
             try { conn.setAutoCommit(true); } catch (SQLException ex) {
-                System.out.println("Error resetting auto-commit: " + ex.getMessage());
+                if (logger.isLoggable(Level.SEVERE)) {
+                    logger.log(Level.SEVERE, () -> "Failed to setAutoCommit: " + ex.getMessage());
+                }
             }
         }
     }
 
     public boolean updateStudentName(int studentId, String newName) {
         if (newName == null || newName.isEmpty()) {
-            System.out.println("Error: Name cannot be null or empty.");
             return false;
         }
         Connection conn = MariaDBConnection.getConnection();
@@ -181,14 +198,15 @@ public class StudentDao {
             int rows = ps.executeUpdate();
             return rows > 0;
         } catch (SQLException e) {
-            System.out.println("Error updating student name.");
+            if (logger.isLoggable(Level.SEVERE)) {
+                logger.log(Level.SEVERE, () -> "Failed to update student name: " + e.getMessage());
+            }
             return false;
         }
     }
 
     public boolean updateStudentEmail(int studentId, String newEmail) {
         if (newEmail == null || newEmail.isEmpty()) {
-            System.out.println("Error: Email cannot be null or empty.");
             return false;
         }
         Connection conn = MariaDBConnection.getConnection();
@@ -199,7 +217,7 @@ public class StudentDao {
             int rows = ps.executeUpdate();
             return rows > 0;
         } catch (SQLException e) {
-            System.out.println("Error updating student email: " + e.getMessage());
+            logger.log(Level.SEVERE, () -> "Failed to update student email: " + e.getMessage());
             return false;
         }
     }

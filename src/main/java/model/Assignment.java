@@ -23,7 +23,6 @@ public class Assignment {
         this.courseId = courseId; //note that courseId is nullable in the database
         this.title = title;
         this.description = description;
-        System.out.println(deadline);
         this.deadline = DateFormater.formatTimestampToString(deadline);
         this.status = status;
     }

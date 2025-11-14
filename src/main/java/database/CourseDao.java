@@ -4,11 +4,15 @@
 package database;
 
 import model.Course;
+import server.Server;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class CourseDao {
+    private static final Logger logger = Logger.getLogger(CourseDao.class.getName());
 
     /**
      * Adds a new course to the database. Returns the generated course ID, or -1 if insertion fails.
@@ -19,11 +23,9 @@ public class CourseDao {
      */
     public Course addCourse(int studentId, String courseName, Date startDate, Date endDate) {
         if (startDate != null && endDate != null && endDate.before(startDate)) {
-            System.out.println("Error: End date cannot be before start date.");
             return null;
         }
         if (courseName == null || courseName.isEmpty()) {
-            System.out.println("Error: Course name cannot be null or empty.");
             return null;
         }
         Connection conn = MariaDBConnection.getConnection();
@@ -45,7 +47,9 @@ public class CourseDao {
             } return null; // Indicate failure
 
         } catch (SQLException e) {
-            System.out.println("Error adding course: " + e.getMessage());
+            if (logger.isLoggable(Level.SEVERE)) {
+                logger.log(Level.SEVERE, () -> "Failed to add course: " + e.getMessage());
+            }
             return null; // Indicate failure
         }
     }
@@ -74,7 +78,9 @@ public class CourseDao {
             }
             return null;
         } catch (SQLException e) {
-            System.out.println("Error retrieving course: " + e.getMessage());
+            if (logger.isLoggable(Level.SEVERE)) {
+                logger.log(Level.SEVERE, () -> "Failed to get course by ID: " + e.getMessage());
+            }
             return null;
         }
     }
@@ -89,16 +95,18 @@ public class CourseDao {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     int courseId = rs.getInt("course_id");
-                    studentId = rs.getInt("student_id");
+                    int studentIdFromDb = rs.getInt("student_id");
                     String courseName = rs.getString("course_name");
                     Date startDate = rs.getDate("start_date");
                     Date endDate = rs.getDate("end_date");
-                    courses.add(new Course(courseId, studentId, courseName, startDate, endDate));
+                    courses.add(new Course(courseId, studentIdFromDb, courseName, startDate, endDate));
                 }
             }
             return courses;
         } catch (SQLException e) {
-            System.out.println("Error retrieving courses.");
+            if (logger.isLoggable(Level.SEVERE)) {
+                logger.log(Level.SEVERE, () -> "Failed to get all courses: " + e.getMessage());
+            }
             return null;
         }
     }
@@ -124,7 +132,9 @@ public class CourseDao {
             return rows > 0;
 
         } catch (SQLException e) {
-            System.out.println("Error deleting course: " + e.getMessage());
+            if (logger.isLoggable(Level.SEVERE)) {
+                logger.log(Level.SEVERE, () -> "Failed to delete course: " + e.getMessage());
+            }
             return false;
         }
     }
@@ -133,28 +143,44 @@ public class CourseDao {
         Course existingCourse = getCourseById(courseId);
         if (existingCourse == null) return false;
 
-        if (courseName == null) courseName = existingCourse.getCourseName();
-        if (startDate == null && existingCourse.getStartDate() != null)
-            startDate = new java.sql.Date(existingCourse.getStartDate().getTime());
-        if (endDate == null && existingCourse.getEndDate() != null)
-            endDate = new java.sql.Date(existingCourse.getEndDate().getTime());
+        String finalCourseName = courseName != null ? courseName : existingCourse.getCourseName();
 
-        if (startDate != null && endDate != null && endDate.before(startDate)) {
-            System.out.println("Error: End date cannot be before start date.");
+        Date finalStartDate;
+        if (startDate != null) {
+            finalStartDate = startDate;
+        } else if (existingCourse.getStartDate() != null) {
+            finalStartDate = new java.sql.Date(existingCourse.getStartDate().getTime());
+        } else {
+            finalStartDate = null;
+        }
+
+        Date finalEndDate;
+        if (endDate != null) {
+            finalEndDate = endDate;
+        } else if (existingCourse.getEndDate() != null) {
+            finalEndDate = new java.sql.Date(existingCourse.getEndDate().getTime());
+        } else {
+            finalEndDate = null;
+        }
+
+        if (finalStartDate != null && finalEndDate != null && finalEndDate.before(finalStartDate)) {
             return false;
         }
 
-        Connection conn = MariaDBConnection.getConnection();
         String sql = "UPDATE courses SET course_name = ?, start_date = ?, end_date = ? WHERE course_id = ?;";
-        try (PreparedStatement ps = conn.prepareStatement(sql)){
-            ps.setString(1, courseName);
-            ps.setDate(2, startDate);
-            ps.setDate(3, endDate);
+        try (Connection conn = MariaDBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, finalCourseName);
+            ps.setDate(2, finalStartDate);
+            ps.setDate(3, finalEndDate);
             ps.setInt(4, courseId);
-            int rows = ps.executeUpdate();
-            return rows > 0;
+
+            return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.out.println("Error updating course.");
+            if (logger.isLoggable(Level.SEVERE)) {
+                logger.log(Level.SEVERE, () -> "Failed to update course: " + e.getMessage());
+            }
             return false;
         }
     }

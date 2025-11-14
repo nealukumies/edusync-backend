@@ -8,12 +8,16 @@ package database;
 
 import model.Assignment;
 import model.Status;
+import server.Server;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class AssignmentDao {
+    private static final Logger logger = Logger.getLogger(AssignmentDao.class.getName());
 
     /**
      * Inserts a new assignment into the database.
@@ -48,7 +52,9 @@ public class AssignmentDao {
             }
             return null; // Indicate no rows affected
         } catch (SQLException e) {
-            System.out.println("Error inserting assignment: " + e.getMessage());
+            if (logger.isLoggable(Level.SEVERE)) {
+                logger.log(Level.SEVERE, () -> "Failed to insert assignment: " + e.getMessage());
+            }
             return null; // Indicate failure
         }
     }
@@ -81,8 +87,10 @@ public class AssignmentDao {
             }
             return assignments;
         } catch (SQLException e) {
-            System.out.println("Error retrieving assignments: " + e.getMessage());
-            return null;
+            if (logger.isLoggable(Level.SEVERE)) {
+                logger.log(Level.SEVERE, () -> "Failed to get assignments: " + e.getMessage());
+            }
+            return assignments;
         }
     }
 
@@ -95,7 +103,6 @@ public class AssignmentDao {
      */
     public boolean setStatus(int assignmentId, Status status){
         if (status == null) {
-            System.out.println("Status cannot be null");
             return false;
         }
         Connection conn = MariaDBConnection.getConnection();
@@ -106,7 +113,9 @@ public class AssignmentDao {
             int rows = ps.executeUpdate();
             return rows > 0;
         } catch (SQLException e) {
-            System.out.println("Error updating assignment status: " + e.getMessage());
+            if (logger.isLoggable(Level.SEVERE)) {
+                logger.log(Level.SEVERE, () -> "Failed to set assignment status: " + e.getMessage());
+            }
             return false;
         }
     }
@@ -135,7 +144,9 @@ public class AssignmentDao {
                 }
             }
         } catch (SQLException e) {
-            System.out.println("Error retrieving assignment: " + e.getMessage());
+            if (logger.isLoggable(Level.SEVERE)) {
+                logger.log(Level.SEVERE, () -> "Failed to get assignment: " + e.getMessage());
+            }
         }
         return null;
     }
@@ -154,7 +165,9 @@ public class AssignmentDao {
             int rows = ps.executeUpdate();
             return rows > 0;
         } catch (SQLException e) {
-            System.out.println("Error deleting assignment: " + e.getMessage());
+            if (logger.isLoggable(Level.SEVERE)) {
+                logger.log(Level.SEVERE, () -> "Failed to delete assignment: " + e.getMessage());
+            }
             return false;
         }
     }
@@ -175,7 +188,9 @@ public class AssignmentDao {
             int rows = ps.executeUpdate();
             return rows > 0;
         } catch (SQLException e) {
-            System.out.println("Error updating assignment: " + e.getMessage());
+            if (logger.isLoggable(Level.SEVERE)) {
+                logger.log(Level.SEVERE, () -> "Failed to update assignment: " + e.getMessage());
+            }
             return false;
         }
     }

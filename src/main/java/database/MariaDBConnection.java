@@ -2,22 +2,29 @@ package database;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.cdimascio.dotenv.Dotenv;
+import server.Server;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class MariaDBConnection {
-
-    private static Connection conn = null;
-    private static Dotenv dotenv = Dotenv.load();
+    private static final Logger logger = Logger.getLogger(MariaDBConnection.class.getName());
 
     @SuppressFBWarnings(
-            value = "EI_EXPOSE_REP",
+            value = "MS_EXPOSE_REP",
             justification = "Singleton connection is controlled; no exposure risk"
     )
+    private static Connection conn;
+    private static Dotenv dotenv = Dotenv.load();
 
-    public static Connection getConnection() {
+    private MariaDBConnection() {
+        // Private constructor to prevent instantiation
+    }
+
+    public static synchronized Connection getConnection() {
         String url = dotenv.get("DB_URL");
         String user = dotenv.get("DB_USER");
         String password = dotenv.get("DB_PASSWORD");
@@ -30,8 +37,7 @@ public class MariaDBConnection {
             try {
                 conn = DriverManager.getConnection(url, user, password);
             } catch (SQLException e) {
-                System.out.println("Connection failed.");
-                e.printStackTrace();
+                logger.log(Level.SEVERE, () -> "Failed to connect to MariaDB: " + e.getMessage());
             }
         } return conn;
     }

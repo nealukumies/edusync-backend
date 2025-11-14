@@ -13,9 +13,11 @@ import service.AuthService;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Server {
-
+    private static final Logger logger = Logger.getLogger(Server.class.getName());
     private int port;
 
     public Server(int port) {
@@ -45,7 +47,7 @@ public class Server {
         scheduleContext.setHandler(new ScheduleHandler(new ScheduleDao(), new CourseDao()));
 
         server.start();
-        System.out.println("Server started on port " + port);
+        logger.log(Level.SEVERE, () -> "Server started on port " + port);
     }
 
 }

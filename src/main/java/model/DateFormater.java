@@ -5,11 +5,16 @@
 
 package model;
 
+import server.Server;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class DateFormater {
+    private static final Logger logger = Logger.getLogger(DateFormater.class.getName());
     public static String formatDateToString(Date date) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
         return sdf.format(date);
@@ -20,7 +25,9 @@ public class DateFormater {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
             return sdf.parse(dateString);
         } catch (Exception e) {
-            e.printStackTrace();
+            if (logger.isLoggable(Level.SEVERE)) {
+                logger.log(Level.SEVERE, () -> "Failed to parse date string: " + e.getMessage());
+            }
             return null;
         }
     }
@@ -35,7 +42,9 @@ public class DateFormater {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
             return sdf.parse(dateString);
         } catch (Exception e) {
-            e.printStackTrace();
+            if (logger.isLoggable(Level.SEVERE)) {
+                logger.log(Level.SEVERE, () -> "Failed to parse date string: " + e.getMessage());
+            }
             return null;
         }
     }
