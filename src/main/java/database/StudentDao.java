@@ -26,18 +26,18 @@ public class StudentDao {
         }
         Connection conn = MariaDBConnection.getConnection();
         String sql = "INSERT INTO students (name, email, password_hash) VALUES (?, ?, ?);";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)){
             ps.setString(1, name);
             ps.setString(2, email);
             String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(12));
             ps.setString(3, hashedPassword);
             int rows = ps.executeUpdate();
             if (rows > 0) {
-                ResultSet rs = ps.getGeneratedKeys();
-                if (rs.next()) {
-                    int newId = rs.getInt(1);
-                    return new Student(newId, name, email, "user"); // Default role is "user"
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        int newId = rs.getInt(1);
+                        return new Student(newId, name, email, "user"); // Default role is "user"
+                    }
                 }
             } return null; // Indicate failure
         } catch (SQLException e) {
@@ -54,15 +54,15 @@ public class StudentDao {
     public Student getStudent(String email) {
         Connection conn = MariaDBConnection.getConnection();
         String sql = "SELECT student_id, name, email, role FROM students WHERE email = ?;";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+        try (PreparedStatement ps = conn.prepareStatement(sql)){
             ps.setString(1, email);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                int id = rs.getInt("student_id");
-                String name = rs.getString("name");
-                String role = rs.getString("role");
-                return new Student(id, name, email, role);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int id = rs.getInt("student_id");
+                    String name = rs.getString("name");
+                    String role = rs.getString("role");
+                    return new Student(id, name, email, role);
+                }
             }
             return null; // Student not found
         } catch (SQLException e) {
@@ -80,19 +80,19 @@ public class StudentDao {
     public Student getStudentById(int studentId) {
         Connection conn = MariaDBConnection.getConnection();
         String sql = "SELECT name, email, role FROM students WHERE student_id = ?;";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, studentId);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                String name = rs.getString("name");
-                String email = rs.getString("email");
-                String role = rs.getString("role");
-                return new Student(studentId, name, email, role);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    String name = rs.getString("name");
+                    String email = rs.getString("email");
+                    String role = rs.getString("role");
+                    return new Student(studentId, name, email, role);
+                }
             }
             return null; // Student not found
         } catch (SQLException e) {
-            System.out.println("Error retrieving student.");
+            System.out.println("Error retrieving student: " + e.getMessage());
             return null;
         }
     }
@@ -105,12 +105,12 @@ public class StudentDao {
     public String getPasswordHash(String email) {
         Connection conn = MariaDBConnection.getConnection();
         String sql = "SELECT password_hash FROM students WHERE email = ?;";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+        try (PreparedStatement ps = conn.prepareStatement(sql)){
             ps.setString(1, email);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return rs.getString("password_hash");
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("password_hash");
+                }
             }
             return null; // Student not found
         } catch (SQLException e) {
@@ -175,8 +175,7 @@ public class StudentDao {
         }
         Connection conn = MariaDBConnection.getConnection();
         String sql = "UPDATE students SET name = ? WHERE student_id = ?;";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+        try (PreparedStatement ps = conn.prepareStatement(sql)){
             ps.setString(1, newName);
             ps.setInt(2, studentId);
             int rows = ps.executeUpdate();
@@ -194,26 +193,14 @@ public class StudentDao {
         }
         Connection conn = MariaDBConnection.getConnection();
         String sql = "UPDATE students SET email = ? WHERE student_id = ?;";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+        try (PreparedStatement ps = conn.prepareStatement(sql)){
             ps.setString(1, newEmail);
             ps.setInt(2, studentId);
             int rows = ps.executeUpdate();
             return rows > 0;
         } catch (SQLException e) {
-            System.out.println("Error updating student email.");
+            System.out.println("Error updating student email: " + e.getMessage());
             return false;
         }
     }
-
-//    // Simple main method for manual testing
-//    public static void main(String[] args) {
-//        StudentDao studentDao = new StudentDao();
-//        studentDao.addStudent("Pelle", "pellen@maili.fi", "salasana");
-//        System.out.println("With john@gmail.com found student: " + studentDao.getStudent("john@gmail.com"));
-//        int id = studentDao.addStudent("Jane", "jane@mail.com");
-//        System.out.println("For id: " + id + " found student: " + studentDao.getStudentById(id) );
-//        studentDao.updateStudentName(id, "Jane Doe");
-//        System.out.println("After update, found student: " + studentDao.getStudentById(id) );
-//    }
 }

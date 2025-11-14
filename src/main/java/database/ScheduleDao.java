@@ -30,24 +30,24 @@ public class ScheduleDao {
             throw new IllegalArgumentException("Course ID, weekday, start time, and end time must not be null");
         }
 
-        if (startTime.isAfter(endTime) || startTime.equals(endTime)) {
+        if (!startTime.isBefore(endTime) || startTime.equals(endTime)) {
             throw new IllegalArgumentException("Start time must be before end time");
         }
 
         Connection conn = MariaDBConnection.getConnection();
         String sql = "INSERT INTO schedule (course_id, weekday, start_time, end_time) VALUES (?, ?, ?, ?);";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
+        try (PreparedStatement ps = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)){
             ps.setInt(1, courseId);
             ps.setString(2, weekday.name());
             ps.setTime(3, valueOf(startTime));
             ps.setTime(4, valueOf(endTime));
             int rows = ps.executeUpdate();
             if (rows > 0) {
-                var rs = ps.getGeneratedKeys();
-                if (rs.next()) {
-                    int newId = rs.getInt(1);
-                    return new Schedule(newId, courseId, weekday, startTime, endTime);
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        int newId = rs.getInt(1);
+                        return new Schedule(newId, courseId, weekday, startTime, endTime);
+                    }
                 }
             }
             return null; // Indicate no rows affected
@@ -65,8 +65,7 @@ public class ScheduleDao {
     public boolean deleteSchedule(int scheduleId) {
         Connection conn = MariaDBConnection.getConnection();
         String sql = "DELETE FROM schedule WHERE schedule_id = ?;";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+        try (PreparedStatement ps = conn.prepareStatement(sql)){
             ps.setInt(1, scheduleId);
             int rows = ps.executeUpdate();
             return rows > 0; // Return true if a row was deleted
@@ -84,16 +83,16 @@ public class ScheduleDao {
     public Schedule getSchedule(int scheduleId) {
         Connection conn = MariaDBConnection.getConnection();
         String sql = "SELECT * FROM schedule WHERE schedule_id = ?;";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+        try (PreparedStatement ps = conn.prepareStatement(sql)){
             ps.setInt(1, scheduleId);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                int courseId = rs.getInt("course_id");
-                Weekday weekday = Weekday.valueOf(rs.getString("weekday").toUpperCase());
-                LocalTime startTime = rs.getTime("start_time").toLocalTime();
-                LocalTime endTime = rs.getTime("end_time").toLocalTime();
-                return new Schedule(scheduleId, courseId, weekday, startTime, endTime);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int courseId = rs.getInt("course_id");
+                    Weekday weekday = Weekday.valueOf(rs.getString("weekday").toUpperCase());
+                    LocalTime startTime = rs.getTime("start_time").toLocalTime();
+                    LocalTime endTime = rs.getTime("end_time").toLocalTime();
+                    return new Schedule(scheduleId, courseId, weekday, startTime, endTime);
+                }
             }
             return null; // Schedule not found
         } catch (SQLException e) {
@@ -111,17 +110,17 @@ public class ScheduleDao {
         Connection conn = MariaDBConnection.getConnection();
         String sql = "SELECT * FROM schedule WHERE course_id = ?;";
         ArrayList<Schedule> schedules = new ArrayList<>();
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+        try (PreparedStatement ps = conn.prepareStatement(sql)){
             ps.setInt(1, courseId);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                int scheduleId = rs.getInt("schedule_id");
-                courseId = rs.getInt("course_id");
-                Weekday weekday = Weekday.valueOf(rs.getString("weekday").toUpperCase());
-                LocalTime startTime = rs.getTime("start_time").toLocalTime();
-                LocalTime endTime = rs.getTime("end_time").toLocalTime();
-                schedules.add(new Schedule(scheduleId, courseId, weekday, startTime, endTime));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int scheduleId = rs.getInt("schedule_id");
+                    courseId = rs.getInt("course_id");
+                    Weekday weekday = Weekday.valueOf(rs.getString("weekday").toUpperCase());
+                    LocalTime startTime = rs.getTime("start_time").toLocalTime();
+                    LocalTime endTime = rs.getTime("end_time").toLocalTime();
+                    schedules.add(new Schedule(scheduleId, courseId, weekday, startTime, endTime));
+                }
             }
             return schedules;
         } catch (SQLException e) {
@@ -144,17 +143,17 @@ public class ScheduleDao {
                      "JOIN courses c ON s.course_id = c.course_id " +
                      "WHERE c.student_id = ?;";
         ArrayList<Schedule> schedules = new ArrayList<>();
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+        try (PreparedStatement ps = conn.prepareStatement(sql)){
             ps.setInt(1, studentId);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                int scheduleId = rs.getInt("schedule_id");
-                int courseId = rs.getInt("course_id");
-                Weekday weekday = Weekday.valueOf(rs.getString("weekday").toUpperCase());
-                LocalTime startTime = rs.getTime("start_time").toLocalTime();
-                LocalTime endTime = rs.getTime("end_time").toLocalTime();
-                schedules.add(new Schedule(scheduleId, courseId, weekday, startTime, endTime));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int scheduleId = rs.getInt("schedule_id");
+                    int courseId = rs.getInt("course_id");
+                    Weekday weekday = Weekday.valueOf(rs.getString("weekday").toUpperCase());
+                    LocalTime startTime = rs.getTime("start_time").toLocalTime();
+                    LocalTime endTime = rs.getTime("end_time").toLocalTime();
+                    schedules.add(new Schedule(scheduleId, courseId, weekday, startTime, endTime));
+                }
             }
             return schedules;
         } catch (SQLException e) {
@@ -184,8 +183,7 @@ public class ScheduleDao {
 
         Connection conn = MariaDBConnection.getConnection();
         String sql = "UPDATE schedule SET course_id = ?, weekday = ?, start_time = ?, end_time = ? WHERE schedule_id = ?;";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+        try (PreparedStatement ps = conn.prepareStatement(sql)){
             ps.setInt(1, courseId);
             ps.setString(2, weekday.name());
             ps.setTime(3, valueOf(startTime));
@@ -198,22 +196,4 @@ public class ScheduleDao {
             return false; // Indicate failure
         }
     }
-
-    //For testing purposes
-//    public static void main(String[] args) {
-//        ScheduleDao dao = new ScheduleDao();
-//        int newId = dao.insertSchedule(1, Weekday.THURSDAY, LocalTime.of(12, 0), LocalTime.of(15, 30));
-//        System.out.println("Inserted schedule ID: " + newId);
-//
-//        Schedule schedule = dao.getSchedule(newId);
-//        System.out.println("Retrieved schedule: " + schedule);
-
-        //dao.insertSchedule(null, Weekday.TUESDAY, LocalTime.of(9, 0), LocalTime.of(10, 30));
-//
-//        ArrayList<Schedule> schedules = dao.getAllSchedulesForStudent(1);
-//        System.out.println("All schedules for student 1: " + schedules);
-
-//        boolean deleted = dao.deleteSchedule(newId);
-//        System.out.println("Deleted schedule: " + deleted);
-//    }
 }

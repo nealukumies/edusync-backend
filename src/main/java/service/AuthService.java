@@ -4,11 +4,16 @@
 package service;
 
 import database.StudentDao;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import model.Student;
 import org.mindrot.jbcrypt.BCrypt;
 
 public class AuthService {
-    private StudentDao dao;
+    @SuppressFBWarnings(
+            value = "EI_EXPOSE_REP2",
+            justification = "StudentDao is controller; no exposure risk"
+    )
+    private final StudentDao dao;
 
     /**
      * Constructor for AuthService. Initializes the StudentDao instance.

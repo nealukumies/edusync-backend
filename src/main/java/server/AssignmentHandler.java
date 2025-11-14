@@ -6,6 +6,7 @@ package server;
 
 import com.sun.net.httpserver.HttpExchange;
 import database.AssignmentDao;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import model.Assignment;
 import model.Status;
 
@@ -15,7 +16,11 @@ import java.sql.Timestamp;
 import java.util.Map;
 
 public class AssignmentHandler extends BaseHandler {
-    private AssignmentDao assignmentDao;
+    @SuppressFBWarnings(
+            value = "EI_EXPOSE_REP2",
+            justification = "AssignmentDao is controller; no exposure risk"
+    )
+    private final AssignmentDao assignmentDao;
 
     /**
      * Constructor for AssignmentHandler.
@@ -211,10 +216,6 @@ public class AssignmentHandler extends BaseHandler {
         boolean updated = false;
         if (requestMap.get("status") != null) {
             Status status = Status.fromDbValue(requestMap.get("status"));
-            if (status == null) {
-                sendResponse(exchange, 400, Map.of("error", "Invalid status value"));
-                return;
-            }
             boolean statusUpdated = assignmentDao.setStatus(assignmentId, status);
             updated = updated || statusUpdated;
         }

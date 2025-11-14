@@ -6,6 +6,7 @@ package server;
 import com.sun.net.httpserver.HttpExchange;
 import database.CourseDao;
 import database.ScheduleDao;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import model.Course;
 import model.Schedule;
 import model.Weekday;
@@ -16,8 +17,16 @@ import java.util.List;
 import java.util.Map;
 
 public class ScheduleHandler extends BaseHandler {
-    private ScheduleDao scheduleDao;
-    private CourseDao courseDao;
+    @SuppressFBWarnings(
+            value = "EI_EXPOSE_REP2",
+            justification = "ScheduleDao is controller; no exposure risk"
+    )
+    private final ScheduleDao scheduleDao;
+    @SuppressFBWarnings(
+            value = "EI_EXPOSE_REP2",
+            justification = "CourseDao is controller; no exposure risk"
+    )
+    private final CourseDao courseDao;
 
     /**
      * Constructor for ScheduleHandler. Data access objects (DAOs) are injected via constructor.

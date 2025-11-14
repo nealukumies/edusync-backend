@@ -26,10 +26,9 @@ public class AssignmentDao {
      * @return Assignment object or null
      */
     public Assignment insertAssignment(int studentId, Integer courseId, String title, String description, Timestamp deadline) {
-        Connection conn = MariaDBConnection.getConnection();
         String sql = "INSERT INTO assignments (student_id, course_id, title, description, deadline) VALUES (?, ?, ?, ?, ?)";
-        try{
-            PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+        Connection conn = MariaDBConnection.getConnection();
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)){
             ps.setInt(1, studentId);
             if (courseId != null) {
                 ps.setInt(2, courseId);
@@ -39,17 +38,15 @@ public class AssignmentDao {
             ps.setString(3, title);
             ps.setString(4, description);
             ps.setTimestamp(5, deadline);
-            int rows = ps.executeUpdate();
-            ResultSet rs = ps.getGeneratedKeys();
-            if (rs.next()) {
-                int newId = rs.getInt(1);
-                Assignment assignment = new Assignment(newId, studentId, courseId, title, description, deadline, Status.PENDING);
-                return assignment; // Return the created assignment object
-            } else if (rows == 0) {
-                return null; // No rows affected
-            } else {
-                return null; // Indicate failure
+            ps.executeUpdate();
+
+            try (ResultSet rs = ps.getGeneratedKeys()){
+                if (rs.next()) {
+                    int newId = rs.getInt(1);
+                    return new Assignment(newId, studentId, courseId, title, description, deadline, Status.PENDING);
             }
+            }
+            return null; // Indicate no rows affected
         } catch (SQLException e) {
             System.out.println("Error inserting assignment: " + e.getMessage());
             return null; // Indicate failure
@@ -64,20 +61,23 @@ public class AssignmentDao {
      */
     public List<Assignment> getAssignments(int studentId) {
         List<Assignment> assignments = new ArrayList<>();
-        Connection conn = MariaDBConnection.getConnection();
+
         String sql = "SELECT * FROM assignments WHERE student_id = ?";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+        Connection conn = MariaDBConnection.getConnection();
+        try (PreparedStatement ps = conn.prepareStatement(sql)){
+
             ps.setInt(1, studentId);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) { // loop over all rows
-                int id = rs.getInt("assignment_id");
-                String title = rs.getString("title");
-                String description = rs.getString("description");
-                Timestamp deadline = rs.getTimestamp("deadline");
-                Integer courseId = rs.getObject("course_id") != null ? rs.getInt("course_id") : null;
-                Status status = Status.fromDbValue(rs.getString("status"));
-                assignments.add(new Assignment(id, studentId, courseId, title, description, deadline, status));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) { // loop over all rows
+                    int id = rs.getInt("assignment_id");
+                    String title = rs.getString("title");
+                    String description = rs.getString("description");
+                    Timestamp deadline = rs.getTimestamp("deadline");
+                    Integer courseId = rs.getObject("course_id") != null ? rs.getInt("course_id") : null;
+                    Status status = Status.fromDbValue(rs.getString("status"));
+                    assignments.add(new Assignment(id, studentId, courseId, title, description, deadline, status));
+                }
             }
             return assignments;
         } catch (SQLException e) {
@@ -100,8 +100,7 @@ public class AssignmentDao {
         }
         Connection conn = MariaDBConnection.getConnection();
         String sql = "UPDATE assignments SET status = ? WHERE assignment_id = ?";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status.getDbValue());
             ps.setInt(2, assignmentId);
             int rows = ps.executeUpdate();
@@ -121,18 +120,19 @@ public class AssignmentDao {
     public Assignment getAssignmentById(int assignmentId) {
         Connection conn = MariaDBConnection.getConnection();
         String sql = "SELECT * FROM assignments WHERE assignment_id = ?";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+        try (PreparedStatement ps = conn.prepareStatement(sql)){
+
             ps.setInt(1, assignmentId);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                int studentId = rs.getInt("student_id");
-                Integer courseId = rs.getObject("course_id") != null ? rs.getInt("course_id") : null;
-                String title = rs.getString("title");
-                String description = rs.getString("description");
-                Timestamp deadline = rs.getTimestamp("deadline");
-                Status status = Status.fromDbValue(rs.getString("status"));
-                return new Assignment(assignmentId, studentId, courseId, title, description, deadline, status);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int studentId = rs.getInt("student_id");
+                    Integer courseId = rs.getObject("course_id") != null ? rs.getInt("course_id") : null;
+                    String title = rs.getString("title");
+                    String description = rs.getString("description");
+                    Timestamp deadline = rs.getTimestamp("deadline");
+                    Status status = Status.fromDbValue(rs.getString("status"));
+                    return new Assignment(assignmentId, studentId, courseId, title, description, deadline, status);
+                }
             }
         } catch (SQLException e) {
             System.out.println("Error retrieving assignment: " + e.getMessage());
@@ -149,8 +149,7 @@ public class AssignmentDao {
     public boolean deleteAssignment(int assignmentId) {
         Connection conn = MariaDBConnection.getConnection();
         String sql = "DELETE FROM assignments WHERE assignment_id = ?";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+        try (PreparedStatement ps = conn.prepareStatement(sql)){
             ps.setInt(1, assignmentId);
             int rows = ps.executeUpdate();
             return rows > 0;
@@ -163,8 +162,7 @@ public class AssignmentDao {
     public boolean updateAssignment(int assignmentId, String title, String description, Timestamp deadline, Integer courseId) {
         Connection conn = MariaDBConnection.getConnection();
         String sql = "UPDATE assignments SET title = ?, description = ?, deadline = ?, course_id = ? WHERE assignment_id = ?";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+        try (PreparedStatement ps = conn.prepareStatement(sql)){
             ps.setString(1, title);
             ps.setString(2, description);
             ps.setTimestamp(3, deadline);
@@ -181,18 +179,4 @@ public class AssignmentDao {
             return false;
         }
     }
-
-//    // For testing purposes
-//    public static void main(String[] args) {
-//        AssignmentDao dao = new AssignmentDao();
-//        //dao.insertAssignment(1, 1, "Math Homework", "Complete exercises 1-10", Date.valueOf("2025-10-11"));
-//        //dao.setStatus(2, Status.IN_PROGRESS);
-//        List<Assignment> assignments = dao.getAssignments(1);
-//        for (Assignment a : assignments) {
-//            System.out.println("ID: " + a.getAssignmentId() + ", Title: " + a.getTitle() + ", Status: " + a.getStatus());
-//        }
-////        System.out.println("Assignment with id 3: " + dao.getAssignmentById(3));
-////        dao.deleteAssignment(3);
-////        System.out.println("After deletion, assignment with id 2: " + dao.getAssignmentById(3));
-//    }
 }

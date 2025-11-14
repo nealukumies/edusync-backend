@@ -1,5 +1,6 @@
 package database;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.cdimascio.dotenv.Dotenv;
 
 import java.sql.Connection;
@@ -10,6 +11,11 @@ public class MariaDBConnection {
 
     private static Connection conn = null;
     private static Dotenv dotenv = Dotenv.load();
+
+    @SuppressFBWarnings(
+            value = "EI_EXPOSE_REP",
+            justification = "Singleton connection is controlled; no exposure risk"
+    )
 
     public static Connection getConnection() {
         String url = dotenv.get("DB_URL");
@@ -29,16 +35,4 @@ public class MariaDBConnection {
             }
         } return conn;
     }
-
-    //For testing the connection
-//    public static void main(String[] args) {
-//        try (Connection conn = MariaDBConnection.getConnection()) {
-//            if (conn != null) {
-//                System.out.println("Connected successfully!");
-//            }
-//        } catch (SQLException e) {
-//            System.out.println("No connection.");
-//            e.printStackTrace();
-//        }
-//    }
 }

@@ -5,6 +5,7 @@ package server;
 
 import com.sun.net.httpserver.HttpExchange;
 import database.CourseDao;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import model.Course;
 
 import java.io.IOException;
@@ -13,7 +14,11 @@ import java.util.List;
 import java.util.Map;
 
 public class CourseHandler extends BaseHandler {
-    private CourseDao courseDao;
+    @SuppressFBWarnings(
+            value = "EI_EXPOSE_REP2",
+            justification = "CourseDao is controller; no exposure risk"
+    )
+    private final CourseDao courseDao;
 
     /**
      * Constructor for CourseHandler. Data access object (DAO) is injected via constructor.

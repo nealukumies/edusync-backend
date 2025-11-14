@@ -28,23 +28,24 @@ public class CourseDao {
         }
         Connection conn = MariaDBConnection.getConnection();
         String sql = "INSERT INTO courses (student_id, course_name, start_date, end_date) VALUES (?, ?, ?, ?);";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)){
+
             ps.setInt(1, studentId);
             ps.setString(2, courseName);
             ps.setDate(3, startDate);
             ps.setDate(4, endDate);
             int rows = ps.executeUpdate();
             if (rows > 0) {
-                ResultSet rs = ps.getGeneratedKeys();
-                if (rs.next()) {
-                    int newId = rs.getInt(1);
-                    return new Course(newId, studentId, courseName, startDate, endDate);
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        int newId = rs.getInt(1);
+                        return new Course(newId, studentId, courseName, startDate, endDate);
+                    }
                 }
             } return null; // Indicate failure
 
         } catch (SQLException e) {
-            System.out.println("Error adding course.");
+            System.out.println("Error adding course: " + e.getMessage());
             return null; // Indicate failure
         }
     }
@@ -57,22 +58,23 @@ public class CourseDao {
     public Course getCourseById(int courseId) {
         Connection conn = MariaDBConnection.getConnection();
         String sql = "SELECT * FROM courses WHERE course_id = ?;";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+        try (PreparedStatement ps = conn.prepareStatement(sql)){
+
             ps.setInt(1, courseId);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return new Course(
-                    rs.getInt("course_id"),
-                    rs.getInt("student_id"),
-                    rs.getString("course_name"),
-                    rs.getDate("start_date"),
-                    rs.getDate("end_date")
-                );
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new Course(
+                            rs.getInt("course_id"),
+                            rs.getInt("student_id"),
+                            rs.getString("course_name"),
+                            rs.getDate("start_date"),
+                            rs.getDate("end_date")
+                    );
+                }
             }
             return null;
         } catch (SQLException e) {
-            System.out.println("Error retrieving course.");
+            System.out.println("Error retrieving course: " + e.getMessage());
             return null;
         }
     }
@@ -81,17 +83,18 @@ public class CourseDao {
         ArrayList<Course> courses = new ArrayList<>();
         Connection conn = MariaDBConnection.getConnection();
         String sql = "SELECT * FROM courses WHERE student_id = ?;";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+        try (PreparedStatement ps = conn.prepareStatement(sql)){
+
             ps.setInt(1, studentId);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                int courseId = rs.getInt("course_id");
-                studentId = rs.getInt("student_id");
-                String courseName = rs.getString("course_name");
-                Date startDate = rs.getDate("start_date");
-                Date endDate = rs.getDate("end_date");
-                courses.add(new Course(courseId, studentId, courseName, startDate, endDate));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int courseId = rs.getInt("course_id");
+                    studentId = rs.getInt("student_id");
+                    String courseName = rs.getString("course_name");
+                    Date startDate = rs.getDate("start_date");
+                    Date endDate = rs.getDate("end_date");
+                    courses.add(new Course(courseId, studentId, courseName, startDate, endDate));
+                }
             }
             return courses;
         } catch (SQLException e) {
@@ -108,17 +111,20 @@ public class CourseDao {
      */
     public boolean deleteCourse(int courseId) {
         Connection conn = MariaDBConnection.getConnection();
-        try {
-            PreparedStatement psSchedules = conn.prepareStatement("DELETE FROM schedule WHERE course_id = ?;");
+        String sqlSchedules = "DELETE FROM schedule WHERE course_id = ?;";
+        String sqlCourse = "DELETE FROM courses WHERE course_id = ?;";
+
+        try (PreparedStatement psSchedules = conn.prepareStatement(sqlSchedules);
+             PreparedStatement psCourse = conn.prepareStatement(sqlCourse)) {
+            psSchedules.setInt(1, courseId);
             psSchedules.setInt(1, courseId);
             psSchedules.executeUpdate();
-            PreparedStatement psCourse = conn.prepareStatement("DELETE FROM courses WHERE course_id = ?;");
             psCourse.setInt(1, courseId);
             int rows = psCourse.executeUpdate();
             return rows > 0;
+
         } catch (SQLException e) {
-            System.out.println("Error deleting course.");
-            e.printStackTrace();
+            System.out.println("Error deleting course: " + e.getMessage());
             return false;
         }
     }
@@ -140,8 +146,7 @@ public class CourseDao {
 
         Connection conn = MariaDBConnection.getConnection();
         String sql = "UPDATE courses SET course_name = ?, start_date = ?, end_date = ? WHERE course_id = ?;";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+        try (PreparedStatement ps = conn.prepareStatement(sql)){
             ps.setString(1, courseName);
             ps.setDate(2, startDate);
             ps.setDate(3, endDate);
@@ -152,15 +157,5 @@ public class CourseDao {
             System.out.println("Error updating course.");
             return false;
         }
-    }
-
-    public static void main(String[] args) {
-        CourseDao dao = new CourseDao();
-        //dao.addCourse(1, "Mathematics", Date.valueOf("2024-09-01"), Date.valueOf("2025-06-30"));
-        //System.out.println("Course with id 1: " + dao.getCourseById(1));
-        //dao.addCourse(1, "History", Date.valueOf("2025-09-01"), Date.valueOf("2025-12-30"));
-        //dao.addCourse(1, "Biology", Date.valueOf("2025-10-01"), Date.valueOf("2026-01-30"));
-        System.out.println("All courses for student with id 1: " + dao.getAllCourses(1));
-
     }
 }
