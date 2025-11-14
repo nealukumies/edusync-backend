@@ -9,7 +9,6 @@ import model.Status;
 import model.Student;
 import org.junit.jupiter.api.*;
 
-import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
@@ -149,11 +148,11 @@ class AssignmentDaoTest {
      * Insert a new assignment, update its status, verify the update, and then delete the assignment.
      */
     @Test
-    void setStatusTest() {
+    void updateStatusTest() {
         Assignment assignment = assignmentDao.insertAssignment(1, 1, "Status Test", "Testing status update", Timestamp.valueOf("2025-10-10 10:15:00"));
         int id = assignment.getAssignmentId();
         insertedAssignments.add(id);
-        assignmentDao.setStatus(id, Status.IN_PROGRESS);
+        assignmentDao.updateStatus(id, Status.IN_PROGRESS);
         Assignment updatedAssignment = assignmentDao.getAssignmentById(id);
         Status status = updatedAssignment.getStatus();
         assertEquals(Status.IN_PROGRESS, status, "Status should be IN_PROGRESS");
@@ -164,11 +163,11 @@ class AssignmentDaoTest {
      * Attempt to update with a null status and an invalid assignment ID.
      */
     @Test
-    void setStatusInvalidAssignmentTest() {
+    void updateStatusInvalidAssignmentTest() {
         Assignment assignment = assignmentDao.insertAssignment(1, 1, "Invalid Status Test", "Testing invalid status update", Timestamp.valueOf("2025-10-10 10:30:00"));
         int id = assignment.getAssignmentId();
         insertedAssignments.add(id);
-        boolean updated = assignmentDao.setStatus(id, null);
+        boolean updated = assignmentDao.updateStatus(id, null);
         assertFalse(updated, "Status update should fail for null status");
     }
 
@@ -176,8 +175,8 @@ class AssignmentDaoTest {
      * Test updating the status of an assignment with an invalid assignment ID.
      */
     @Test
-    void setStatusInvalidAssignmentIdTest() {
-        boolean updated = assignmentDao.setStatus(-100, Status.COMPLETED);
+    void updateStatusInvalidAssignmentIdTest() {
+        boolean updated = assignmentDao.updateStatus(-100, Status.COMPLETED);
         assertFalse(updated, "Status update should fail for invalid assignment ID");
     }
 
@@ -224,9 +223,9 @@ class AssignmentDaoTest {
         Assignment assignment = assignmentDao.insertAssignment(1, 1, "Update Null Course Test", "Testing update with null course", Timestamp.valueOf("2025-10-10 09:00:00"));
         int id = assignment.getAssignmentId();
         insertedAssignments.add(id);
-        assignmentDao.updateAssignment(id, "Updated Title", "Updated Description", Timestamp.valueOf("2025-11-11 09:00:00"), null);
+        assignmentDao.updateAssignment(id, "Updated", "New Description", Timestamp.valueOf("2025-11-11 09:00:00"), null);
         Assignment updatedAssignment = assignmentDao.getAssignmentById(id);
-        assertEquals("Updated Title", updatedAssignment.getTitle(), "Title should be updated");
+        assertEquals("Updated", updatedAssignment.getTitle(), "Title should be updated");
     }
 
     @Test
@@ -234,7 +233,7 @@ class AssignmentDaoTest {
         Assignment assignment = assignmentDao.insertAssignment(1, 1, "Update No Title Test", "Testing update with no title", Timestamp.valueOf("2025-10-10 13:00:00"));
         int id = assignment.getAssignmentId();
         insertedAssignments.add(id);
-        boolean updated = assignmentDao.updateAssignment(id, null, "Updated Description", Timestamp.valueOf("2025-11-11 13:00:00"), 1);
+        boolean updated = assignmentDao.updateAssignment(id, null, "Description", Timestamp.valueOf("2025-11-11 13:00:00"), 1);
         assertFalse(updated, "Update should fail for null title");
     }
 
@@ -243,7 +242,7 @@ class AssignmentDaoTest {
         Assignment assignment = assignmentDao.insertAssignment(1, 1, "Update No Deadline Test", "Testing update with no deadline", Timestamp.valueOf("2025-10-10 13:00:00"));
         int id = assignment.getAssignmentId();
         insertedAssignments.add(id);
-        boolean updated = assignmentDao.updateAssignment(id, "Updated Title", "Updated Description", null, 1);
+        boolean updated = assignmentDao.updateAssignment(id, "Updated", "Desc", null, 1);
         assertFalse(updated, "Update should fail for null deadline");
     }
 }

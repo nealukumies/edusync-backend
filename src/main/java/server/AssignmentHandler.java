@@ -21,6 +21,8 @@ public class AssignmentHandler extends BaseHandler {
             justification = "AssignmentDao is controller; no exposure risk"
     )
     private final AssignmentDao assignmentDao;
+    private static final String ERROR_KEY = "error";
+
 
     /**
      * Constructor for AssignmentHandler.
@@ -28,35 +30,8 @@ public class AssignmentHandler extends BaseHandler {
      * @param assignmentDao The AssignmentDao instance for database operations.
      */
     public AssignmentHandler(AssignmentDao assignmentDao) {
+        super();
         this.assignmentDao = assignmentDao;
-    }
-
-    /**
-     * Handles incoming HTTP requests and routes them to the appropriate method
-     * based on the HTTP method (GET, POST, DELETE, PUT).
-     * @param exchange the exchange containing the request from the
-     *                 client and used to send the response
-     * @throws IOException
-     */
-    @Override
-    public void handle(HttpExchange exchange) throws IOException {
-        String method = exchange.getRequestMethod();
-        switch (method) {
-            case "GET":
-                handleGet(exchange);
-                break;
-            case "POST":
-                handlePost(exchange);
-                break;
-            case "DELETE":
-                handleDelete(exchange);
-                break;
-            case "PUT":
-                handlePut(exchange);
-                break;
-            default:
-                sendResponse(exchange, 405, Map.of("error", "Method Not Allowed"));
-        }
     }
 
     /**
@@ -65,10 +40,9 @@ public class AssignmentHandler extends BaseHandler {
      * @param exchange
      * @throws IOException
      */
-    private void handleGet(HttpExchange exchange) throws IOException {
+    protected void handleGet(HttpExchange exchange) throws IOException {
         String[] pathParts = exchange.getRequestURI().getPath().split("/");
 
-        // Handle /assignments/students/{studentId}
         if (pathParts.length == 4 && "students".equals(pathParts[2])) {
             int studentId = getIdFromPath(exchange, 3);
             if (studentId == -1) return;
@@ -83,7 +57,6 @@ public class AssignmentHandler extends BaseHandler {
             return;
         }
 
-        // Handle /assignments/{assignmentId}
         int assignmentId = getIdFromPath(exchange, 2);
         if (assignmentId == -1) return;
 
@@ -105,7 +78,7 @@ public class AssignmentHandler extends BaseHandler {
      * @param exchange
      * @throws IOException
      */
-    private void handlePost(HttpExchange exchange) throws IOException {
+    protected void handlePost(HttpExchange exchange) throws IOException {
         Map<String, String> requestMap = parseJsonBody(exchange);
         if (requestMap == null) { return; }
 
@@ -122,12 +95,12 @@ public class AssignmentHandler extends BaseHandler {
                 sqlDeadline = Timestamp.valueOf(deadline);
             }
         } catch (IllegalArgumentException e) {
-            sendResponse(exchange, 400, Map.of("Error", "Invalid date format. Use YYYY-MM-DD"));
+            sendResponse(exchange, 400, Map.of(ERROR_KEY, "Invalid date format. Use YYYY-MM-DD"));
             return;
         }
 
         if (courseId <= 0 || studentId <= 0 || title == null || sqlDeadline == null) {
-            sendResponse(exchange, 400, Map.of("Error", "Title, and deadline are required"));
+            sendResponse(exchange, 400, Map.of(ERROR_KEY, "Title, and deadline are required"));
             return;
         }
 
@@ -142,7 +115,7 @@ public class AssignmentHandler extends BaseHandler {
      * @param exchange
      * @throws IOException
      */
-    private void handleDelete(HttpExchange exchange) throws IOException {
+    protected void handleDelete(HttpExchange exchange) throws IOException {
         int assignmentId = getIdFromPath(exchange, 2);
         if (assignmentId == -1) return;
 
@@ -155,7 +128,7 @@ public class AssignmentHandler extends BaseHandler {
         if (!isAuthorized(exchange, assignmentStudentId)) return;
         boolean success = assignmentDao.deleteAssignment(assignmentId);
         if (!success) {
-            sendResponse(exchange, 500, Map.of("error", "Failed to delete assignment"));
+            sendResponse(exchange, 500, Map.of(ERROR_KEY, "Failed to delete assignment"));
             return;
         }
         sendResponse(exchange, 200, Map.of("message", "Assignment deleted successfully"));
@@ -170,12 +143,12 @@ public class AssignmentHandler extends BaseHandler {
      * @param exchange
      * @throws IOException
      */
-    private void handlePut(HttpExchange exchange) throws IOException {
+    protected void handlePut(HttpExchange exchange) throws IOException {
         int assignmentId = getIdFromPath(exchange, 2);
         if (assignmentId == -1) return;
         Map<String, String> requestMap = parseJsonBody(exchange);
         if (requestMap == null) {
-            sendResponse(exchange, 400, Map.of("error", "invalid json"));
+            sendResponse(exchange, 400, Map.of(ERROR_KEY, "invalid json"));
             return;
         }
 
@@ -197,7 +170,7 @@ public class AssignmentHandler extends BaseHandler {
             try {
                 newDeadline = java.sql.Timestamp.valueOf(requestMap.get("deadline"));
             } catch (IllegalArgumentException e) {
-                sendResponse(exchange, 400, Map.of("error", "Invalid date format. Use YYYY-MM-DD"));
+                sendResponse(exchange, 400, Map.of(ERROR_KEY, "Invalid date format. Use YYYY-MM-DD"));
                 return;
             }
         }
@@ -208,7 +181,7 @@ public class AssignmentHandler extends BaseHandler {
                 int parsedCourseId = Integer.parseInt(requestMap.get("course_id"));
                 if (parsedCourseId > 0) newCourseId = parsedCourseId;
             } catch (NumberFormatException e) {
-                sendResponse(exchange, 400, Map.of("error", "Invalid course_id"));
+                sendResponse(exchange, 400, Map.of(ERROR_KEY, "Invalid course_id"));
                 return;
             }
         }
@@ -216,7 +189,7 @@ public class AssignmentHandler extends BaseHandler {
         boolean updated = false;
         if (requestMap.get("status") != null) {
             Status status = Status.fromDbValue(requestMap.get("status"));
-            boolean statusUpdated = assignmentDao.setStatus(assignmentId, status);
+            boolean statusUpdated = assignmentDao.updateStatus(assignmentId, status);
             updated = updated || statusUpdated;
         }
 
@@ -227,7 +200,7 @@ public class AssignmentHandler extends BaseHandler {
             Assignment updatedAssignment = assignmentDao.getAssignmentById(assignmentId);
             sendResponse(exchange, 200, updatedAssignment);
         } else {
-            sendResponse(exchange, 400, Map.of("error", "No fields were updated"));
+            sendResponse(exchange, 400, Map.of(ERROR_KEY, "No fields were updated"));
         }
     }
 

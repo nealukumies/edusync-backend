@@ -17,7 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Server {
-    private static final Logger logger = Logger.getLogger(Server.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(Server.class.getName());
     private int port;
 
     public Server(int port) {
@@ -47,7 +47,7 @@ public class Server {
         scheduleContext.setHandler(new ScheduleHandler(new ScheduleDao(), new CourseDao()));
 
         server.start();
-        logger.log(Level.SEVERE, () -> "Server started on port " + port);
+        LOGGER.log(Level.SEVERE, () -> "Server started on port " + port);
     }
 
 }

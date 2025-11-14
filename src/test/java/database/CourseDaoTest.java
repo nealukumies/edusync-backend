@@ -80,7 +80,7 @@ class CourseDaoTest {
      */
     @Test
     void addCourseWithEndDateBeforeStartDate() {
-        Course course = courseDao.addCourse(1, "Test101", Date.valueOf("2025-12-01"), Date.valueOf("2025-01-01"));
+        Course course = courseDao.addCourse(1, "Test Course", Date.valueOf("2025-12-01"), Date.valueOf("2025-01-01"));
         assertNull(course, "Insertion should fail when end date is before start date");
     }
 
@@ -137,7 +137,7 @@ class CourseDaoTest {
      */
     @Test
     void updateCourseTest() {
-        Course course  = courseDao.addCourse(1, "Test101", Date.valueOf("2025-02-01"), Date.valueOf("2025-06-01"));
+        Course course  = courseDao.addCourse(1, "Course", Date.valueOf("2025-02-01"), Date.valueOf("2025-06-01"));
         int id = course.getCourseId();
         insertedCourses.add(id);
         courseDao.updateCourse(id, "Test Basics", Date.valueOf("2025-03-01"), Date.valueOf("2025-07-01"));
@@ -150,11 +150,11 @@ class CourseDaoTest {
      */
     @Test
     void updateCourseWithInvalidDatesTest() {
-        Course course = courseDao.addCourse(1, "Test101", Date.valueOf("2025-02-01"), Date.valueOf("2025-06-01"));
+        Course course = courseDao.addCourse(1, "T Course", Date.valueOf("2025-02-01"), Date.valueOf("2025-06-01"));
         int id = course.getCourseId();
         insertedCourses.add(id);
 
-        boolean updated = courseDao.updateCourse(id, "Test101", Date.valueOf("2025-07-01"), Date.valueOf("2025-06-01"));
+        boolean updated = courseDao.updateCourse(id, "Testing", Date.valueOf("2025-07-01"), Date.valueOf("2025-06-01"));
         assertFalse(updated, "Update should fail when end date is before start date");
     }
 
@@ -167,7 +167,7 @@ class CourseDaoTest {
         int id = course.getCourseId();
         insertedCourses.add(id);
         boolean updated = courseDao.updateCourse(id, null, Date.valueOf("2025-03-01"), Date.valueOf("2025-07-01"));
-        assertTrue(updated, "Update should fail with null course name");
+        assertTrue(updated, "Update shouldn´t fail with null course name");
     }
 
     /**
@@ -184,10 +184,10 @@ class CourseDaoTest {
      */
     @Test
     void updateCourseTestWithNulLDatesTest() {
-        Course course = courseDao.addCourse(1, "Test101", Date.valueOf("2025-02-01"), Date.valueOf("2025-06-01"));
+        Course course = courseDao.addCourse(1, "Testable", Date.valueOf("2025-02-01"), Date.valueOf("2025-06-01"));
         int id = course.getCourseId();
         insertedCourses.add(id);
-        boolean updated = courseDao.updateCourse(id, "Test101", null, null);
+        boolean updated = courseDao.updateCourse(id, "Test 1", null, null);
         assertTrue(updated, "Update should fail with null dates");
     }
 

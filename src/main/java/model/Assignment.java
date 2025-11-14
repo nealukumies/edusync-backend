@@ -43,7 +43,7 @@ public class Assignment {
         return description;
     }
     public Timestamp getDeadline() {
-        Date d = DateFormater.parseStringToTimestamp(deadline);
+        final Date d = DateFormater.parseStringToTimestamp(deadline);
         return d != null ? new Timestamp(d.getTime()) : null;
     }
     public Status getStatus() {

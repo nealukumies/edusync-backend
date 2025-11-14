@@ -10,7 +10,6 @@ import com.sun.net.httpserver.HttpHandler;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -18,8 +17,15 @@ import java.util.Map;
 
 public abstract class BaseHandler implements HttpHandler {
     protected final Gson gson;
+    private static final String ERROR_KEY = "error";
+    protected static final String METHOD_NOT_ALLOWED = "Method Not Allowed";
+    protected static final String GET = "GET";
+    protected static final String POST = "POST";
+    protected static final String PUT = "PUT";
+    protected static final String DELETE = "DELETE";
 
-    public BaseHandler() {
+
+    protected BaseHandler() {
         this.gson = new GsonBuilder()
                 .registerTypeAdapter(LocalTime.class, (JsonSerializer<LocalTime>) (src, typeOfSrc, context) ->
                         new JsonPrimitive(src.format(DateTimeFormatter.ofPattern("HH:mm")))
@@ -54,7 +60,7 @@ public abstract class BaseHandler implements HttpHandler {
      */
     protected boolean isMethod(HttpExchange exchange, String method) throws IOException {
         if (!exchange.getRequestMethod().equalsIgnoreCase(method)) {
-            sendResponse(exchange, 405, Map.of("error", "Method Not Allowed"));
+            sendResponse(exchange, 405, Map.of(ERROR_KEY, "Method Not Allowed"));
             return false;
         }
         return true;
@@ -72,7 +78,7 @@ public abstract class BaseHandler implements HttpHandler {
         try {
             return gson.fromJson(body, Map.class);
         } catch (Exception e) {
-            sendResponse(exchange, 400, Map.of("error", "Invalid JSON"));
+            sendResponse(exchange, 400, Map.of(ERROR_KEY, "Invalid JSON"));
             return null; // Caller can check for null and return
         }
     }
@@ -90,13 +96,13 @@ public abstract class BaseHandler implements HttpHandler {
         String[] pathParts = exchange.getRequestURI().getPath().split("/");
 
         if (pathParts.length <= index) {
-            sendResponse(exchange, 400, Map.of("error", "Bad Request: Missing ID in path"));
+            sendResponse(exchange, 400, Map.of(ERROR_KEY, "Bad Request: Missing ID in path"));
             return -1;
         }
         try {
             return Integer.parseInt(pathParts[index]);
         } catch (NumberFormatException e) {
-            sendResponse(exchange, 400, Map.of("error", "Bad Request: Invalid ID format"));
+            sendResponse(exchange, 400, Map.of(ERROR_KEY, "Bad Request: Invalid ID format"));
             return -1;
         }
     }
@@ -111,13 +117,13 @@ public abstract class BaseHandler implements HttpHandler {
     protected int getIdFromHeader(HttpExchange exchange) throws IOException {
         String studentIdStr = exchange.getRequestHeaders().getFirst("student_id");
         if (studentIdStr == null) {
-            sendResponse(exchange, 401, Map.of("error", "Unauthorized: Missing Student ID header"));
+            sendResponse(exchange, 401, Map.of(ERROR_KEY, "Unauthorized: Missing Student ID header"));
             return -1;
         }
         try {
             return Integer.parseInt(studentIdStr);
         } catch (NumberFormatException e) {
-            sendResponse(exchange, 400, Map.of("error", "Bad Request: Invalid Student ID format"));
+            sendResponse(exchange, 400, Map.of(ERROR_KEY, "Bad Request: Invalid Student ID format"));
             return -1;
         }
     }
@@ -132,7 +138,7 @@ public abstract class BaseHandler implements HttpHandler {
     protected String getRoleFromHeader(HttpExchange exchange) throws IOException {
         String role = exchange.getRequestHeaders().getFirst("role");
         if (role == null) {
-            sendResponse(exchange, 401, Map.of("error", "Unauthorized: Missing role header"));
+            sendResponse(exchange, 401, Map.of(ERROR_KEY, "Unauthorized: Missing role header"));
             return null;
         }
         return role;
@@ -151,20 +157,37 @@ public abstract class BaseHandler implements HttpHandler {
     protected boolean isAuthorized(HttpExchange exchange, int studentId) throws IOException {
         String role = getRoleFromHeader(exchange);
         if (role == null) {
-            sendResponse(exchange, 401, Map.of("error", "Unauthorized: Missing role header"));
+            sendResponse(exchange, 401, Map.of(ERROR_KEY, "Unauthorized: Missing role header"));
             return false;
         }
 
         int headerId = getIdFromHeader(exchange);
         if (headerId == -1) {
-            sendResponse(exchange, 401, Map.of("error", "Unauthorized: Missing student id in header"));
+            sendResponse(exchange, 401, Map.of(ERROR_KEY, "Unauthorized: Missing student id in header"));
             return false;
         }
         if ("user".equals(role) && studentId != headerId) {
-            sendResponse(exchange, 403, Map.of("error", "Forbidden: Insufficient permissions"));
+            sendResponse(exchange, 403, Map.of(ERROR_KEY, "Forbidden: Insufficient permissions"));
             return false;
         }
         return true;
     }
+
+    @Override
+    public void handle(HttpExchange exchange) throws IOException {
+        String method = exchange.getRequestMethod().toUpperCase();
+        switch (method) {
+            case GET -> handleGet(exchange);
+            case POST -> handlePost(exchange);
+            case PUT -> handlePut(exchange);
+            case DELETE -> handleDelete(exchange);
+            default -> sendResponse(exchange, 405, Map.of(ERROR_KEY, METHOD_NOT_ALLOWED));
+        }
+    }
+
+    protected void handleGet(HttpExchange exchange) throws IOException {}
+    protected void handlePost(HttpExchange exchange) throws IOException {}
+    protected void handlePut(HttpExchange exchange) throws IOException {}
+    protected void handleDelete(HttpExchange exchange) throws IOException {}
 
 }

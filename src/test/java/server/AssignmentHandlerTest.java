@@ -7,7 +7,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import server.testutils.MockHttpExchange;
 
-import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
@@ -285,7 +284,7 @@ class AssignmentHandlerTest {
         String body = "{\"status\":\"completed\"}";
         Assignment existingAssignment = new Assignment(1, 1, 1, "Old Assignment", "Old Description", Timestamp.valueOf("2024-12-31 13:00:00"), Status.PENDING);
         Assignment updatedAssignment = new Assignment(1, 1, 1, "Old Assignment", "Old Description", Timestamp.valueOf("2024-12-31 13:00:00"), Status.COMPLETED);
-        when(mockDao.setStatus(1, Status.COMPLETED)).thenReturn(true);
+        when(mockDao.updateStatus(1, Status.COMPLETED)).thenReturn(true);
         when(mockDao.getAssignmentById(1)).thenReturn(existingAssignment).thenReturn(updatedAssignment);
         MockHttpExchange exchange = new MockHttpExchange("PUT", "/assignments/1", body);
         exchange.withHeader("student_id", "1").withHeader("role", "user");
@@ -302,7 +301,7 @@ class AssignmentHandlerTest {
         Assignment existingAssignment = new Assignment(1, 1, 1, "Old Assignment", "Old Description", Timestamp.valueOf("2024-12-31 12:45:00"), Status.PENDING);
         Assignment updatedAssignment = new Assignment(1, 1, 1, "Updated Assignment", "Old Description", Timestamp.valueOf("2024-12-31 12:45:00"), Status.COMPLETED);
         when(mockDao.updateAssignment(1, "Updated Assignment", "Old Description", Timestamp.valueOf("2024-12-31 12:45:00"), 1)).thenReturn(true);
-        when(mockDao.setStatus(1, Status.COMPLETED)).thenReturn(true);
+        when(mockDao.updateStatus(1, Status.COMPLETED)).thenReturn(true);
         when(mockDao.getAssignmentById(1)).thenReturn(existingAssignment).thenReturn(updatedAssignment);
         MockHttpExchange exchange = new MockHttpExchange("PUT", "/assignments/1", body);
         exchange.withHeader("student_id", "1").withHeader("role", "user");

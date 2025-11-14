@@ -7,15 +7,14 @@ package database;
 
 import model.Student;
 import org.mindrot.jbcrypt.BCrypt;
-import server.Server;
-import server.StudentHandler;
 
 import java.sql.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@SuppressWarnings("PMD.AtLeastOneConstructor")
 public class StudentDao {
-    private static final Logger logger = Logger.getLogger(StudentDao.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(StudentDao.class.getName());
 
     /**
      * Adds a new student to the database. Returns the Student object if successful, or null if insertion fails.
@@ -28,25 +27,25 @@ public class StudentDao {
         if (name == null || name.isEmpty() || email == null || email.isEmpty() || password == null || password.isEmpty()) {
             return null;
         }
-        Connection conn = MariaDBConnection.getConnection();
-        String sql = "INSERT INTO students (name, email, password_hash) VALUES (?, ?, ?);";
+        final Connection conn = MariaDBConnection.getConnection();
+        final String sql = "INSERT INTO students (name, email, password_hash) VALUES (?, ?, ?);";
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)){
             ps.setString(1, name);
             ps.setString(2, email);
             String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(12));
             ps.setString(3, hashedPassword);
-            int rows = ps.executeUpdate();
+            final int rows = ps.executeUpdate();
             if (rows > 0) {
                 try (ResultSet rs = ps.getGeneratedKeys()) {
                     if (rs.next()) {
-                        int newId = rs.getInt(1);
+                        final int newId = rs.getInt(1);
                         return new Student(newId, name, email, "user"); // Default role is "user"
                     }
                 }
             } return null; // Indicate failure
         } catch (SQLException e) {
-            if (logger.isLoggable(Level.SEVERE)) {
-                logger.log(Level.SEVERE, () -> "Failed to add student: " + e.getMessage());
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.log(Level.SEVERE, () -> "Failed to add student: " + e.getMessage());
             }
             return null; // Indicate failure
         }
@@ -58,22 +57,22 @@ public class StudentDao {
      * @return
      */
     public Student getStudent(String email) {
-        Connection conn = MariaDBConnection.getConnection();
-        String sql = "SELECT student_id, name, email, role FROM students WHERE email = ?;";
+        final Connection conn = MariaDBConnection.getConnection();
+        final String sql = "SELECT student_id, name, email, role FROM students WHERE email = ?;";
         try (PreparedStatement ps = conn.prepareStatement(sql)){
             ps.setString(1, email);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    int id = rs.getInt("student_id");
-                    String name = rs.getString("name");
-                    String role = rs.getString("role");
+                    final int id = rs.getInt("student_id");
+                    final String name = rs.getString("name");
+                    final String role = rs.getString("role");
                     return new Student(id, name, email, role);
                 }
             }
             return null; // Student not found
         } catch (SQLException e) {
-            if (logger.isLoggable(Level.SEVERE)) {
-                logger.log(Level.SEVERE, () -> "Failed to get student: " + e.getMessage());
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.log(Level.SEVERE, () -> "Failed to get student: " + e.getMessage());
             }
             return null;
         }
@@ -86,22 +85,22 @@ public class StudentDao {
      */
 
     public Student getStudentById(int studentId) {
-        Connection conn = MariaDBConnection.getConnection();
-        String sql = "SELECT name, email, role FROM students WHERE student_id = ?;";
+        final Connection conn = MariaDBConnection.getConnection();
+        final String sql = "SELECT name, email, role FROM students WHERE student_id = ?;";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, studentId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    String name = rs.getString("name");
-                    String email = rs.getString("email");
-                    String role = rs.getString("role");
+                    final String name = rs.getString("name");
+                    final String email = rs.getString("email");
+                    final String role = rs.getString("role");
                     return new Student(studentId, name, email, role);
                 }
             }
             return null; // Student not found
         } catch (SQLException e) {
-            if (logger.isLoggable(Level.SEVERE)) {
-                logger.log(Level.SEVERE, () -> "Failed to get student: " + e.getMessage());
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.log(Level.SEVERE, () -> "Failed to get student: " + e.getMessage());
             }
             return null;
         }
@@ -113,8 +112,8 @@ public class StudentDao {
      * @return String - password hash, or null if not found
      */
     public String getPasswordHash(String email) {
-        Connection conn = MariaDBConnection.getConnection();
-        String sql = "SELECT password_hash FROM students WHERE email = ?;";
+        final Connection conn = MariaDBConnection.getConnection();
+        final String sql = "SELECT password_hash FROM students WHERE email = ?;";
         try (PreparedStatement ps = conn.prepareStatement(sql)){
             ps.setString(1, email);
             try (ResultSet rs = ps.executeQuery()) {
@@ -124,8 +123,8 @@ public class StudentDao {
             }
             return null; // Student not found
         } catch (SQLException e) {
-            if (logger.isLoggable(Level.SEVERE)) {
-                logger.log(Level.SEVERE, () -> "Failed to get password hash: " + e.getMessage());
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.log(Level.SEVERE, () -> "Failed to get password hash: " + e.getMessage());
             }
             return null;
         }
@@ -138,7 +137,7 @@ public class StudentDao {
      * @return
      */
     public boolean deleteStudent(int studentId) {
-        Connection conn = MariaDBConnection.getConnection();
+        final Connection conn = MariaDBConnection.getConnection();
         try {
             conn.setAutoCommit(false); // start transaction
 
@@ -157,7 +156,7 @@ public class StudentDao {
             }
 
             // Delete student
-            int rows;
+            final int rows;
             try (PreparedStatement ps = conn.prepareStatement(
                     "DELETE FROM students WHERE student_id = ?")) {
                 ps.setInt(1, studentId);
@@ -169,18 +168,18 @@ public class StudentDao {
 
         } catch (SQLException e) {
             try { conn.rollback(); } catch (SQLException ex) {
-                if (logger.isLoggable(Level.SEVERE)) {
-                    logger.log(Level.SEVERE, () -> "Failed to rollback: " + ex.getMessage());
+                if (LOGGER.isLoggable(Level.SEVERE)) {
+                    LOGGER.log(Level.SEVERE, () -> "Failed to rollback: " + ex.getMessage());
                 }
             }
-            if (logger.isLoggable(Level.SEVERE)) {
-                logger.log(Level.SEVERE, () -> "Failed to delete student: " + e.getMessage());
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.log(Level.SEVERE, () -> "Failed to delete student: " + e.getMessage());
             }
             return false;
         } finally {
             try { conn.setAutoCommit(true); } catch (SQLException ex) {
-                if (logger.isLoggable(Level.SEVERE)) {
-                    logger.log(Level.SEVERE, () -> "Failed to setAutoCommit: " + ex.getMessage());
+                if (LOGGER.isLoggable(Level.SEVERE)) {
+                    LOGGER.log(Level.SEVERE, () -> "Failed to setAutoCommit: " + ex.getMessage());
                 }
             }
         }
@@ -190,16 +189,16 @@ public class StudentDao {
         if (newName == null || newName.isEmpty()) {
             return false;
         }
-        Connection conn = MariaDBConnection.getConnection();
-        String sql = "UPDATE students SET name = ? WHERE student_id = ?;";
+        final Connection conn = MariaDBConnection.getConnection();
+        final String sql = "UPDATE students SET name = ? WHERE student_id = ?;";
         try (PreparedStatement ps = conn.prepareStatement(sql)){
             ps.setString(1, newName);
             ps.setInt(2, studentId);
-            int rows = ps.executeUpdate();
+            final int rows = ps.executeUpdate();
             return rows > 0;
         } catch (SQLException e) {
-            if (logger.isLoggable(Level.SEVERE)) {
-                logger.log(Level.SEVERE, () -> "Failed to update student name: " + e.getMessage());
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.log(Level.SEVERE, () -> "Failed to update student name: " + e.getMessage());
             }
             return false;
         }
@@ -209,15 +208,15 @@ public class StudentDao {
         if (newEmail == null || newEmail.isEmpty()) {
             return false;
         }
-        Connection conn = MariaDBConnection.getConnection();
-        String sql = "UPDATE students SET email = ? WHERE student_id = ?;";
+        final Connection conn = MariaDBConnection.getConnection();
+        final String sql = "UPDATE students SET email = ? WHERE student_id = ?;";
         try (PreparedStatement ps = conn.prepareStatement(sql)){
             ps.setString(1, newEmail);
             ps.setInt(2, studentId);
-            int rows = ps.executeUpdate();
+            final int rows = ps.executeUpdate();
             return rows > 0;
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, () -> "Failed to update student email: " + e.getMessage());
+            LOGGER.log(Level.SEVERE, () -> "Failed to update student email: " + e.getMessage());
             return false;
         }
     }

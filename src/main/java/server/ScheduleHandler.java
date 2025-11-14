@@ -27,6 +27,7 @@ public class ScheduleHandler extends BaseHandler {
             justification = "CourseDao is controller; no exposure risk"
     )
     private final CourseDao courseDao;
+    private static final String ERROR_KEY = "error";
 
     /**
      * Constructor for ScheduleHandler. Data access objects (DAOs) are injected via constructor.
@@ -34,36 +35,9 @@ public class ScheduleHandler extends BaseHandler {
      * @param courseDao
      */
     public ScheduleHandler(ScheduleDao scheduleDao, CourseDao courseDao) {
+        super();
         this.scheduleDao = scheduleDao;
         this.courseDao = courseDao;
-    }
-
-    /**
-     * Handles incoming HTTP requests and routes them to the appropriate method
-     * based on the HTTP method (GET, POST, DELETE, PUT).
-     * @param exchange the exchange containing the request from the
-     *                 client and used to send the response
-     * @throws IOException
-     */
-    @Override
-    public void handle(HttpExchange exchange) throws IOException {
-        String method = exchange.getRequestMethod();
-        switch (method) {
-            case "GET":
-                handleGet(exchange);
-                break;
-            case "POST":
-                handlePost(exchange);
-                break;
-            case "DELETE":
-                handleDelete(exchange);
-                break;
-            case "PUT":
-                handlePut(exchange);
-                break;
-            default:
-                sendResponse(exchange, 405, "Method Not Allowed");
-        }
     }
 
     /**
@@ -73,11 +47,10 @@ public class ScheduleHandler extends BaseHandler {
      * @param exchange
      * @throws IOException
      */
-    private void handleGet(HttpExchange exchange) throws IOException {
+    protected void handleGet(HttpExchange exchange) throws IOException {
         String[] pathParts = exchange.getRequestURI().getPath().split("/");
 
-        // Handle /schedules/courses/{courseId}
-        if (pathParts[2].equals("courses") && pathParts.length == 4) {
+        if ("courses".equals(pathParts[2]) && pathParts.length == 4) {
             int courseId = getIdFromPath(exchange, 3);
             if (courseId == -1) return;
             List<Schedule> schedules = scheduleDao.getAllSchedulesForCourse(courseId);
@@ -89,8 +62,7 @@ public class ScheduleHandler extends BaseHandler {
             return;
         }
 
-        //handle /schedules/students/{studentId}
-        if (pathParts[2].equals("students") && pathParts.length == 4) {
+        if ("students".equals(pathParts[2]) && pathParts.length == 4) {
             int studentId = getIdFromPath(exchange, 3);
             if (studentId == -1) return;
             if (!isAuthorized(exchange, studentId)) return;
@@ -103,7 +75,6 @@ public class ScheduleHandler extends BaseHandler {
             return;
         }
 
-        // Handle /schedules/{scheduleId}
         int scheduleId = getIdFromPath(exchange, 2);
         if (scheduleId == -1) return;
         Schedule schedule = scheduleDao.getSchedule(scheduleId);
@@ -122,20 +93,20 @@ public class ScheduleHandler extends BaseHandler {
      * @param exchange
      * @throws IOException
      */
-    private void handlePost(HttpExchange exchange) throws IOException {
+    protected void handlePost(HttpExchange exchange) throws IOException {
         Map<String, String> requestMap = parseJsonBody(exchange);
         if (requestMap == null) { return; }
 
         String courseStr = (requestMap.get("course_id"));
         if (courseStr == null) {
-            sendResponse(exchange, 400, Map.of("error", "course_id is required"));
+            sendResponse(exchange, 400, Map.of(ERROR_KEY, "course_id is required"));
             return;
         }
         int courseId;
         try {
             courseId = Integer.parseInt(courseStr);
         } catch (NumberFormatException e) {
-            sendResponse(exchange, 400, Map.of("error", "Invalid course_id format"));
+            sendResponse(exchange, 400, Map.of(ERROR_KEY, "Invalid course_id format"));
             return;
         }
 
@@ -148,12 +119,12 @@ public class ScheduleHandler extends BaseHandler {
                 weekday = Weekday.valueOf(weekdayStr.toUpperCase());
             }
         } catch (IllegalArgumentException e) {
-            sendResponse(exchange, 400, Map.of("error", "Invalid weekday value"));
+            sendResponse(exchange, 400, Map.of(ERROR_KEY, "Invalid weekday value"));
             return;
         }
 
         if (courseId <= 0 || weekday == null || startTime == null || endTime == null) {
-            sendResponse(exchange, 400, Map.of("error", "course_id, weekday, start_time, and end_time are required"));
+            sendResponse(exchange, 400, Map.of(ERROR_KEY, "course_id, weekday, start_time, and end_time are required"));
             return;
         }
 
@@ -163,17 +134,17 @@ public class ScheduleHandler extends BaseHandler {
             start = LocalTime.parse(startTime);
             end = LocalTime.parse(endTime);
         } catch (Exception e) {
-            sendResponse(exchange, 400, Map.of("error", "Invalid time format. Use HH:MM"));
+            sendResponse(exchange, 400, Map.of(ERROR_KEY, "Invalid time format. Use HH:MM"));
             return;
         }
         if (!start.isBefore(end)) {
-            sendResponse(exchange, 400, Map.of("error", "start_time must be before end_time"));
+            sendResponse(exchange, 400, Map.of(ERROR_KEY, "start_time must be before end_time"));
             return;
         }
 
         Schedule schedule = scheduleDao.insertSchedule(courseId, weekday, start, end);
         if (schedule == null) {
-            sendResponse(exchange, 500, Map.of("error", "Failed to add schedule"));
+            sendResponse(exchange, 500, Map.of(ERROR_KEY, "Failed to add schedule"));
             return;
         }
         sendResponse(exchange, 201, schedule);
@@ -187,7 +158,7 @@ public class ScheduleHandler extends BaseHandler {
      * @param exchange
      * @throws IOException
      */
-    private void handleDelete(HttpExchange exchange) throws IOException {
+     protected void handleDelete(HttpExchange exchange) throws IOException {
         int scheduleId = getIdFromPath(exchange, 2);
         if (scheduleId == -1) return;
 
@@ -203,7 +174,7 @@ public class ScheduleHandler extends BaseHandler {
         if (!isAuthorized(exchange, studentId)) return;
         boolean success = scheduleDao.deleteSchedule(scheduleId);
         if (!success) {
-            sendResponse(exchange, 500, Map.of("error", "Failed to delete schedule"));
+            sendResponse(exchange, 500, Map.of(ERROR_KEY, "Failed to delete schedule"));
             return;
         }
         sendResponse(exchange, 200, Map.of("message", "Schedule deleted successfully"));
@@ -217,7 +188,7 @@ public class ScheduleHandler extends BaseHandler {
      * @param exchange
      * @throws IOException
      */
-    private void handlePut(HttpExchange exchange) throws IOException {
+    protected void handlePut(HttpExchange exchange) throws IOException {
         int scheduleId = getIdFromPath(exchange, 2);
         if (scheduleId == -1) return;
 
@@ -238,7 +209,7 @@ public class ScheduleHandler extends BaseHandler {
 
         Map<String, String> requestMap = parseJsonBody(exchange);
         if (requestMap == null){
-            sendResponse(exchange, 400, Map.of("error", "invalid json"));
+            sendResponse(exchange, 400, Map.of(ERROR_KEY, "invalid json"));
             return;
         }
 
@@ -255,18 +226,18 @@ public class ScheduleHandler extends BaseHandler {
             if (endTimeStr != null) end = LocalTime.parse(endTimeStr);
             if (weekdayStr != null) weekday = Weekday.valueOf(weekdayStr.toUpperCase());
         } catch (Exception e) {
-            sendResponse(exchange, 400, Map.of("error", "Invalid time or weekday format"));
+            sendResponse(exchange, 400, Map.of(ERROR_KEY, "Invalid time or weekday format"));
             return;
         }
 
         if (!start.isBefore(end)) {
-            sendResponse(exchange, 400, Map.of("error", "start_time must be before end_time"));
+            sendResponse(exchange, 400, Map.of(ERROR_KEY, "start_time must be before end_time"));
             return;
         }
 
         boolean updated = scheduleDao.updateSchedule(scheduleId, courseId, weekday, start, end);
         if (!updated) {
-            sendResponse(exchange, 500, Map.of("error", "Failed to update schedule"));
+            sendResponse(exchange, 500, Map.of(ERROR_KEY, "Failed to update schedule"));
             return;
         }
         sendResponse(exchange, 200, scheduleDao.getSchedule(scheduleId));

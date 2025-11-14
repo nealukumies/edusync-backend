@@ -66,6 +66,30 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <version>3.21.0</version>
+
+                <configuration>
+                    <failOnViolation>false</failOnViolation>
+
+                    <!-- Explicitly exclude test directory from analysis -->
+                    <excludes>
+                        <exclude>**/test/**</exclude>
+                        <exclude>src/test/java/**/*.java</exclude>
+                    </excludes>
+                </configuration>
+
+                <executions>
+                    <execution>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.5.0</version>
                 <executions>

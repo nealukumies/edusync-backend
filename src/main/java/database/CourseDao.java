@@ -11,8 +11,9 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@SuppressWarnings("PMD.AtLeastOneConstructor")
 public class CourseDao {
-    private static final Logger logger = Logger.getLogger(CourseDao.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(CourseDao.class.getName());
 
     /**
      * Adds a new course to the database. Returns the generated course ID, or -1 if insertion fails.
@@ -28,27 +29,27 @@ public class CourseDao {
         if (courseName == null || courseName.isEmpty()) {
             return null;
         }
-        Connection conn = MariaDBConnection.getConnection();
-        String sql = "INSERT INTO courses (student_id, course_name, start_date, end_date) VALUES (?, ?, ?, ?);";
+        final Connection conn = MariaDBConnection.getConnection();
+        final String sql = "INSERT INTO courses (student_id, course_name, start_date, end_date) VALUES (?, ?, ?, ?);";
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)){
 
             ps.setInt(1, studentId);
             ps.setString(2, courseName);
             ps.setDate(3, startDate);
             ps.setDate(4, endDate);
-            int rows = ps.executeUpdate();
+            final int rows = ps.executeUpdate();
             if (rows > 0) {
                 try (ResultSet rs = ps.getGeneratedKeys()) {
                     if (rs.next()) {
-                        int newId = rs.getInt(1);
+                        final int newId = rs.getInt(1);
                         return new Course(newId, studentId, courseName, startDate, endDate);
                     }
                 }
             } return null; // Indicate failure
 
         } catch (SQLException e) {
-            if (logger.isLoggable(Level.SEVERE)) {
-                logger.log(Level.SEVERE, () -> "Failed to add course: " + e.getMessage());
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.log(Level.SEVERE, () -> "Failed to add course: " + e.getMessage());
             }
             return null; // Indicate failure
         }
@@ -60,8 +61,8 @@ public class CourseDao {
      * @return
      */
     public Course getCourseById(int courseId) {
-        Connection conn = MariaDBConnection.getConnection();
-        String sql = "SELECT * FROM courses WHERE course_id = ?;";
+        final Connection conn = MariaDBConnection.getConnection();
+        final String sql = "SELECT * FROM courses WHERE course_id = ?;";
         try (PreparedStatement ps = conn.prepareStatement(sql)){
 
             ps.setInt(1, courseId);
@@ -78,34 +79,34 @@ public class CourseDao {
             }
             return null;
         } catch (SQLException e) {
-            if (logger.isLoggable(Level.SEVERE)) {
-                logger.log(Level.SEVERE, () -> "Failed to get course by ID: " + e.getMessage());
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.log(Level.SEVERE, () -> "Failed to get course by ID: " + e.getMessage());
             }
             return null;
         }
     }
 
     public List<Course> getAllCourses(int studentId) {
-        List<Course> courses = new ArrayList<>();
-        Connection conn = MariaDBConnection.getConnection();
-        String sql = "SELECT * FROM courses WHERE student_id = ?;";
+        final List<Course> courses = new ArrayList<>();
+        final Connection conn = MariaDBConnection.getConnection();
+        final String sql = "SELECT * FROM courses WHERE student_id = ?;";
         try (PreparedStatement ps = conn.prepareStatement(sql)){
 
             ps.setInt(1, studentId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    int courseId = rs.getInt("course_id");
-                    int studentIdFromDb = rs.getInt("student_id");
-                    String courseName = rs.getString("course_name");
-                    Date startDate = rs.getDate("start_date");
-                    Date endDate = rs.getDate("end_date");
+                    final int courseId = rs.getInt("course_id");
+                    final int studentIdFromDb = rs.getInt("student_id");
+                    final String courseName = rs.getString("course_name");
+                    final Date startDate = rs.getDate("start_date");
+                    final Date endDate = rs.getDate("end_date");
                     courses.add(new Course(courseId, studentIdFromDb, courseName, startDate, endDate));
                 }
             }
             return courses;
         } catch (SQLException e) {
-            if (logger.isLoggable(Level.SEVERE)) {
-                logger.log(Level.SEVERE, () -> "Failed to get all courses: " + e.getMessage());
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.log(Level.SEVERE, () -> "Failed to get all courses: " + e.getMessage());
             }
             return courses;
         }
@@ -118,9 +119,9 @@ public class CourseDao {
      * @return boolean
      */
     public boolean deleteCourse(int courseId) {
-        Connection conn = MariaDBConnection.getConnection();
-        String sqlSchedules = "DELETE FROM schedule WHERE course_id = ?;";
-        String sqlCourse = "DELETE FROM courses WHERE course_id = ?;";
+        final Connection conn = MariaDBConnection.getConnection();
+        final String sqlSchedules = "DELETE FROM schedule WHERE course_id = ?;";
+        final String sqlCourse = "DELETE FROM courses WHERE course_id = ?;";
 
         try (PreparedStatement psSchedules = conn.prepareStatement(sqlSchedules);
              PreparedStatement psCourse = conn.prepareStatement(sqlCourse)) {
@@ -128,28 +129,28 @@ public class CourseDao {
             psSchedules.setInt(1, courseId);
             psSchedules.executeUpdate();
             psCourse.setInt(1, courseId);
-            int rows = psCourse.executeUpdate();
+            final int rows = psCourse.executeUpdate();
             return rows > 0;
 
         } catch (SQLException e) {
-            if (logger.isLoggable(Level.SEVERE)) {
-                logger.log(Level.SEVERE, () -> "Failed to delete course: " + e.getMessage());
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.log(Level.SEVERE, () -> "Failed to delete course: " + e.getMessage());
             }
             return false;
         }
     }
 
     public boolean updateCourse(int courseId, String courseName, Date startDate, Date endDate) {
-        Course existingCourse = getCourseById(courseId);
+        final Course existingCourse = getCourseById(courseId);
         if (existingCourse == null) return false;
 
-        String finalCourseName = courseName != null ? courseName : existingCourse.getCourseName();
+        final String finalCourseName = courseName != null ? courseName : existingCourse.getCourseName();
 
         Date finalStartDate;
         if (startDate != null) {
             finalStartDate = startDate;
         } else if (existingCourse.getStartDate() != null) {
-            finalStartDate = new java.sql.Date(existingCourse.getStartDate().getTime());
+            finalStartDate = new Date(existingCourse.getStartDate().getTime());
         } else {
             finalStartDate = null;
         }
@@ -158,7 +159,7 @@ public class CourseDao {
         if (endDate != null) {
             finalEndDate = endDate;
         } else if (existingCourse.getEndDate() != null) {
-            finalEndDate = new java.sql.Date(existingCourse.getEndDate().getTime());
+            finalEndDate = new Date(existingCourse.getEndDate().getTime());
         } else {
             finalEndDate = null;
         }
@@ -167,8 +168,8 @@ public class CourseDao {
             return false;
         }
 
-        String sql = "UPDATE courses SET course_name = ?, start_date = ?, end_date = ? WHERE course_id = ?;";
-        Connection conn = MariaDBConnection.getConnection();
+        final String sql = "UPDATE courses SET course_name = ?, start_date = ?, end_date = ? WHERE course_id = ?;";
+        final Connection conn = MariaDBConnection.getConnection();
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, finalCourseName);
@@ -178,8 +179,8 @@ public class CourseDao {
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            if (logger.isLoggable(Level.SEVERE)) {
-                logger.log(Level.SEVERE, () -> "Failed to update course: " + e.getMessage());
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.log(Level.SEVERE, () -> "Failed to update course: " + e.getMessage());
             }
             return false;
         }

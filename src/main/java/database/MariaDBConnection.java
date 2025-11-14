@@ -2,7 +2,6 @@ package database;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.cdimascio.dotenv.Dotenv;
-import server.Server;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -11,7 +10,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class MariaDBConnection {
-    private static final Logger logger = Logger.getLogger(MariaDBConnection.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(MariaDBConnection.class.getName());
 
     @SuppressFBWarnings(
             value = "MS_EXPOSE_REP",
@@ -25,9 +24,9 @@ public class MariaDBConnection {
     }
 
     public static synchronized Connection getConnection() {
-        String url = dotenv.get("DB_URL");
-        String user = dotenv.get("DB_USER");
-        String password = dotenv.get("DB_PASSWORD");
+        final String url = dotenv.get("DB_URL");
+        final String user = dotenv.get("DB_USER");
+        final String password = dotenv.get("DB_PASSWORD");
 
         if (url == null || user == null || password == null) {
             throw new IllegalStateException("Database credentials are not set in .env");
@@ -37,7 +36,7 @@ public class MariaDBConnection {
             try {
                 conn = DriverManager.getConnection(url, user, password);
             } catch (SQLException e) {
-                logger.log(Level.SEVERE, () -> "Failed to connect to MariaDB: " + e.getMessage());
+                LOGGER.log(Level.SEVERE, () -> "Failed to connect to MariaDB: " + e.getMessage());
             }
         } return conn;
     }

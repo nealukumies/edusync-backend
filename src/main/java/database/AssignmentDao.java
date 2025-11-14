@@ -8,7 +8,6 @@ package database;
 
 import model.Assignment;
 import model.Status;
-import server.Server;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -16,8 +15,9 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@SuppressWarnings("PMD.AtLeastOneConstructor")
 public class AssignmentDao {
-    private static final Logger logger = Logger.getLogger(AssignmentDao.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(AssignmentDao.class.getName());
 
     /**
      * Inserts a new assignment into the database.
@@ -30,8 +30,8 @@ public class AssignmentDao {
      * @return Assignment object or null
      */
     public Assignment insertAssignment(int studentId, Integer courseId, String title, String description, Timestamp deadline) {
-        String sql = "INSERT INTO assignments (student_id, course_id, title, description, deadline) VALUES (?, ?, ?, ?, ?)";
-        Connection conn = MariaDBConnection.getConnection();
+        final String sql = "INSERT INTO assignments (student_id, course_id, title, description, deadline) VALUES (?, ?, ?, ?, ?)";
+        final Connection conn = MariaDBConnection.getConnection();
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)){
             ps.setInt(1, studentId);
             if (courseId != null) {
@@ -46,14 +46,14 @@ public class AssignmentDao {
 
             try (ResultSet rs = ps.getGeneratedKeys()){
                 if (rs.next()) {
-                    int newId = rs.getInt(1);
+                    final int newId = rs.getInt(1);
                     return new Assignment(newId, studentId, courseId, title, description, deadline, Status.PENDING);
             }
             }
             return null; // Indicate no rows affected
         } catch (SQLException e) {
-            if (logger.isLoggable(Level.SEVERE)) {
-                logger.log(Level.SEVERE, () -> "Failed to insert assignment: " + e.getMessage());
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.log(Level.SEVERE, () -> "Failed to insert assignment: " + e.getMessage());
             }
             return null; // Indicate failure
         }
@@ -66,29 +66,30 @@ public class AssignmentDao {
      * @return List<Assignment>
      */
     public List<Assignment> getAssignments(int studentId) {
-        List<Assignment> assignments = new ArrayList<>();
+        final List<Assignment> assignments = new ArrayList<>();
 
-        String sql = "SELECT * FROM assignments WHERE student_id = ?";
-        Connection conn = MariaDBConnection.getConnection();
+        final String sql = "SELECT * FROM assignments WHERE student_id = ?";
+        final Connection conn = MariaDBConnection.getConnection();
         try (PreparedStatement ps = conn.prepareStatement(sql)){
 
             ps.setInt(1, studentId);
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) { // loop over all rows
-                    int id = rs.getInt("assignment_id");
-                    String title = rs.getString("title");
-                    String description = rs.getString("description");
-                    Timestamp deadline = rs.getTimestamp("deadline");
-                    Integer courseId = rs.getObject("course_id") != null ? rs.getInt("course_id") : null;
-                    Status status = Status.fromDbValue(rs.getString("status"));
+                    final int id = rs.getInt("assignment_id");
+                    final String title = rs.getString("title");
+                    final String description = rs.getString("description");
+                    final Timestamp deadline = rs.getTimestamp("deadline");
+                    final String column = "course_id";
+                    final Integer courseId = rs.getObject(column) != null ? rs.getInt(column) : null;
+                    final Status status = Status.fromDbValue(rs.getString("status"));
                     assignments.add(new Assignment(id, studentId, courseId, title, description, deadline, status));
                 }
             }
             return assignments;
         } catch (SQLException e) {
-            if (logger.isLoggable(Level.SEVERE)) {
-                logger.log(Level.SEVERE, () -> "Failed to get assignments: " + e.getMessage());
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.log(Level.SEVERE, () -> "Failed to get assignments: " + e.getMessage());
             }
             return assignments;
         }
@@ -101,20 +102,20 @@ public class AssignmentDao {
      * @param status
      * @return boolean
      */
-    public boolean setStatus(int assignmentId, Status status){
+    public boolean updateStatus(int assignmentId, Status status){
         if (status == null) {
             return false;
         }
-        Connection conn = MariaDBConnection.getConnection();
-        String sql = "UPDATE assignments SET status = ? WHERE assignment_id = ?";
+        final Connection conn = MariaDBConnection.getConnection();
+        final String sql = "UPDATE assignments SET status = ? WHERE assignment_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status.getDbValue());
             ps.setInt(2, assignmentId);
-            int rows = ps.executeUpdate();
+            final int rows = ps.executeUpdate();
             return rows > 0;
         } catch (SQLException e) {
-            if (logger.isLoggable(Level.SEVERE)) {
-                logger.log(Level.SEVERE, () -> "Failed to set assignment status: " + e.getMessage());
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.log(Level.SEVERE, () -> "Failed to set assignment status: " + e.getMessage());
             }
             return false;
         }
@@ -127,25 +128,25 @@ public class AssignmentDao {
      * @return Assignment
      */
     public Assignment getAssignmentById(int assignmentId) {
-        Connection conn = MariaDBConnection.getConnection();
-        String sql = "SELECT * FROM assignments WHERE assignment_id = ?";
+        final Connection conn = MariaDBConnection.getConnection();
+        final String sql = "SELECT * FROM assignments WHERE assignment_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)){
 
             ps.setInt(1, assignmentId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    int studentId = rs.getInt("student_id");
-                    Integer courseId = rs.getObject("course_id") != null ? rs.getInt("course_id") : null;
-                    String title = rs.getString("title");
-                    String description = rs.getString("description");
-                    Timestamp deadline = rs.getTimestamp("deadline");
-                    Status status = Status.fromDbValue(rs.getString("status"));
+                    final int studentId = rs.getInt("student_id");
+                    final Integer courseId = rs.getObject("course_id") != null ? rs.getInt("course_id") : null;
+                    final String title = rs.getString("title");
+                    final String description = rs.getString("description");
+                    final Timestamp deadline = rs.getTimestamp("deadline");
+                    final Status status = Status.fromDbValue(rs.getString("status"));
                     return new Assignment(assignmentId, studentId, courseId, title, description, deadline, status);
                 }
             }
         } catch (SQLException e) {
-            if (logger.isLoggable(Level.SEVERE)) {
-                logger.log(Level.SEVERE, () -> "Failed to get assignment: " + e.getMessage());
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.log(Level.SEVERE, () -> "Failed to get assignment: " + e.getMessage());
             }
         }
         return null;
@@ -158,23 +159,23 @@ public class AssignmentDao {
      * @return boolean
      */
     public boolean deleteAssignment(int assignmentId) {
-        Connection conn = MariaDBConnection.getConnection();
-        String sql = "DELETE FROM assignments WHERE assignment_id = ?";
+        final Connection conn = MariaDBConnection.getConnection();
+        final String sql = "DELETE FROM assignments WHERE assignment_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)){
             ps.setInt(1, assignmentId);
-            int rows = ps.executeUpdate();
+            final int rows = ps.executeUpdate();
             return rows > 0;
         } catch (SQLException e) {
-            if (logger.isLoggable(Level.SEVERE)) {
-                logger.log(Level.SEVERE, () -> "Failed to delete assignment: " + e.getMessage());
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.log(Level.SEVERE, () -> "Failed to delete assignment: " + e.getMessage());
             }
             return false;
         }
     }
 
     public boolean updateAssignment(int assignmentId, String title, String description, Timestamp deadline, Integer courseId) {
-        Connection conn = MariaDBConnection.getConnection();
-        String sql = "UPDATE assignments SET title = ?, description = ?, deadline = ?, course_id = ? WHERE assignment_id = ?";
+        final Connection conn = MariaDBConnection.getConnection();
+        final String sql = "UPDATE assignments SET title = ?, description = ?, deadline = ?, course_id = ? WHERE assignment_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)){
             ps.setString(1, title);
             ps.setString(2, description);
@@ -188,8 +189,8 @@ public class AssignmentDao {
             int rows = ps.executeUpdate();
             return rows > 0;
         } catch (SQLException e) {
-            if (logger.isLoggable(Level.SEVERE)) {
-                logger.log(Level.SEVERE, () -> "Failed to update assignment: " + e.getMessage());
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.log(Level.SEVERE, () -> "Failed to update assignment: " + e.getMessage());
             }
             return false;
         }

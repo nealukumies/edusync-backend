@@ -19,6 +19,7 @@ public class LoginHandler extends BaseHandler {
      * @param authService The AuthService instance for authentication operations.
      */
     public LoginHandler(AuthService authService) {
+        super();
         this.authService = authService;
     }
 

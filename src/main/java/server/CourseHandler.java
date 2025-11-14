@@ -19,41 +19,15 @@ public class CourseHandler extends BaseHandler {
             justification = "CourseDao is controller; no exposure risk"
     )
     private final CourseDao courseDao;
+    private static final String ERROR_KEY = "error";
 
     /**
      * Constructor for CourseHandler. Data access object (DAO) is injected via constructor.
      * @param courseDao
      */
     public CourseHandler(CourseDao courseDao) {
+        super();
         this.courseDao = courseDao;
-    }
-
-    /**
-     * Handles incoming HTTP requests and routes them to the appropriate method
-     * based on the HTTP method (GET, POST, DELETE, PUT).
-     * @param exchange the exchange containing the request from the
-     *                 client and used to send the response
-     * @throws IOException
-     */
-    @Override
-    public void handle(HttpExchange exchange) throws IOException {
-        String method = exchange.getRequestMethod();
-        switch (method) {
-            case "GET":
-                handleGet(exchange);
-                break;
-            case "POST":
-                handlePost(exchange);
-                break;
-            case "DELETE":
-                handleDelete(exchange);
-                break;
-            case "PUT":
-                handlePut(exchange);
-                break;
-            default:
-                sendResponse(exchange, 405, Map.of("error", "Method Not Allowed"));
-        }
     }
 
     /**
@@ -63,11 +37,11 @@ public class CourseHandler extends BaseHandler {
      * @param exchange
      * @throws IOException
      */
-    private void handleGet(HttpExchange exchange) throws IOException {
+    protected void handleGet(HttpExchange exchange) throws IOException {
         String[] pathParts = exchange.getRequestURI().getPath().split("/");
 
         // Handle /courses/students/{studentId}
-        if (pathParts[2].equals("students") && pathParts.length == 4) {
+        if ("students".equals(pathParts[2]) && pathParts.length == 4) {
             int studentId = getIdFromPath(exchange, 3);
             if (studentId == -1) return;
             if (!isAuthorized(exchange, studentId)) return;
@@ -101,7 +75,7 @@ public class CourseHandler extends BaseHandler {
      * @param exchange
      * @throws IOException
      */
-    private void handlePost(HttpExchange exchange) throws IOException {
+    protected void handlePost(HttpExchange exchange) throws IOException {
         if (!isMethod(exchange, "POST")) { return; }
 
         Map<String, String> requestMap = parseJsonBody(exchange);
@@ -122,16 +96,16 @@ public class CourseHandler extends BaseHandler {
             if (endDate != null) {
             sqlEndDate = Date.valueOf(endDate);}
         } catch (IllegalArgumentException e) {
-            sendResponse(exchange, 400, Map.of("error", "Invalid date format. Use YYYY-MM-DD"));
+            sendResponse(exchange, 400, Map.of(ERROR_KEY, "Invalid date format. Use YYYY-MM-DD"));
             return;
         }
         if (courseName == null || sqlStartDate == null || sqlEndDate == null) {
-            sendResponse(exchange, 400, Map.of("error", "Course name, start date, and end date are required"));
+            sendResponse(exchange, 400, Map.of(ERROR_KEY, "Course name, start date, and end date are required"));
             return;
         }
         Course course  = courseDao.addCourse(studentId, courseName, sqlStartDate, sqlEndDate);
         if (course == null) {
-            sendResponse(exchange, 500, Map.of("error", "Failed to add course"));
+            sendResponse(exchange, 500, Map.of(ERROR_KEY, "Failed to add course"));
             return;
         }
         sendResponse(exchange, 201, course);
@@ -145,7 +119,7 @@ public class CourseHandler extends BaseHandler {
      * @param exchange
      * @throws IOException
      */
-    private void handleDelete(HttpExchange exchange) throws IOException {
+    protected void handleDelete(HttpExchange exchange) throws IOException {
         int studentId = getIdFromHeader(exchange);
         if (studentId == -1) return;
         int courseId = getIdFromPath(exchange, 2);
@@ -153,16 +127,16 @@ public class CourseHandler extends BaseHandler {
 
         Course course = courseDao.getCourseById(courseId);
         if (course == null) {
-            sendResponse(exchange, 404, Map.of("error", "Course not found"));
+            sendResponse(exchange, 404, Map.of(ERROR_KEY, "Course not found"));
             return;
         }
         if (course.getStudentId() != studentId) {
-            sendResponse(exchange, 403, Map.of("error", "Forbidden: You can only delete your own courses"));
+            sendResponse(exchange, 403, Map.of(ERROR_KEY, "Forbidden: You can only delete your own courses"));
             return;
         }
         boolean deleted = courseDao.deleteCourse(courseId);
         if (!deleted) {
-            sendResponse(exchange, 500, Map.of("error", "Failed to delete course"));
+            sendResponse(exchange, 500, Map.of(ERROR_KEY, "Failed to delete course"));
             return;
         }
         sendResponse(exchange, 200, Map.of("message", "Course deleted successfully"));
@@ -177,7 +151,7 @@ public class CourseHandler extends BaseHandler {
      * @param exchange
      * @throws IOException
      */
-    private void handlePut(HttpExchange exchange) throws IOException {
+    protected void handlePut(HttpExchange exchange) throws IOException {
         int courseId = getIdFromPath(exchange, 2);
         if (courseId == -1) return;
 
@@ -186,7 +160,7 @@ public class CourseHandler extends BaseHandler {
 
         Course existingCourse = courseDao.getCourseById(courseId);
         if (existingCourse == null) {
-            sendResponse(exchange, 404, Map.of("error", "Course not found"));
+            sendResponse(exchange, 404, Map.of(ERROR_KEY, "Course not found"));
             return;
         }
 
@@ -207,7 +181,7 @@ public class CourseHandler extends BaseHandler {
                 sqlEndDate = Date.valueOf(requestMap.get("end_date"));
             }
         } catch (IllegalArgumentException e) {
-            sendResponse(exchange, 400, Map.of("error", "Invalid date format. Use YYYY-MM-DD"));
+            sendResponse(exchange, 400, Map.of(ERROR_KEY, "Invalid date format. Use YYYY-MM-DD"));
             return;
         }
 
@@ -216,7 +190,7 @@ public class CourseHandler extends BaseHandler {
             Course updated = courseDao.getCourseById(courseId);
             sendResponse(exchange, 200, updated);
         } else {
-            sendResponse(exchange, 500, Map.of("error", "Failed to update course"));
+            sendResponse(exchange, 500, Map.of(ERROR_KEY, "Failed to update course"));
         }
     }
 }
