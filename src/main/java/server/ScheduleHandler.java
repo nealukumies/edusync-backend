@@ -13,6 +13,7 @@ import model.Weekday;
 
 import java.io.IOException;
 import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
 
@@ -47,44 +48,60 @@ public class ScheduleHandler extends BaseHandler {
      * @param exchange
      * @throws IOException
      */
+    @Override
     protected void handleGet(HttpExchange exchange) throws IOException {
         final String[] pathParts = exchange.getRequestURI().getPath().split("/");
 
-        if ("courses".equals(pathParts[2]) && pathParts.length == 4) {
-            final int courseId = getIdFromPath(exchange, 3);
-            if (courseId == -1) {return;}
-            final List<Schedule> schedules = scheduleDao.getAllSchedulesForCourse(courseId);
-            if (schedules == null || schedules.isEmpty()) {
-                sendResponse(exchange, 404, "No schedules found for this course");
-                return;
-            }
-            sendResponse(exchange, 200, schedules);
-            return;
+        if (handleGetByCourse(exchange, pathParts)) {return;}
+        if (handleGetByStudent(exchange, pathParts)) {return;}
+        handleGetByScheduleId(exchange, pathParts);
+    }
+
+    private boolean handleGetByCourse(HttpExchange exchange, String[] pathParts) throws IOException {
+        if (!"courses".equals(pathParts[2]) || pathParts.length != 4) return false;
+
+        final int courseId = getIdFromPath(exchange, 3);
+        if (courseId == -1) return true;
+
+        final List<Schedule> schedules = scheduleDao.getAllSchedulesForCourse(courseId);
+        if (schedules == null || schedules.isEmpty()) {
+            sendResponse(exchange, 404, "No schedules found for this course");
+            return true;
         }
 
-        if ("students".equals(pathParts[2]) && pathParts.length == 4) {
-            final int studentId = getIdFromPath(exchange, 3);
-            if (studentId == -1) {return;}
-            if (!isAuthorized(exchange, studentId)) {return;}
-            final List<Schedule> schedules = scheduleDao.getAllSchedulesForStudent(studentId);
-            if (schedules == null || schedules.isEmpty()) {
-                sendResponse(exchange, 404, "No schedules found for this student");
-                return;
-            }
-            sendResponse(exchange, 200, schedules);
-            return;
+        sendResponse(exchange, 200, schedules);
+        return true;
+    }
+
+    private boolean handleGetByStudent(HttpExchange exchange, String[] pathParts) throws IOException {
+        if (!"students".equals(pathParts[2]) || pathParts.length != 4) return false;
+
+        final int studentId = getIdFromPath(exchange, 3);
+        if (studentId == -1) return true;
+        if (!isAuthorized(exchange, studentId)) return true;
+
+        final List<Schedule> schedules = scheduleDao.getAllSchedulesForStudent(studentId);
+        if (schedules == null || schedules.isEmpty()) {
+            sendResponse(exchange, 404, "No schedules found for this student");
+            return true;
         }
 
+        sendResponse(exchange, 200, schedules);
+        return true;
+    }
+
+    private void handleGetByScheduleId(HttpExchange exchange, String[] pathParts) throws IOException {
         final int scheduleId = getIdFromPath(exchange, 2);
-        if (scheduleId == -1) {return;}
+        if (scheduleId == -1) return;
+
         final Schedule schedule = scheduleDao.getSchedule(scheduleId);
         if (schedule == null) {
             sendResponse(exchange, 404, "Schedule not found");
             return;
         }
+
         sendResponse(exchange, 200, schedule);
     }
-
     /**
      * Handles POST requests to create a new schedule.
      * Expects a JSON body with course_id, weekday, start_time, and end_time.
@@ -97,7 +114,7 @@ public class ScheduleHandler extends BaseHandler {
         final Map<String, String> requestMap = parseJsonBody(exchange);
         if (requestMap == null) { return; }
 
-        final String courseStr = (requestMap.get("course_id"));
+        final String courseStr = requestMap.get("course_id");
         if (courseStr == null) {
             sendResponse(exchange, 400, Map.of(ERROR_KEY, "course_id is required"));
             return;
@@ -133,7 +150,7 @@ public class ScheduleHandler extends BaseHandler {
         try {
             start = LocalTime.parse(startTime);
             end = LocalTime.parse(endTime);
-        } catch (Exception e) {
+        } catch (DateTimeParseException e) {
             sendResponse(exchange, 400, Map.of(ERROR_KEY, "Invalid time format. Use HH:MM"));
             return;
         }
@@ -160,15 +177,14 @@ public class ScheduleHandler extends BaseHandler {
      */
      protected void handleDelete(HttpExchange exchange) throws IOException {
          final int scheduleId = getIdFromPath(exchange, 2);
-        if (scheduleId == -1) {return;}
+         if (scheduleId == -1) {return;}
 
          final Schedule schedule = scheduleDao.getSchedule(scheduleId);
-        if (schedule == null) {
+         if (schedule == null) {
             sendResponse(exchange, 404, "Schedule not found");
             return;
-        }
+         }
         final int courseId = schedule.getCourseId();
-        final CourseDao courseDao = new CourseDao();
         final Course course = courseDao.getCourseById(courseId);
         final int studentId = course.getStudentId();
         if (!isAuthorized(exchange, studentId)) {return;}
@@ -225,7 +241,7 @@ public class ScheduleHandler extends BaseHandler {
             if (startTimeStr != null) {start = LocalTime.parse(startTimeStr);}
             if (endTimeStr != null) {end = LocalTime.parse(endTimeStr);}
             if (weekdayStr != null) {weekday = Weekday.valueOf(weekdayStr.toUpperCase());}
-        } catch (Exception e) {
+        } catch (DateTimeParseException | IllegalArgumentException e) {
             sendResponse(exchange, 400, Map.of(ERROR_KEY, "Invalid time or weekday format"));
             return;
         }
@@ -242,5 +258,4 @@ public class ScheduleHandler extends BaseHandler {
         }
         sendResponse(exchange, 200, scheduleDao.getSchedule(scheduleId));
     }
-
 }

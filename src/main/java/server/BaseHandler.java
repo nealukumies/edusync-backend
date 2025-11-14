@@ -7,10 +7,12 @@ package server;
 import com.google.gson.*;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import model.Status;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.sql.Timestamp;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
@@ -77,9 +79,9 @@ public abstract class BaseHandler implements HttpHandler {
         final String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
         try {
             return gson.fromJson(body, Map.class);
-        } catch (Exception e) {
+        } catch (JsonSyntaxException e) {
             sendResponse(exchange, 400, Map.of(ERROR_KEY, "Invalid JSON"));
-            return null; // Caller can check for null and return
+            return null;
         }
     }
 
@@ -173,7 +175,16 @@ public abstract class BaseHandler implements HttpHandler {
         return true;
     }
 
-    @Override
+    protected Integer parseEntityId(HttpExchange exchange, int index, String entityName) throws IOException {
+        int id = getIdFromPath(exchange, index);
+        if (id == -1) {
+            sendResponse(exchange, 400, Map.of(ERROR_KEY, entityName + " ID is required or invalid"));
+            return null;
+        }
+        return id;
+    }
+
+
     public void handle(HttpExchange exchange) throws IOException {
         final String method = exchange.getRequestMethod().toUpperCase();
         switch (method) {

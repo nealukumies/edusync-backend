@@ -145,7 +145,8 @@ public class AssignmentHandler extends BaseHandler {
      */
     protected void handlePut(HttpExchange exchange) throws IOException {
         final int assignmentId = getIdFromPath(exchange, 2);
-        if (assignmentId == -1) {return;}
+        if (assignmentId == -1) return;
+
         final Map<String, String> requestMap = parseJsonBody(exchange);
         if (requestMap == null) {
             sendResponse(exchange, 400, Map.of(ERROR_KEY, "invalid json"));
@@ -158,50 +159,56 @@ public class AssignmentHandler extends BaseHandler {
             return;
         }
 
-        final int studentId = existingAssignment.getStudentId();
-        if (!isAuthorized(exchange, studentId)) {return;}
+        if (!isAuthorized(exchange, existingAssignment.getStudentId())) return;
 
-        final String newTitle = requestMap.getOrDefault("title", existingAssignment.getTitle());
-        final String newDescription = requestMap.getOrDefault("description", existingAssignment.getDescription());
-        Timestamp newDeadline = existingAssignment.getDeadline() != null
-                ? new Timestamp(existingAssignment.getDeadline().getTime())
-                : null;
-        if (requestMap.get("deadline") != null) {
-            try {
-                newDeadline = java.sql.Timestamp.valueOf(requestMap.get("deadline"));
-            } catch (IllegalArgumentException e) {
-                sendResponse(exchange, 400, Map.of(ERROR_KEY, "Invalid date format. Use YYYY-MM-DD"));
-                return;
-            }
-        }
+        final Timestamp newDeadline = parseDeadline(requestMap, existingAssignment.getDeadline(), exchange);
+        if (newDeadline == null) return;
 
-        Integer newCourseId = existingAssignment.getCourseId();
-        if (requestMap.get("course_id") != null) {
-            try {
-                final int parsedCourseId = Integer.parseInt(requestMap.get("course_id"));
-                if (parsedCourseId > 0) {newCourseId = parsedCourseId;}
-            } catch (NumberFormatException e) {
-                sendResponse(exchange, 400, Map.of(ERROR_KEY, "Invalid course_id"));
-                return;
-            }
-        }
+        final Integer newCourseId = parseCourseId(requestMap, existingAssignment.getCourseId(), exchange);
+        if (newCourseId == null) return;
 
-        boolean updated = false;
-        if (requestMap.get("status") != null) {
-            final Status status = Status.fromDbValue(requestMap.get("status"));
-            final boolean statusUpdated = assignmentDao.updateStatus(assignmentId, status);
-            updated = updated || statusUpdated;
-        }
+        final boolean statusUpdated = updateStatusIfPresent(assignmentId, requestMap);
 
-        final boolean fieldsUpdated = assignmentDao.updateAssignment(assignmentId, newTitle, newDescription, newDeadline, newCourseId);
-        updated = updated || fieldsUpdated;
+        final boolean fieldsUpdated = assignmentDao.updateAssignment(
+                assignmentId,
+                requestMap.getOrDefault("title", existingAssignment.getTitle()),
+                requestMap.getOrDefault("description", existingAssignment.getDescription()),
+                newDeadline,
+                newCourseId
+        );
 
-        if (updated) {
-            final Assignment updatedAssignment = assignmentDao.getAssignmentById(assignmentId);
-            sendResponse(exchange, 200, updatedAssignment);
+        if (statusUpdated || fieldsUpdated) {
+            sendResponse(exchange, 200, assignmentDao.getAssignmentById(assignmentId));
         } else {
             sendResponse(exchange, 400, Map.of(ERROR_KEY, "No fields were updated"));
         }
+    }
+
+    private Timestamp parseDeadline(Map<String, String> requestMap, Timestamp existingDeadline, HttpExchange exchange) throws IOException {
+        if (requestMap.get("deadline") == null) return existingDeadline;
+        try {
+            return Timestamp.valueOf(requestMap.get("deadline"));
+        } catch (IllegalArgumentException e) {
+            sendResponse(exchange, 400, Map.of(ERROR_KEY, "Invalid date format. Use YYYY-MM-DD"));
+            return null;
+        }
+    }
+
+    private Integer parseCourseId(Map<String, String> requestMap, Integer existingCourseId, HttpExchange exchange) throws IOException {
+        if (requestMap.get("course_id") == null) return existingCourseId;
+        try {
+            int parsedId = Integer.parseInt(requestMap.get("course_id"));
+            return parsedId > 0 ? parsedId : existingCourseId;
+        } catch (NumberFormatException e) {
+            sendResponse(exchange, 400, Map.of(ERROR_KEY, "Invalid course_id"));
+            return null;
+        }
+    }
+
+    private boolean updateStatusIfPresent(int assignmentId, Map<String, String> requestMap) {
+        if (requestMap.get("status") == null) return false;
+        final Status status = Status.fromDbValue(requestMap.get("status"));
+        return assignmentDao.updateStatus(assignmentId, status);
     }
 
 }

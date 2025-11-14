@@ -9,7 +9,7 @@ import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class MariaDBConnection {
+public final class MariaDBConnection {
     private static final Logger LOGGER = Logger.getLogger(MariaDBConnection.class.getName());
 
     @SuppressFBWarnings(

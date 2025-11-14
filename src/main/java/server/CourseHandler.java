@@ -169,9 +169,9 @@ public class CourseHandler extends BaseHandler {
         final String courseName = requestMap.getOrDefault("course_name", existingCourse.getCourseName());
 
         Date sqlStartDate = existingCourse.getStartDate() != null ?
-                new java.sql.Date(existingCourse.getStartDate().getTime()) : null;
+                new Date(existingCourse.getStartDate().getTime()) : null;
         Date sqlEndDate = existingCourse.getEndDate() != null ?
-                new java.sql.Date(existingCourse.getEndDate().getTime()) : null;
+                new Date(existingCourse.getEndDate().getTime()) : null;
         try {
             if (requestMap.get("start_date") != null) {
                 sqlStartDate = Date.valueOf(requestMap.get("start_date"));
