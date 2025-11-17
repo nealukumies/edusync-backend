@@ -190,7 +190,7 @@ public abstract class BaseHandler implements HttpHandler {
      * @throws IOException Throws IOException if an I/O error occurs
      */
     protected Integer parseEntityId(HttpExchange exchange, String entityName) throws IOException {
-        int id = getIdFromPath(exchange, 2);
+        final int id = getIdFromPath(exchange, 2);
         if (id == -1) {
             sendResponse(exchange, 400, Map.of(ERROR_KEY, entityName + " ID is required or invalid"));
             return null;

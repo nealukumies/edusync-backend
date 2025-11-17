@@ -71,7 +71,7 @@ public class ScheduleHandler extends BaseHandler {
      * @throws IOException Throws IOException if an I/O error occurs
      */
     private boolean handleGetByCourse(HttpExchange exchange, String[] pathParts) throws IOException {
-        if (!"courses".equals(pathParts[2]) || pathParts.length != 4) return false;
+        if (!"courses".equals(pathParts[2]) || pathParts.length != 4) {return false;}
 
         final int courseId = getIdFromPath(exchange, 3);
         if (courseId == -1) return true;
@@ -98,7 +98,7 @@ public class ScheduleHandler extends BaseHandler {
      * @throws IOException Throws IOException if an I/O error occurs
      */
     private boolean handleGetByStudent(HttpExchange exchange, String[] pathParts) throws IOException {
-        if (!"students".equals(pathParts[2]) || pathParts.length != 4) return false;
+        if (!"students".equals(pathParts[2]) || pathParts.length != 4) {return false;}
 
         final int studentId = getIdFromPath(exchange, 3);
         if (studentId == -1) return true;
@@ -124,7 +124,7 @@ public class ScheduleHandler extends BaseHandler {
      */
     private void handleGetByScheduleId(HttpExchange exchange) throws IOException {
         final int scheduleId = getIdFromPath(exchange, 2);
-        if (scheduleId == -1) return;
+        if (scheduleId == -1) {return;}
 
         final Schedule schedule = scheduleDao.getSchedule(scheduleId);
         if (schedule == null) {

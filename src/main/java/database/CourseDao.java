@@ -11,18 +11,21 @@ import java.util.logging.Logger;
  * Data Access Object for Course entity. Provides methods to add and retrieve courses from the database.
  */
 public class CourseDao {
-    /** Logger for logging errors and information. */
+    /**
+     * Logger for logging errors and information.
+     */
     private static final Logger LOGGER = Logger.getLogger(CourseDao.class.getName());
 
     /**
      * Adds a new course to the database. Returns the generated course ID, or -1 if insertion fails.
      *
-     * @param studentId The ID of the student associated with the course.
+     * @param studentId  The ID of the student associated with the course.
      * @param courseName The name of the course.
-     * @param startDate The start date of the course.
-     * @param endDate The end date of the course.
+     * @param startDate  The start date of the course.
+     * @param endDate    The end date of the course.
      */
     public Course addCourse(int studentId, String courseName, Date startDate, Date endDate) {
+        Course result = null;
         if (startDate != null && endDate != null && endDate.before(startDate)) {
             return null;
         }
@@ -31,7 +34,7 @@ public class CourseDao {
         }
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "INSERT INTO courses (student_id, course_name, start_date, end_date) VALUES (?, ?, ?, ?);";
-        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)){
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             ps.setInt(1, studentId);
             ps.setString(2, courseName);
@@ -42,17 +45,16 @@ public class CourseDao {
                 try (ResultSet rs = ps.getGeneratedKeys()) {
                     if (rs.next()) {
                         final int newId = rs.getInt(1);
-                        return new Course(newId, studentId, courseName, startDate, endDate);
+                        result = new Course(newId, studentId, courseName, startDate, endDate);
                     }
                 }
-            } return null; // Indicate failure
-
+            }
         } catch (SQLException e) {
             if (LOGGER.isLoggable(Level.SEVERE)) {
                 LOGGER.log(Level.SEVERE, () -> "Failed to add course: " + e.getMessage());
             }
-            return null; // Indicate failure
         }
+        return result;
     }
 
     /**
@@ -62,14 +64,15 @@ public class CourseDao {
      * @return
      */
     public Course getCourseById(final int courseId) {
+        Course result = null;
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "SELECT course_id, student_id, course_name, start_date, end_date FROM courses WHERE course_id = ?;";
-        try (PreparedStatement ps = conn.prepareStatement(sql)){
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, courseId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    return new Course(
+                    result = new Course(
                             rs.getInt("course_id"),
                             rs.getInt("student_id"),
                             rs.getString("course_name"),
@@ -78,13 +81,13 @@ public class CourseDao {
                     );
                 }
             }
-            return null;
+
         } catch (SQLException e) {
             if (LOGGER.isLoggable(Level.SEVERE)) {
                 LOGGER.log(Level.SEVERE, () -> "Failed to get course by ID: " + e.getMessage());
             }
-            return null;
         }
+        return result;
     }
 
     /**
@@ -97,7 +100,7 @@ public class CourseDao {
         final List<Course> courses = new ArrayList<>();
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "SELECT course_id, student_id, course_name, start_date, end_date FROM courses WHERE student_id = ?;";
-        try (PreparedStatement ps = conn.prepareStatement(sql)){
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, studentId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -110,13 +113,12 @@ public class CourseDao {
                     courses.add(new Course(courseId, studentIdFromDb, courseName, startDate, endDate));
                 }
             }
-            return courses;
         } catch (SQLException e) {
             if (LOGGER.isLoggable(Level.SEVERE)) {
                 LOGGER.log(Level.SEVERE, () -> "Failed to get all courses: " + e.getMessage());
             }
-            return courses;
         }
+        return courses;
     }
 
     /**
@@ -126,6 +128,7 @@ public class CourseDao {
      * @return boolean
      */
     public boolean deleteCourse(final int courseId) {
+        boolean success = false;
         final Connection conn = MariaDBConnection.getConnection();
         final String sqlSchedules = "DELETE FROM schedule WHERE course_id = ?;";
         final String sqlCourse = "DELETE FROM courses WHERE course_id = ?;";
@@ -136,63 +139,71 @@ public class CourseDao {
             psSchedules.executeUpdate();
             psCourse.setInt(1, courseId);
             final int rows = psCourse.executeUpdate();
-            return rows > 0;
+            success = rows > 0;
 
         } catch (SQLException e) {
             if (LOGGER.isLoggable(Level.SEVERE)) {
                 LOGGER.log(Level.SEVERE, () -> "Failed to delete course: " + e.getMessage());
             }
-            return false;
         }
+        return success;
     }
 
     /**
-     * Updates an existing course with new values. Only non-null parameters are updated.
+     * Updates an existing course with new values. If a parameter is null, the existing value is retained.
      *
      * @param courseId The ID of the course to update.
      * @param courseName The new name of the course (or null to keep existing).
      * @param startDate The new start date of the course (or null to keep existing).
      * @param endDate The new end date of the course (or null to keep existing).
-     * @return boolean
+     * @return boolean indicating success or failure of the update.
      */
-    @SuppressWarnings("PMD.MethodArgumentCouldBeFinal")
     public boolean updateCourse(int courseId, String courseName, Date startDate, Date endDate) {
         final Course existingCourse = getCourseById(courseId);
-        if (existingCourse == null) {return false;}
+        if (existingCourse == null) return false; // early exit reduces nesting
 
-        final String finalCourseName = courseName != null ? courseName : existingCourse.getCourseName();
+        final String finalCourseName = resolveCourseName(courseName, existingCourse);
+        final Date finalStartDate = resolveStartDate(startDate, existingCourse);
+        final Date finalEndDate = resolveEndDate(endDate, existingCourse);
 
-        final Date finalStartDate;
-        if (startDate != null) {
-            finalStartDate = startDate;
-        } else if (existingCourse.getStartDate() != null) {
-            finalStartDate = new Date(existingCourse.getStartDate().getTime());
-        } else {
-            finalStartDate = null;
-        }
+        if (!isValidDateRange(finalStartDate, finalEndDate)) return false; // early exit
 
-        final Date finalEndDate;
-        if (endDate != null) {
-            finalEndDate = endDate;
-        } else if (existingCourse.getEndDate() != null) {
-            finalEndDate = new Date(existingCourse.getEndDate().getTime());
-        } else {
-            finalEndDate = null;
-        }
+        return executeUpdate(courseId, finalCourseName, finalStartDate, finalEndDate);
+    }
 
-        if (finalStartDate != null && finalEndDate != null && finalEndDate.before(finalStartDate)) {
-            return false;
-        }
+    /** Helper method for updateCourse */
+    private String resolveCourseName(String courseName, Course existingCourse) {
+        return courseName != null ? courseName : existingCourse.getCourseName();
+    }
 
+    /** Helper method for updateCourse */
+    private Date resolveStartDate(Date startDate, Course existingCourse) {
+        if (startDate != null) return startDate;
+        if (existingCourse.getStartDate() != null) return new Date(existingCourse.getStartDate().getTime());
+        return null;
+    }
+
+    /** Helper method for updateCourse */
+    private Date resolveEndDate(Date endDate, Course existingCourse) {
+        if (endDate != null) return endDate;
+        if (existingCourse.getEndDate() != null) return new Date(existingCourse.getEndDate().getTime());
+        return null;
+    }
+
+    /** Helper method for updateCourse */
+    private boolean isValidDateRange(Date startDate, Date endDate) {
+        return startDate != null && endDate != null && !endDate.before(startDate);
+    }
+
+    /** Helper method for updateCourse */
+    private boolean executeUpdate(int courseId, String courseName, Date startDate, Date endDate) {
         final String sql = "UPDATE courses SET course_name = ?, start_date = ?, end_date = ? WHERE course_id = ?;";
         final Connection conn = MariaDBConnection.getConnection();
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setString(1, finalCourseName);
-            ps.setDate(2, finalStartDate);
-            ps.setDate(3, finalEndDate);
+            ps.setString(1, courseName);
+            ps.setDate(2, startDate);
+            ps.setDate(3, endDate);
             ps.setInt(4, courseId);
-
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             if (LOGGER.isLoggable(Level.SEVERE)) {

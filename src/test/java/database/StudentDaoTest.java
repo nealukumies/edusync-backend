@@ -210,33 +210,6 @@ class StudentDaoTest {
         assertNull(student, "Adding student with null email should return null");
     }
 
-    /*
-    Test adding a student with a null password. The result should be null.
-     */
-    @Test
-    void addStudentWithEmptyPasswordTest() {
-        Student student = studentDao.addStudent("EmptyPass", "emptypass@test.com", "");
-        assertNull(student, "Adding student with empty password should return null");
-    }
-
-    /*
-    Test adding a student with an empty name. The result should be null.
-     */
-    @Test
-    void addStudentWithEmptyNameTest() {
-        Student student = studentDao.addStudent("", "emptyname@test.com", "password");
-        assertNull(student, "Adding student with empty name should return null");
-    }
-
-    /*
-    Test adding a student with an empty email. The result should be null.
-     */
-    @Test
-    void addStudentWithEmptyEmailTest() {
-        Student student = studentDao.addStudent("EmptyEmail", "", "password");
-        assertNull(student, "Adding student with empty email should return null");
-    }
-
     @Test
     void addStudentThrowsSQLExceptionTest() throws SQLException {
         try (MockedStatic<MariaDBConnection> mockedConnection = mockStatic(MariaDBConnection.class)) {

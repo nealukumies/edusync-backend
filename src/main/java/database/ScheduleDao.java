@@ -31,6 +31,7 @@ public class ScheduleDao {
      */
     @SuppressWarnings("PMD.MethodArgumentCouldBeFinal")
     public Schedule insertSchedule(Integer courseId, Weekday weekday, LocalTime startTime, LocalTime endTime) {
+        Schedule result = null;
         if (courseId == null || weekday == null || startTime == null || endTime == null) {
             throw new IllegalArgumentException("Course ID, weekday, start time, and end time must not be null");
         }
@@ -51,17 +52,16 @@ public class ScheduleDao {
                 try (ResultSet rs = ps.getGeneratedKeys()) {
                     if (rs.next()) {
                         final int newId = rs.getInt(1);
-                        return new Schedule(newId, courseId, weekday, startTime, endTime);
+                        result = new Schedule(newId, courseId, weekday, startTime, endTime);
                     }
                 }
             }
-            return null; // Indicate no rows affected
         } catch (SQLException e) {
             if (LOGGER.isLoggable(Level.SEVERE)) {
                 LOGGER.log(Level.SEVERE, () -> "Failed to insert schedule: " + e.getMessage());
             }
-            return null; // Indicate failure
         }
+        return result;
     }
 
     /**
@@ -71,18 +71,19 @@ public class ScheduleDao {
      * @return boolean
      */
     public boolean deleteSchedule(final int scheduleId) {
+        boolean success = false;
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "DELETE FROM schedule WHERE schedule_id = ?;";
         try (PreparedStatement ps = conn.prepareStatement(sql)){
             ps.setInt(1, scheduleId);
             final int rows = ps.executeUpdate();
-            return rows > 0; // Return true if a row was deleted
+            success = rows > 0;
         } catch (SQLException e) {
             if (LOGGER.isLoggable(Level.SEVERE)) {
                 LOGGER.log(Level.SEVERE, () -> "Failed to delete schedule: " + e.getMessage());
             }
-            return false; // Indicate failure
         }
+        return success;
     }
 
     /**
@@ -92,6 +93,7 @@ public class ScheduleDao {
      * @return Schedule
      */
     public Schedule getSchedule(final int scheduleId) {
+        Schedule result = null;
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "SELECT course_id, weekday, start_time, end_time FROM schedule WHERE schedule_id = ?;";
         try (PreparedStatement ps = conn.prepareStatement(sql)){
@@ -102,16 +104,15 @@ public class ScheduleDao {
                     final Weekday weekday = Weekday.fromString(rs.getString(WEEKDAY_KEY));
                     final LocalTime startTime = rs.getTime(START_TIME_KEY).toLocalTime();
                     final LocalTime endTime = rs.getTime(END_TIME_KEY).toLocalTime();
-                    return new Schedule(scheduleId, courseId, weekday, startTime, endTime);
+                    result = new Schedule(scheduleId, courseId, weekday, startTime, endTime);
                 }
             }
-            return null; // Schedule not found
         } catch (SQLException e) {
             if (LOGGER.isLoggable(Level.SEVERE)) {
                 LOGGER.log(Level.SEVERE, () -> "Failed to get schedule: " + e.getMessage());
             }
-            return null; // Indicate failure
         }
+        return result;
     }
 
     /**
@@ -136,13 +137,12 @@ public class ScheduleDao {
                     schedules.add(new Schedule(scheduleId, dbCourseId, weekday, startTime, endTime));
                 }
             }
-            return schedules;
         } catch (SQLException e) {
             if (LOGGER.isLoggable(Level.SEVERE)) {
                 LOGGER.log(Level.SEVERE, () -> "Failed to get schedules for course: " + e.getMessage());
             }
-            return schedules; // Return empty list on failure
         }
+        return schedules;
     }
 
     /**
@@ -191,6 +191,7 @@ public class ScheduleDao {
      * @return boolean
      */
     public boolean updateSchedule(int scheduleId, Integer courseId, Weekday weekday, LocalTime startTime, LocalTime endTime) {
+        boolean success = false;
         if (courseId == null || weekday == null || startTime == null || endTime == null) {
             throw new IllegalArgumentException("Course ID, weekday, start time, and end time must not be null");
         }
@@ -208,12 +209,12 @@ public class ScheduleDao {
             ps.setTime(4, valueOf(endTime));
             ps.setInt(5, scheduleId);
             final int rows = ps.executeUpdate();
-            return rows > 0; // Return true if a row was updated
+            success = rows > 0; // Return true if a row was updated
         } catch (SQLException e) {
             if (LOGGER.isLoggable(Level.SEVERE)) {
                 LOGGER.log(Level.SEVERE, () -> "Failed to update schedule: " + e.getMessage());
             }
-            return false; // Indicate failure
         }
+        return success;
     }
 }

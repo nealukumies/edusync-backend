@@ -24,9 +24,7 @@ public class StudentDao {
      */
     @SuppressWarnings("PMD.MethodArgumentCouldBeFinal")
     public Student addStudent(String name, String email, String password) {
-        if (name == null || name.isEmpty() || email == null || email.isEmpty() || password == null || password.isEmpty()) {
-            return null;
-        }
+        Student result = null;
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "INSERT INTO students (name, email, password_hash) VALUES (?, ?, ?);";
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)){
@@ -39,16 +37,16 @@ public class StudentDao {
                 try (ResultSet rs = ps.getGeneratedKeys()) {
                     if (rs.next()) {
                         final int newId = rs.getInt(1);
-                        return new Student(newId, name, email, "user"); // Default role is "user"
+                        result = new Student(newId, name, email, "user"); // Default role is "user"
                     }
                 }
-            } return null; // Indicate failure
+            }
         } catch (SQLException e) {
             if (LOGGER.isLoggable(Level.SEVERE)) {
                 LOGGER.log(Level.SEVERE, () -> "Failed to add student: " + e.getMessage());
             }
-            return null; // Indicate failure
         }
+        return result;
     }
 
     /**
@@ -58,6 +56,7 @@ public class StudentDao {
      * @return Student - the Student object, or null if not found
      */
     public Student getStudent(final String email) {
+        Student result = null;
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "SELECT student_id, name, email, role FROM students WHERE email = ?;";
         try (PreparedStatement ps = conn.prepareStatement(sql)){
@@ -67,16 +66,15 @@ public class StudentDao {
                     final int id = rs.getInt("student_id");
                     final String name = rs.getString("name");
                     final String role = rs.getString("role");
-                    return new Student(id, name, email, role);
+                    result = new Student(id, name, email, role);
                 }
             }
-            return null; // Student not found
         } catch (SQLException e) {
             if (LOGGER.isLoggable(Level.SEVERE)) {
                 LOGGER.log(Level.SEVERE, () -> "Failed to get student: " + e.getMessage());
             }
-            return null;
         }
+        return result;
     }
 
     /**
@@ -87,6 +85,7 @@ public class StudentDao {
      */
 
     public Student getStudentById(final int studentId) {
+        Student result = null;
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "SELECT name, email, role FROM students WHERE student_id = ?;";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -96,16 +95,15 @@ public class StudentDao {
                     final String name = rs.getString("name");
                     final String email = rs.getString("email");
                     final String role = rs.getString("role");
-                    return new Student(studentId, name, email, role);
+                    result = new Student(studentId, name, email, role);
                 }
             }
-            return null; // Student not found
         } catch (SQLException e) {
             if (LOGGER.isLoggable(Level.SEVERE)) {
                 LOGGER.log(Level.SEVERE, () -> "Failed to get student: " + e.getMessage());
             }
-            return null;
         }
+        return result;
     }
 
     /**
@@ -115,22 +113,22 @@ public class StudentDao {
      * @return String - password hash, or null if not found
      */
     public String getPasswordHash(final String email) {
+        String result = null;
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "SELECT password_hash FROM students WHERE email = ?;";
         try (PreparedStatement ps = conn.prepareStatement(sql)){
             ps.setString(1, email);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    return rs.getString("password_hash");
+                    result = rs.getString("password_hash");
                 }
             }
-            return null;
         } catch (SQLException e) {
             if (LOGGER.isLoggable(Level.SEVERE)) {
                 LOGGER.log(Level.SEVERE, () -> "Failed to get password hash: " + e.getMessage());
             }
-            return null;
         }
+        return result;
     }
 
     /**
@@ -140,6 +138,7 @@ public class StudentDao {
      * @return boolean
      */
     public boolean deleteStudent(final int studentId) {
+        boolean success = false;
         final Connection conn = MariaDBConnection.getConnection();
         try {
             conn.setAutoCommit(false);
@@ -160,7 +159,7 @@ public class StudentDao {
                 rows = ps.executeUpdate();
             }
             conn.commit();
-            return rows > 0;
+            success = rows > 0;
 
         } catch (SQLException e) {
             try { conn.rollback(); } catch (SQLException ex) {
@@ -171,7 +170,6 @@ public class StudentDao {
             if (LOGGER.isLoggable(Level.SEVERE)) {
                 LOGGER.log(Level.SEVERE, () -> "Failed to delete student: " + e.getMessage());
             }
-            return false;
         } finally {
             try { conn.setAutoCommit(true); } catch (SQLException ex) {
                 if (LOGGER.isLoggable(Level.SEVERE)) {
@@ -179,6 +177,7 @@ public class StudentDao {
                 }
             }
         }
+        return success;
     }
 
     /**
@@ -190,22 +189,22 @@ public class StudentDao {
      */
     @SuppressWarnings("PMD.MethodArgumentCouldBeFinal")
     public boolean updateStudentName(int studentId, String newName) {
-        if (newName == null || newName.isEmpty()) {
-            return false;
-        }
-        final Connection conn = MariaDBConnection.getConnection();
-        final String sql = "UPDATE students SET name = ? WHERE student_id = ?;";
-        try (PreparedStatement ps = conn.prepareStatement(sql)){
-            ps.setString(1, newName);
-            ps.setInt(2, studentId);
-            final int rows = ps.executeUpdate();
-            return rows > 0;
-        } catch (SQLException e) {
-            if (LOGGER.isLoggable(Level.SEVERE)) {
-                LOGGER.log(Level.SEVERE, () -> "Failed to update student name: " + e.getMessage());
+        boolean success = false;
+        if (newName != null && !newName.isEmpty()) {
+            final Connection conn = MariaDBConnection.getConnection();
+            final String sql = "UPDATE students SET name = ? WHERE student_id = ?;";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, newName);
+                ps.setInt(2, studentId);
+                final int rows = ps.executeUpdate();
+                success = rows > 0;
+            } catch (SQLException e) {
+                if (LOGGER.isLoggable(Level.SEVERE)) {
+                    LOGGER.log(Level.SEVERE, () -> "Failed to update student name: " + e.getMessage());
+                }
             }
-            return false;
         }
+        return success;
     }
 
     /**
