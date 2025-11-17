@@ -34,7 +34,6 @@ public class LoginHandler extends BaseHandler {
         if (!isMethod(exchange, "POST")) { return; }
 
         final Map<String, String> requestMap = parseJsonBody(exchange);
-        if (requestMap == null) { return; }
 
         final String email = requestMap.get("email");
         final String password = requestMap.get("password");

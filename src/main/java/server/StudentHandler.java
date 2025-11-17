@@ -64,8 +64,6 @@ public class StudentHandler extends BaseHandler {
         if (!isMethod(exchange, "POST")) { return; }
 
         final Map<String, String> requestMap = parseJsonBody(exchange);
-        if (requestMap == null) { return; }
-
         final String name = requestMap.get("name");
         final String email = requestMap.get("email");
         final String password = requestMap.get("password");
@@ -121,7 +119,6 @@ public class StudentHandler extends BaseHandler {
         if (!isAuthorized(exchange, studentId)) {return;}
 
         final Map<String, String> requestMap = parseJsonBody(exchange);
-        if (requestMap == null) { return; }
 
         final String newName = requestMap.get("name");
         final String newEmail = requestMap.get("email");

@@ -83,7 +83,6 @@ public class CourseHandler extends BaseHandler {
         if (!isMethod(exchange, "POST")) { return; }
 
         final Map<String, String> requestMap = parseJsonBody(exchange);
-        if (requestMap == null) { return; }
 
         final int studentId = getIdFromHeader(exchange);
         if (studentId == -1) {return;}
@@ -162,7 +161,6 @@ public class CourseHandler extends BaseHandler {
         if (courseId == -1) {return;}
 
         final Map<String, String> requestMap = parseJsonBody(exchange);
-        if (requestMap == null) { return; }
 
         final Course existingCourse = courseDao.getCourseById(courseId);
         if (existingCourse == null) {

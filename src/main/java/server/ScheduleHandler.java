@@ -114,7 +114,6 @@ public class ScheduleHandler extends BaseHandler {
     @Override
     protected void handlePost(HttpExchange exchange) throws IOException {
         final Map<String, String> requestMap = parseJsonBody(exchange);
-        if (requestMap == null) { return; }
 
         final String courseStr = requestMap.get("course_id");
         if (courseStr == null) {
@@ -228,8 +227,8 @@ public class ScheduleHandler extends BaseHandler {
         if (!isAuthorized(exchange, studentId)) {return;}
 
         final Map<String, String> requestMap = parseJsonBody(exchange);
-        if (requestMap == null){
-            sendResponse(exchange, 400, Map.of(ERROR_KEY, "invalid json"));
+        if (requestMap.isEmpty()) {
+            sendResponse(exchange, 400, Map.of(ERROR_KEY, "Invalid JSON"));
             return;
         }
 

@@ -79,7 +79,7 @@ public abstract class BaseHandler implements HttpHandler {
             return gson.fromJson(body, Map.class);
         } catch (JsonSyntaxException e) {
             sendResponse(exchange, 400, Map.of(ERROR_KEY, "Invalid JSON"));
-            return null;
+            return Map.of();
         }
     }
 

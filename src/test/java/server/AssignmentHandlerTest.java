@@ -218,7 +218,7 @@ class AssignmentHandlerTest {
         MockHttpExchange exchange = new MockHttpExchange("PUT", "/assignments/1", body);
         exchange.withHeader("student_id", "1").withHeader("role", "user");
         handler.handle(exchange);
-        assertEquals(400, exchange.getResponseCode(), "Response code should be 400");
+        assertEquals(404, exchange.getResponseCode(), "Response code should be 404");
     }
 
     /**

@@ -88,7 +88,6 @@ public class AssignmentHandler extends BaseHandler {
     @Override
     protected void handlePost(HttpExchange exchange) throws IOException {
         final Map<String, String> requestMap = parseJsonBody(exchange);
-        if (requestMap == null) { return; }
 
         final int studentId = getIdFromHeader(exchange);
 
@@ -158,10 +157,6 @@ public class AssignmentHandler extends BaseHandler {
         if (assignmentId == -1) return;
 
         final Map<String, String> requestMap = parseJsonBody(exchange);
-        if (requestMap == null) {
-            sendResponse(exchange, 400, Map.of(ERROR_KEY, "invalid json"));
-            return;
-        }
 
         final Assignment existingAssignment = assignmentDao.getAssignmentById(assignmentId);
         if (existingAssignment == null) {

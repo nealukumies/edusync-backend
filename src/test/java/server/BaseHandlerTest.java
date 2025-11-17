@@ -69,11 +69,18 @@ class BaseHandlerTest {
      */
     @Test
     void testParseJsonBody() throws Exception {
-        String json = "{\"key\":\"value\"}";
-        MockHttpExchange exchange = new MockHttpExchange("POST", "/students", json);
-        exchange = new MockHttpExchange("POST", "/students", "invalid json");
-        Map<String, String> result = baseHandler.parseJsonBody(exchange);
-        assertNull(result, "Expected parseJsonBody to return null for invalid JSON");
+        String validJson = "{\"key\":\"value\"}";
+        MockHttpExchange exchangeValid = new MockHttpExchange("POST", "/students", validJson);
+        Map<String, String> resultValid = baseHandler.parseJsonBody(exchangeValid);
+        assertEquals("value", resultValid.get("key"), "Should parse valid JSON correctly");
+    }
+
+    @Test
+    void testParseJsonBodyInvalidJson() throws Exception {
+        String invalidJson = "invalid json";
+        MockHttpExchange exchangeInvalid = new MockHttpExchange("POST", "/students", invalidJson);
+        Map<String, String> resultInvalid = baseHandler.parseJsonBody(exchangeInvalid);
+        assertTrue(resultInvalid.isEmpty(), "Should parse invalid JSON correctly");
     }
 
     /**

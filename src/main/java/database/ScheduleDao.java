@@ -43,7 +43,7 @@ public class ScheduleDao {
 
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "INSERT INTO schedule (course_id, weekday, start_time, end_time) VALUES (?, ?, ?, ?);";
-        try (PreparedStatement ps = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)){
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)){
             ps.setInt(1, courseId);
             ps.setString(2, weekday.name());
             ps.setTime(3, valueOf(startTime));
@@ -93,7 +93,7 @@ public class ScheduleDao {
      */
     public Schedule getSchedule(final int scheduleId) {
         final Connection conn = MariaDBConnection.getConnection();
-        final String sql = "SELECT * FROM schedule WHERE schedule_id = ?;";
+        final String sql = "SELECT course_id, weekday, start_time, end_time FROM schedule WHERE schedule_id = ?;";
         try (PreparedStatement ps = conn.prepareStatement(sql)){
             ps.setInt(1, scheduleId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -121,7 +121,7 @@ public class ScheduleDao {
      */
     public List<Schedule> getAllSchedulesForCourse(final int courseId) {
         final Connection conn = MariaDBConnection.getConnection();
-        final String sql = "SELECT * FROM schedule WHERE course_id = ?;";
+        final String sql = "SELECT schedule_id, course_id, weekday, start_time, end_time  FROM schedule WHERE course_id = ?;";
         final List<Schedule> schedules = new ArrayList<>();
         try (PreparedStatement ps = conn.prepareStatement(sql)){
             ps.setInt(1, courseId);
