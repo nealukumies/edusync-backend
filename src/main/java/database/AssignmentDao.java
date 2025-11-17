@@ -1,14 +1,7 @@
-/**
- * AssignmentDao.java
- * Data Access Object for managing assignments in the database. Provides methods to insert, retrieve, update, and delete assignments.
- */
-
-
 package database;
 
 import model.Assignment;
 import model.Status;
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,18 +9,22 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @SuppressWarnings("PMD.AtLeastOneConstructor")
+/**
+ * Data Access Object (DAO) for managing assignments in the database.
+ */
 public class AssignmentDao {
+    /** Logger for logging errors and information. */
     private static final Logger LOGGER = Logger.getLogger(AssignmentDao.class.getName());
+    /** Key for course ID column in the database. */
     private static final String COURSE_KEY = "course_id";
-
     /**
      * Inserts a new assignment into the database.
-     * Returns the created Assignment object, or null if insertion fails or no rows affected.
-     * @param studentId
-     * @param courseId
-     * @param title
-     * @param description
-     * @param deadline
+     * .
+     * @param studentId The ID of the student.
+     * @param courseId The ID of the course (can be null).
+     * @param title The title of the assignment.
+     * @param description The description of the assignment.
+     * @param deadline The deadline of the assignment.
      * @return Assignment object or null
      */
     @SuppressWarnings("PMD.MethodArgumentCouldBeFinal")
@@ -63,8 +60,8 @@ public class AssignmentDao {
 
     /**
      * Retrieves all assignments for a given student ID.
-     * Returns a list of Assignment objects, or null if an error occurs.
-     * @param studentId
+     *
+     * @param studentId The ID of the student.
      * @return List<Assignment>
      */
     public List<Assignment> getAssignments(final int studentId) {
@@ -99,9 +96,9 @@ public class AssignmentDao {
 
     /**
      * Sets the status of an assignment identified by assignmentId.
-     * Returns true if the update was successful, false otherwise.
-     * @param assignmentId
-     * @param status
+     *
+     * @param assignmentId The ID of the assignment.
+     * @param status The new status to set.
      * @return boolean
      */
     @SuppressWarnings("PMD.MethodArgumentCouldBeFinal")
@@ -126,8 +123,8 @@ public class AssignmentDao {
 
     /**
      * Retrieves an assignment by its ID.
-     * Returns the Assignment object if found, or null if not found or an error occurs.
-     * @param assignmentId
+     *
+     * @param assignmentId The ID of the assignment.
      * @return Assignment
      */
     public Assignment getAssignmentById(final int assignmentId) {
@@ -157,8 +154,8 @@ public class AssignmentDao {
 
     /**
      * Deletes an assignment by its ID.
-     * Returns true if the deletion was successful, false otherwise.
-     * @param assignmentId
+     *
+     * @param assignmentId The ID of the assignment.
      * @return boolean
      */
     public boolean deleteAssignment(final int assignmentId) {
@@ -178,13 +175,13 @@ public class AssignmentDao {
 
     /**
      * Updates an existing assignment's details.
-     * Returns true if the update was successful, false otherwise.
-     * @param assignmentId
-     * @param title
-     * @param description
-     * @param deadline
-     * @param courseId
-     * @return
+     *
+     * @param assignmentId The ID of the assignment.
+     * @param title The new title of the assignment.
+     * @param description The new description of the assignment.
+     * @param deadline The new deadline of the assignment.
+     * @param courseId The new course ID of the assignment (can be null).
+     * @return boolean
      */
     @SuppressWarnings("PMD.MethodArgumentCouldBeFinal")
     public boolean updateAssignment(int assignmentId, String title, String description, Timestamp deadline, Integer courseId) {

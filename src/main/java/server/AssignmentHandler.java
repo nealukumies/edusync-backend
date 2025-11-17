@@ -1,7 +1,3 @@
-/**
- * This class handles HTTP requests related to assignments.
- */
-
 package server;
 
 import com.sun.net.httpserver.HttpExchange;
@@ -15,6 +11,9 @@ import java.util.List;
 import java.sql.Timestamp;
 import java.util.Map;
 
+/**
+ * This class handles HTTP requests related to assignments.
+ */
 public class AssignmentHandler extends BaseHandler {
     private static final String NO_ASSIGNMENTS_FOUND = "No assignments found";
     private static final String COURSE_ID_KEY = "course_id";
@@ -29,7 +28,6 @@ public class AssignmentHandler extends BaseHandler {
     private final AssignmentDao assignmentDao;
     private static final String ERROR_KEY = "error";
 
-
     /**
      * Constructor for AssignmentHandler.
      *
@@ -43,6 +41,7 @@ public class AssignmentHandler extends BaseHandler {
     /**
      * Handles GET requests for assignments.
      * Supports fetching assignments by student ID or assignment ID.
+     *
      * @param exchange
      * @throws IOException
      */
@@ -82,6 +81,7 @@ public class AssignmentHandler extends BaseHandler {
      * Handles POST requests to create a new assignment.
      * Expects a JSON body with course_id, title, description, and deadline.
      * Authorization is checked via the student_id header.
+     *
      * @param exchange
      * @throws IOException
      */
@@ -119,6 +119,7 @@ public class AssignmentHandler extends BaseHandler {
      * Handles DELETE requests to remove an assignment by its ID.
      * Expects the assignment ID in the URL path as /assignments/{assignmentId}.
      * Authorization is checked to ensure the requester owns the assignment.
+     *
      * @param exchange
      * @throws IOException
      */
@@ -148,13 +149,14 @@ public class AssignmentHandler extends BaseHandler {
      * The request body can contain any of the fields: title, description, deadline, course_id, status.
      * Only the fields provided in the request body will be updated.
      * Authorization is checked to ensure the requester owns the assignment.
+     *
      * @param exchange
      * @throws IOException
      */
     @Override
     protected void handlePut(HttpExchange exchange) throws IOException {
         final int assignmentId = getIdFromPath(exchange, 2);
-        if (assignmentId == -1) return;
+        if (assignmentId == -1) {return;}
 
         final Map<String, String> requestMap = parseJsonBody(exchange);
 
@@ -164,13 +166,13 @@ public class AssignmentHandler extends BaseHandler {
             return;
         }
 
-        if (!isAuthorized(exchange, existingAssignment.getStudentId())) return;
+        if (!isAuthorized(exchange, existingAssignment.getStudentId())) {return;}
 
         final Timestamp newDeadline = parseDeadline(requestMap, existingAssignment.getDeadline(), exchange);
-        if (newDeadline == null) return;
+        if (newDeadline == null) {return;}
 
         final Integer newCourseId = parseCourseId(requestMap, existingAssignment.getCourseId(), exchange);
-        if (newCourseId == null) return;
+        if (newCourseId == null) {return;}
 
         final boolean statusUpdated = updateStatusIfPresent(assignmentId, requestMap);
 
@@ -189,6 +191,15 @@ public class AssignmentHandler extends BaseHandler {
         }
     }
 
+    /**
+     * Parses the deadline from the request map.
+     *
+     * @param requestMap The map containing request parameters.
+     * @param existingDeadline The existing deadline to fall back on if not provided.
+     * @param exchange The HttpExchange object for sending responses.
+     * @return The parsed Timestamp deadline.
+     * @throws IOException If an I/O error occurs.
+     */
     private Timestamp parseDeadline(Map<String, String> requestMap, Timestamp existingDeadline, HttpExchange exchange) throws IOException {
         if (requestMap.get(DEADLINE_KEY) == null) return existingDeadline;
         try {
@@ -199,11 +210,20 @@ public class AssignmentHandler extends BaseHandler {
         }
     }
 
+    /**
+     * Parses the course ID from the request map.
+     *
+     * @param requestMap The map containing request parameters.
+     * @param existingCourseId The existing course ID to fall back on if not provided.
+     * @param exchange The HttpExchange object for sending responses.
+     * @return The parsed Integer course ID.
+     * @throws IOException If an I/O error occurs.
+     */
     private Integer parseCourseId(Map<String, String> requestMap, Integer existingCourseId, HttpExchange exchange) throws IOException {
         if (requestMap.get(COURSE_ID_KEY) == null) return existingCourseId;
-        Integer parsedId;
+        int parsedId;
         try {
-            parsedId = Integer.valueOf(requestMap.get(COURSE_ID_KEY));
+            parsedId = Integer.parseInt(requestMap.get(COURSE_ID_KEY));
         } catch (NumberFormatException e) {
             sendResponse(exchange, 400, Map.of(ERROR_KEY, "Invalid course_id"));
             return null;
@@ -212,6 +232,12 @@ public class AssignmentHandler extends BaseHandler {
         return (parsedId > 0) ? parsedId : existingCourseId;
     }
 
+    /**
+     * Updates the status of the assignment if present in the request map.
+     * @param assignmentId The ID of the assignment to update.
+     * @param requestMap The map containing request parameters.
+     * @return True if the status was updated, false otherwise.
+     */
     private boolean updateStatusIfPresent(int assignmentId, Map<String, String> requestMap) {
         if (requestMap.get("status") == null) return false;
         final Status status = Status.fromDbValue(requestMap.get("status"));

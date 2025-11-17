@@ -1,6 +1,3 @@
-/**
- * This class handles HTTP requests related to course management.
- */
 package server;
 
 import com.sun.net.httpserver.HttpExchange;
@@ -13,6 +10,9 @@ import java.sql.Date;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * This class handles HTTP requests related to course management.
+ */
 public class CourseHandler extends BaseHandler {
     @SuppressFBWarnings(
             value = "EI_EXPOSE_REP2",
@@ -27,7 +27,8 @@ public class CourseHandler extends BaseHandler {
 
     /**
      * Constructor for CourseHandler. Data access object (DAO) is injected via constructor.
-     * @param courseDao
+     *
+     * @param courseDao The CourseDao instance for database operations.
      */
     public CourseHandler(CourseDao courseDao) {
         super();
@@ -38,8 +39,9 @@ public class CourseHandler extends BaseHandler {
      * Handles GET requests for courses.
      * Supports fetching courses by student ID or course ID.
      * Authorization checks ensure students can only access their own courses.
-     * @param exchange
-     * @throws IOException
+     *
+     * @param exchange The HttpExchange object containing request and response data.
+     * @throws IOException Throws IOException if an I/O error occurs.
      */
     @Override
     protected void handleGet(HttpExchange exchange) throws IOException {
@@ -75,8 +77,9 @@ public class CourseHandler extends BaseHandler {
      * Handles POST requests to add a new course.
      * Expects JSON body with course_name, start_date, and end_date.
      * Validates input and returns appropriate HTTP responses.
-     * @param exchange
-     * @throws IOException
+     *
+     * @param exchange The HttpExchange object containing request and response data.
+     * @throws IOException Throws IOException if an I/O error occurs.
      */
     @Override
     protected void handlePost(HttpExchange exchange) throws IOException {
@@ -119,8 +122,9 @@ public class CourseHandler extends BaseHandler {
      * Validates that the course exists and that the requesting student is authorized to delete it.
      * Returns appropriate HTTP responses based on the outcome.
      * Authorization is checked via the student_id header.
-     * @param exchange
-     * @throws IOException
+     *
+     * @param exchange The HttpExchange object containing request and response data.
+     * @throws IOException Throws IOException if an I/O error occurs.
      */
     @Override
     protected void handleDelete(HttpExchange exchange) throws IOException {
@@ -152,8 +156,9 @@ public class CourseHandler extends BaseHandler {
      * Validates input and checks authorization before updating.
      * Returns appropriate HTTP responses based on the outcome.
      * Authorization is checked via the student_id header.
-     * @param exchange
-     * @throws IOException
+     *
+     * @param exchange The HttpExchange object containing request and response data.
+     * @throws IOException Throws IOException if an I/O error occurs.
      */
     @Override
     protected void handlePut(HttpExchange exchange) throws IOException {

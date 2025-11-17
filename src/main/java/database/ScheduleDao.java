@@ -1,21 +1,18 @@
-/**
- * Data Access Object (DAO) for managing schedules in the database.
- */
 package database;
 
 import model.Schedule;
 import model.Weekday;
-
 import java.sql.*;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import static java.sql.Time.valueOf;
 
-@SuppressWarnings("PMD.AtLeastOneConstructor")
+/**
+ * Data Access Object (DAO) for managing schedules in the database.
+ */
 public class ScheduleDao {
     private static final Logger LOGGER = Logger.getLogger(ScheduleDao.class.getName());
     private static final String COURSE_KEY = "course_id";
@@ -25,10 +22,11 @@ public class ScheduleDao {
 
     /**
      * Inserts a new schedule into the schedules table. Returns the created Schedule object, or null if insertion fails.
-     * @param courseId
-     * @param weekday
-     * @param startTime
-     * @param endTime
+     *
+     * @param courseId The ID of the course.
+     * @param weekday The day of the week.
+     * @param startTime The start time of the schedule.
+     * @param endTime The end time of the schedule.
      * @return Schedule object or null
      */
     @SuppressWarnings("PMD.MethodArgumentCouldBeFinal")
@@ -67,8 +65,9 @@ public class ScheduleDao {
     }
 
     /**
-     * Deletes a schedule by its ID. Returns true if deletion was successful, false otherwise.
-     * @param scheduleId
+     * Deletes a schedule by its ID.
+     *
+     * @param scheduleId The ID of the schedule to delete.
      * @return boolean
      */
     public boolean deleteSchedule(final int scheduleId) {
@@ -87,7 +86,8 @@ public class ScheduleDao {
     }
 
     /**
-     * Retrieves a schedule by its ID. Returns a Schedule object if found, or null if not found or an error occurs.
+     * Retrieves a schedule by its ID.
+     *
      * @param scheduleId
      * @return Schedule
      */
@@ -115,8 +115,9 @@ public class ScheduleDao {
     }
 
     /**
-     * Retrieves all schedules for a given course ID. Returns a list of Schedule objects, or an empty list if none found or an error occurs.
-     * @param courseId
+     * Retrieves all schedules for a given course ID.
+     *
+     * @param courseId The ID of the course.
      * @return ArrayList<Schedule>
      */
     public List<Schedule> getAllSchedulesForCourse(final int courseId) {
@@ -146,8 +147,8 @@ public class ScheduleDao {
 
     /**
      * Retrieves all schedules for all courses of a given student ID.
-     * Returns a list of Schedule objects, or an empty list if none found or an error occurs.
-     * @param studentId
+     *
+     * @param studentId The ID of the student.
      * @return ArrayList<Schedule>
      */
 
@@ -181,15 +182,14 @@ public class ScheduleDao {
 
     /**
      * Updates an existing schedule identified by scheduleId with new details.
-     * Returns true if the update was successful, false otherwise.
-     * @param scheduleId
-     * @param courseId
-     * @param weekday
-     * @param startTime
-     * @param endTime
+     *
+     * @param scheduleId The ID of the schedule to update.
+     * @param courseId The ID of the course.
+     * @param weekday The day of the week.
+     * @param startTime The start time of the schedule.
+     * @param endTime The end time of the schedule.
      * @return boolean
      */
-    @SuppressWarnings("PMD.MethodArgumentCouldBeFinal")
     public boolean updateSchedule(int scheduleId, Integer courseId, Weekday weekday, LocalTime startTime, LocalTime endTime) {
         if (courseId == null || weekday == null || startTime == null || endTime == null) {
             throw new IllegalArgumentException("Course ID, weekday, start time, and end time must not be null");

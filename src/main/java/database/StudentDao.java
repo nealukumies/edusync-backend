@@ -1,8 +1,3 @@
-/**
- * Data Access Object (DAO) class for managing student records in the database.
- * Provides methods to add a new student and retrieve a student by email.
- */
-
 package database;
 
 import model.Student;
@@ -12,15 +7,19 @@ import java.sql.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@SuppressWarnings("PMD.AtLeastOneConstructor")
+/**
+ * Data Access Object (DAO) class for managing student records in the database.
+ * Provides methods to add a new student and retrieve a student by email.
+ */
 public class StudentDao {
     private static final Logger LOGGER = Logger.getLogger(StudentDao.class.getName());
 
     /**
-     * Adds a new student to the database. Returns the Student object if successful, or null if insertion fails.
-     * @param name
-     * @param email
-     * @param password
+     * Adds a new student to the database.
+     *
+     * @param name The name of the student
+     * @param email the email of the student
+     * @param password The plaintext password of the student
      * @return Student - the created Student object, or null if error occurs
      */
     @SuppressWarnings("PMD.MethodArgumentCouldBeFinal")
@@ -53,9 +52,10 @@ public class StudentDao {
     }
 
     /**
-     * Retrieves a student by email. Returns a Student object if found, or null if not found or an error occurs.
-     * @param email
-     * @return
+     * Retrieves a student by email.
+     *
+     * @param email The email of the student
+     * @return Student - the Student object, or null if not found
      */
     public Student getStudent(final String email) {
         final Connection conn = MariaDBConnection.getConnection();
@@ -80,9 +80,10 @@ public class StudentDao {
     }
 
     /**
-     * Retrieves a student by student ID. Returns a Student object if found, or null if not found or an error occurs.
-     * @param studentId
-     * @return
+     * Retrieves a student by student ID.
+     *
+     * @param studentId The ID of the student
+     * @return Student - the Student object, or null if not found
      */
 
     public Student getStudentById(final int studentId) {
@@ -108,8 +109,9 @@ public class StudentDao {
     }
 
     /**
-     * Retrieves the password hash for a student by email. Returns the password hash if found, or null if not found or an error occurs.
-     * @param email
+     * Retrieves the password hash for a student by email.
+     *
+     * @param email The email of the student
      * @return String - password hash, or null if not found
      */
     public String getPasswordHash(final String email) {
@@ -122,7 +124,7 @@ public class StudentDao {
                     return rs.getString("password_hash");
                 }
             }
-            return null; // Student not found
+            return null;
         } catch (SQLException e) {
             if (LOGGER.isLoggable(Level.SEVERE)) {
                 LOGGER.log(Level.SEVERE, () -> "Failed to get password hash: " + e.getMessage());
@@ -132,38 +134,31 @@ public class StudentDao {
     }
 
     /**
-     * Deletes a student by student ID. Returns true if deletion was successful, false otherwise.
-     * Deletes related assignments and courses as well.
-     * @param studentId
-     * @return
+     * Deletes a student by student ID.
+     *
+     * @param studentId The ID of the student
+     * @return boolean
      */
     public boolean deleteStudent(final int studentId) {
         final Connection conn = MariaDBConnection.getConnection();
         try {
-            conn.setAutoCommit(false); // start transaction
-
-            // Delete assignments
+            conn.setAutoCommit(false);
             try (PreparedStatement ps = conn.prepareStatement(
                     "DELETE FROM assignments WHERE student_id = ?")) {
                 ps.setInt(1, studentId);
                 ps.executeUpdate();
             }
-
-            // Delete courses
             try (PreparedStatement ps = conn.prepareStatement(
                     "DELETE FROM courses WHERE student_id = ?")) {
                 ps.setInt(1, studentId);
                 ps.executeUpdate();
             }
-
-            // Delete student
             final int rows;
             try (PreparedStatement ps = conn.prepareStatement(
                     "DELETE FROM students WHERE student_id = ?")) {
                 ps.setInt(1, studentId);
                 rows = ps.executeUpdate();
             }
-
             conn.commit();
             return rows > 0;
 
@@ -187,10 +182,11 @@ public class StudentDao {
     }
 
     /**
-     * Updates a student's name. Returns true if update was successful, false otherwise.
-     * @param studentId
-     * @param newName
-     * @return
+     * Updates a student's name.
+     *
+     * @param studentId The ID of the student
+     * @param newName The new name of the student
+     * @return True if update was successful, false otherwise
      */
     @SuppressWarnings("PMD.MethodArgumentCouldBeFinal")
     public boolean updateStudentName(int studentId, String newName) {
@@ -213,7 +209,8 @@ public class StudentDao {
     }
 
     /**
-     * Updates a student's email. Returns true if update was successful, false otherwise.
+     * Updates a student's email.
+     *
      * @param studentId
      * @param newEmail
      * @return

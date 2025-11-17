@@ -1,8 +1,8 @@
+package model;
+
 /**
  * Enum representing the days of the week.
  */
-package model;
-
 public enum Weekday {
     MONDAY,
     TUESDAY,
@@ -14,9 +14,5 @@ public enum Weekday {
 
     public static Weekday fromString(String dbValue) {
         return Weekday.valueOf(dbValue.toUpperCase());
-    }
-
-    public String toDbValue() {
-        return this.name().toLowerCase();
     }
 }

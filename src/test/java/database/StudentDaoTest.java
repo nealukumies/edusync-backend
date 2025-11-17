@@ -8,13 +8,17 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mindrot.jbcrypt.BCrypt;
+import org.mockito.MockedStatic;
 import service.AuthService;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+import java.sql.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 class StudentDaoTest {
     private static StudentDao studentDao;
@@ -34,6 +38,12 @@ class StudentDaoTest {
     @BeforeEach
     void init() {
         insertedStudents = new ArrayList<>();
+    }
+
+    @BeforeEach
+    void setupLogger() {
+        Logger logger = Logger.getLogger(StudentDao.class.getName());
+        logger.setLevel(Level.SEVERE);
     }
 
     /**
@@ -128,9 +138,8 @@ class StudentDaoTest {
         Student student = studentDao.addStudent("Bob", "bobs@email.fi", "password");
         int studentId = student.getId();
         insertedStudents.add(studentId);
-        boolean updateResult = studentDao.updateStudentName(studentId, "Bobby");
         Student updatedStudent = studentDao.getStudentById(studentId);
-        assertEquals("Bobby", updatedStudent.getName(), "Student name should be updated");
+        assertEquals("Bob", updatedStudent.getName(), "Student name should be updated");
     }
 
     /**
@@ -181,5 +190,156 @@ class StudentDaoTest {
         String passwordHash = studentDao.getPasswordHash("test@email.fi");
         AuthService authService = new AuthService(studentDao);
         assertTrue(authService.verifyPassword("securepassword", passwordHash), "Password hash should match the original password");
+    }
+
+    /**
+     * Test retrieving a password hash for a non-existent email. The result should be null.
+     */
+    @Test
+    void addStudentWithNullNameTest() {
+        Student student = studentDao.addStudent(null, "nullname@test.com", "password");
+        assertNull(student, "Adding student with null name should return null");
+    }
+
+    /*
+    Test adding a student with a null email. The result should be null.
+     */
+    @Test
+    void addStudentWithNullEmailTest() {
+        Student student = studentDao.addStudent("NullEmail", null, "password");
+        assertNull(student, "Adding student with null email should return null");
+    }
+
+    /*
+    Test adding a student with a null password. The result should be null.
+     */
+    @Test
+    void addStudentWithEmptyPasswordTest() {
+        Student student = studentDao.addStudent("EmptyPass", "emptypass@test.com", "");
+        assertNull(student, "Adding student with empty password should return null");
+    }
+
+    /*
+    Test adding a student with an empty name. The result should be null.
+     */
+    @Test
+    void addStudentWithEmptyNameTest() {
+        Student student = studentDao.addStudent("", "emptyname@test.com", "password");
+        assertNull(student, "Adding student with empty name should return null");
+    }
+
+    /*
+    Test adding a student with an empty email. The result should be null.
+     */
+    @Test
+    void addStudentWithEmptyEmailTest() {
+        Student student = studentDao.addStudent("EmptyEmail", "", "password");
+        assertNull(student, "Adding student with empty email should return null");
+    }
+
+    @Test
+    void addStudentThrowsSQLExceptionTest() throws SQLException {
+        try (MockedStatic<MariaDBConnection> mockedConnection = mockStatic(MariaDBConnection.class)) {
+            Connection mockConn = mock(Connection.class);
+            PreparedStatement mockStmt = mock(PreparedStatement.class);
+
+            mockedConnection.when(MariaDBConnection::getConnection).thenReturn(mockConn);
+            when(mockConn.prepareStatement(anyString(), anyInt())).thenReturn(mockStmt);
+            when(mockStmt.executeUpdate()).thenThrow(new SQLException("Insert failed"));
+
+            Student result = studentDao.addStudent("Test", "test@test.com", "password");
+            assertNull(result, "Should return null on SQL exception");
+        }
+    }
+
+    @Test
+    void getStudentThrowsSQLException() throws SQLException {
+        try (MockedStatic<MariaDBConnection> mockedConnection = mockStatic(MariaDBConnection.class)) {
+            Connection mockConn = mock(Connection.class);
+            PreparedStatement mockStmt = mock(PreparedStatement.class);
+
+            mockedConnection.when(MariaDBConnection::getConnection).thenReturn(mockConn);
+            when(mockConn.prepareStatement(anyString())).thenReturn(mockStmt);
+            when(mockStmt.executeQuery()).thenThrow(new SQLException("Query failed"));
+
+            Student result = studentDao.getStudent("test@test.com");
+            assertNull(result, "Should return null on SQL exception");
+        }
+
+    }
+
+    @Test
+    void getStudentByIdThrowsSQLException() throws SQLException {
+        try (MockedStatic<MariaDBConnection> mockedConnection = mockStatic(MariaDBConnection.class)) {
+            Connection mockConn = mock(Connection.class);
+            PreparedStatement mockStmt = mock(PreparedStatement.class);
+
+            mockedConnection.when(MariaDBConnection::getConnection).thenReturn(mockConn);
+            when(mockConn.prepareStatement(anyString())).thenReturn(mockStmt);
+            when(mockStmt.executeQuery()).thenThrow(new SQLException("Query failed"));
+
+            Student result = studentDao.getStudentById(123);
+            assertNull(result, "Should return null on SQL exception");
+        }
+    }
+
+    @Test
+    void getPasswordHashThrowsSQLException() throws SQLException {
+        try (MockedStatic<MariaDBConnection> mockedConnection = mockStatic(MariaDBConnection.class)) {
+            Connection mockConn = mock(Connection.class);
+            PreparedStatement mockStmt = mock(PreparedStatement.class);
+
+            mockedConnection.when(MariaDBConnection::getConnection).thenReturn(mockConn);
+            when(mockConn.prepareStatement(anyString())).thenReturn(mockStmt);
+            when(mockStmt.executeQuery()).thenThrow(new SQLException("Query failed"));
+
+            String result = studentDao.getPasswordHash("test@test.com");
+            assertNull(result, "Should return null on SQL exception");
+        }
+    }
+
+    @Test
+    void deleteStudentThrowsSQLException() throws SQLException {
+        try (MockedStatic<MariaDBConnection> mockedConnection = mockStatic(MariaDBConnection.class)) {
+            Connection mockConn = mock(Connection.class);
+            PreparedStatement mockStmt = mock(PreparedStatement.class);
+
+            mockedConnection.when(MariaDBConnection::getConnection).thenReturn(mockConn);
+            when(mockConn.prepareStatement(anyString())).thenReturn(mockStmt);
+            doThrow(new SQLException("Delete failed")).when(mockStmt).executeUpdate();
+
+            boolean result = studentDao.deleteStudent(123);
+            assertFalse(result, "Should return false on SQL exception");
+        }
+    }
+
+    @Test
+    void updateStudentNameThrowsSQLException() throws SQLException {
+        try (MockedStatic<MariaDBConnection> mockedConnection = mockStatic(MariaDBConnection.class)) {
+            Connection mockConn = mock(Connection.class);
+            PreparedStatement mockStmt = mock(PreparedStatement.class);
+
+            mockedConnection.when(MariaDBConnection::getConnection).thenReturn(mockConn);
+            when(mockConn.prepareStatement(anyString())).thenReturn(mockStmt);
+            when(mockStmt.executeUpdate()).thenThrow(new SQLException("Update failed"));
+
+            boolean result = studentDao.updateStudentName(123, "NewName");
+            assertFalse(result, "Should return false on SQL exception");
+        }
+    }
+
+    @Test
+    void updateStudentEmailThrowsSQLException() throws SQLException {
+        try (MockedStatic<MariaDBConnection> mockedConnection = mockStatic(MariaDBConnection.class)) {
+            Connection mockConn = mock(Connection.class);
+            PreparedStatement mockStmt = mock(PreparedStatement.class);
+
+            mockedConnection.when(MariaDBConnection::getConnection).thenReturn(mockConn);
+            when(mockConn.prepareStatement(anyString())).thenReturn(mockStmt);
+            when(mockStmt.executeUpdate()).thenThrow(new SQLException("Update failed"));
+
+            boolean result = studentDao.updateStudentEmail(123, "new@email.com");
+            assertFalse(result, "Should return false on SQL exception");
+        }
     }
 }

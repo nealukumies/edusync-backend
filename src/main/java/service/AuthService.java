@@ -1,6 +1,3 @@
-/**
- * This class handles user authentication, including login attempts and password hashing/verification.
- */
 package service;
 
 import database.StudentDao;
@@ -8,6 +5,9 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import model.Student;
 import org.mindrot.jbcrypt.BCrypt;
 
+/**
+ * This class handles user authentication, including login attempts and password hashing/verification.
+ */
 public class AuthService {
     @SuppressFBWarnings(
             value = "EI_EXPOSE_REP2",
@@ -25,8 +25,9 @@ public class AuthService {
     /**
      * Attempts to log in a user with the provided email and password.
      * Returns the Student object if successful, or null if authentication fails.
-     * @param email
-     * @param password
+     *
+     * @param email The email of the student attempting to log in
+     * @param password The plaintext password provided by the student
      * @return Student - the authenticated Student object, or null if authentication fails
      */
     public Student tryLogin(String email, String password) {
@@ -40,9 +41,10 @@ public class AuthService {
 
     /**
      * Verifies a plaintext password against a stored hashed password using BCrypt.
-     * @param password
-     * @param hashed
-     * @return
+     *
+     * @param password The plaintext password to verify
+     * @param hashed The stored hashed password
+     * @return boolean - true if the password matches the hash, false otherwise
      */
     public boolean verifyPassword(String password, String hashed) {
         return BCrypt.checkpw(password, hashed);

@@ -53,7 +53,7 @@ class CourseDaoTest {
     @Test
     void addAndDeleteCourseTest() {
         Course course = courseDao.addCourse(1, "Test101", Date.valueOf("2025-01-01"), Date.valueOf("2025-06-01"));
-        int id = course.getCourseId();;
+        int id = course.getCourseId();
         assertTrue(courseDao.deleteCourse(id), "Deletion successful for ID: " + id);
     }
 

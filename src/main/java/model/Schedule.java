@@ -1,10 +1,10 @@
-/**
- * This class represents a schedule entry for a course, including the day of the week and start/end times.
- */
 package model;
 
 import java.time.LocalTime;
 
+/**
+ * This class represents a schedule entry for a course, including the day of the week and start/end times.
+ */
 public class Schedule {
     private int scheduleId;
     private int courseId;
@@ -12,6 +12,14 @@ public class Schedule {
     private LocalTime startTime;
     private LocalTime endTime;
 
+    /**
+     * Constructor for Schedule.
+     * @param scheduleId The unique identifier for the schedule entry.
+     * @param courseId The ID of the course associated with this schedule.
+     * @param weekday The day of the week for this schedule entry.
+     * @param startTime The start time of the schedule entry.
+     * @param endTime The end time of the schedule entry.
+     */
     public Schedule(int scheduleId, int courseId, Weekday weekday, LocalTime startTime, LocalTime endTime) {
         this.scheduleId = scheduleId;
         this.courseId = courseId;

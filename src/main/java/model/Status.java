@@ -1,9 +1,9 @@
+package model;
+
 /**
  * Enum representing the status of a task.
  * Each status has a corresponding string value used in the database.
  */
-package model;
-
 public enum Status {
     PENDING("pending"),
     IN_PROGRESS("in-progress"),

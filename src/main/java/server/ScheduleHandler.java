@@ -1,6 +1,3 @@
-/**
- * This class handles HTTP requests related to schedules.
- */
 package server;
 
 import com.sun.net.httpserver.HttpExchange;
@@ -17,6 +14,9 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * This class handles HTTP requests related to schedules.
+ */
 public class ScheduleHandler extends BaseHandler {
     @SuppressFBWarnings(
             value = "EI_EXPOSE_REP2",
@@ -33,8 +33,9 @@ public class ScheduleHandler extends BaseHandler {
 
     /**
      * Constructor for ScheduleHandler. Data access objects (DAOs) are injected via constructor.
-     * @param scheduleDao
-     * @param courseDao
+     *
+     * @param scheduleDao The ScheduleDao instance for database operations.
+     * @param courseDao The CourseDao instance for database operations.
      */
     public ScheduleHandler(ScheduleDao scheduleDao, CourseDao courseDao) {
         super();
@@ -46,8 +47,9 @@ public class ScheduleHandler extends BaseHandler {
      * Handles GET requests for schedules.
      * Supports fetching schedules by course ID, student ID, or schedule ID.
      * Authorization checks ensure students can only access their own schedules.
-     * @param exchange
-     * @throws IOException
+     *
+     * @param exchange The HttpExchange object containing request and response data.
+     * @throws IOException Throws IOException if an I/O error occurs.
      */
     @Override
     protected void handleGet(HttpExchange exchange) throws IOException {
@@ -58,6 +60,16 @@ public class ScheduleHandler extends BaseHandler {
         handleGetByScheduleId(exchange);
     }
 
+    /**
+     * Handles GET requests to retrieve schedules by course ID.
+     * Expects the course ID in the URL path as /schedules/courses/{courseId}.
+     * Returns all schedules associated with the specified course.
+     *
+     * @param exchange The HttpExchange object for the request/response
+     * @param pathParts The parts of the request path
+     * @return true if the request was handled, false otherwise
+     * @throws IOException Throws IOException if an I/O error occurs
+     */
     private boolean handleGetByCourse(HttpExchange exchange, String[] pathParts) throws IOException {
         if (!"courses".equals(pathParts[2]) || pathParts.length != 4) return false;
 
@@ -74,6 +86,17 @@ public class ScheduleHandler extends BaseHandler {
         return true;
     }
 
+    /**
+     * Handles GET requests to retrieve schedules by student ID.
+     * Expects the student ID in the URL path as /schedules/students/{studentId}.
+     * Checks authorization to ensure the requester has permission to access the student's schedules.
+     * Returns all schedules associated with the specified student.
+     *
+     * @param exchange The HttpExchange object for the request/response
+     * @param pathParts The parts of the request path
+     * @return true if the request was handled, false otherwise
+     * @throws IOException Throws IOException if an I/O error occurs
+     */
     private boolean handleGetByStudent(HttpExchange exchange, String[] pathParts) throws IOException {
         if (!"students".equals(pathParts[2]) || pathParts.length != 4) return false;
 
@@ -91,6 +114,14 @@ public class ScheduleHandler extends BaseHandler {
         return true;
     }
 
+    /**
+     * Handles GET requests to retrieve a schedule by its ID.
+     * Expects the schedule ID in the URL path as /schedules/{scheduleId}.
+     * Returns the schedule if found, otherwise returns a 404 Not Found response.
+     *
+     * @param exchange The HttpExchange object for the request/response
+     * @throws IOException Throws IOException if an I/O error occurs
+     */
     private void handleGetByScheduleId(HttpExchange exchange) throws IOException {
         final int scheduleId = getIdFromPath(exchange, 2);
         if (scheduleId == -1) return;
@@ -108,8 +139,9 @@ public class ScheduleHandler extends BaseHandler {
      * Expects a JSON body with course_id, weekday, start_time, and end_time.
      * Validates input and checks authorization before creating the schedule.
      * Returns appropriate HTTP responses based on the outcome. Success returns 201 Created and the created schedule.
-     * @param exchange
-     * @throws IOException
+     *
+     * @param exchange The HttpExchange object containing request and response data.
+     * @throws IOException Throws IOException if an I/O error occurs.
      */
     @Override
     protected void handlePost(HttpExchange exchange) throws IOException {
@@ -173,8 +205,9 @@ public class ScheduleHandler extends BaseHandler {
      * Expects the schedule ID in the URL path as /schedules/{scheduleId}.
      * Authorization is checked to ensure the requester owns the schedule.
      * Returns appropriate HTTP responses based on the outcome.
-     * @param exchange
-     * @throws IOException
+     *
+     * @param exchange The HttpExchange object containing request and response data.
+     * @throws IOException Throws IOException if an I/O error occurs.
      */
     @Override
      protected void handleDelete(HttpExchange exchange) throws IOException {
@@ -203,8 +236,9 @@ public class ScheduleHandler extends BaseHandler {
      * Expects a JSON body with fields to update: start_time, end_time, and/or weekday.
      * Validates input and checks authorization before updating.
      * Returns appropriate HTTP responses based on the outcome.
-     * @param exchange
-     * @throws IOException
+     *
+     * @param exchange The HttpExchange object containing request and response data.
+     * @throws IOException Throws IOException if an I/O error occurs.
      */
     @Override
     protected void handlePut(HttpExchange exchange) throws IOException {

@@ -174,7 +174,30 @@ class BaseHandlerTest {
         assertEquals("{\"message\":\"OK\"}", exchange.getResponseBodyAsString(), "Expected response body to match the sent JSON");
     }
 
+    /**
+     * Tests the parseEntityId function of BaseHandler. Verifies that it correctly parses and validates an entity ID from the URL path.
+     * @throws IOException
+     */
+    @Test
+    void testParseEntityIdValid() throws IOException {
+        MockHttpExchange exchange = new MockHttpExchange("GET", "/students/42", "");
+        Integer id = baseHandler.parseEntityId(exchange, "Student");
+        assertNotNull(id, "Expected a valid ID to be returned");
+        assertEquals(42, id, "Expected ID to match the path segment");
+    }
 
-
+    /*
+    * Tests the parseEntityId function of BaseHandler. Verifies that it correctly handles invalid entity IDs in the URL path.
+     */
+    @Test
+    void testParseEntityIdInvalid() throws IOException {
+        MockHttpExchange exchange = new MockHttpExchange("GET", "/students/abc", "");
+        Integer id = baseHandler.parseEntityId(exchange, "Student");
+        assertNull(id, "Expected null when ID is invalid");
+        assertEquals(400, exchange.getResponseCode(), "Expected response code 400 for invalid ID");
+        String responseBody = exchange.getResponseBodyAsString();
+        assertTrue(responseBody.contains("Student ID is required or invalid"),
+                "Expected error message in response body");
+    }
 
 }

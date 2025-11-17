@@ -1,11 +1,9 @@
-/**
- * Course class represents a course taken by a student.
- */
-
 package model;
 
 import java.util.Date;
-
+/**
+ * Course class represents a course taken by a student.
+ */
 public class Course {
     private int courseId;
     private int studentId;
@@ -13,6 +11,14 @@ public class Course {
     private String startDate;
     private String endDate;
 
+    /**
+     * Constructor for Course.
+     * @param courseId The unique identifier for the course.
+     * @param studentId The ID of the student for the course.
+     * @param courseName The name of the course.
+     * @param startDate The start date of the course.
+     * @param endDate The end date of the course.
+     */
     public Course(int courseId, int studentId, String courseName, Date startDate, Date endDate) {
         this.courseId = courseId;
         this.studentId = studentId;

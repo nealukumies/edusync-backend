@@ -1,28 +1,27 @@
-/**
- * Data Access Object for Course entity. Provides methods to add and retrieve courses from the database.
- */
 package database;
 
 import model.Course;
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@SuppressWarnings("PMD.AtLeastOneConstructor")
+/**
+ * Data Access Object for Course entity. Provides methods to add and retrieve courses from the database.
+ */
 public class CourseDao {
+    /** Logger for logging errors and information. */
     private static final Logger LOGGER = Logger.getLogger(CourseDao.class.getName());
 
     /**
      * Adds a new course to the database. Returns the generated course ID, or -1 if insertion fails.
-     * @param studentId
-     * @param courseName
-     * @param startDate
-     * @param endDate
+     *
+     * @param studentId The ID of the student associated with the course.
+     * @param courseName The name of the course.
+     * @param startDate The start date of the course.
+     * @param endDate The end date of the course.
      */
-    @SuppressWarnings("PMD.MethodArgumentCouldBeFinal")
     public Course addCourse(int studentId, String courseName, Date startDate, Date endDate) {
         if (startDate != null && endDate != null && endDate.before(startDate)) {
             return null;
@@ -58,7 +57,8 @@ public class CourseDao {
 
     /**
      * Retrieves a course by its ID. Returns a Course object if found, or null if not found or an error occurs.
-     * @param courseId
+     *
+     * @param courseId The ID of the course to retrieve.
      * @return
      */
     public Course getCourseById(final int courseId) {
@@ -87,6 +87,12 @@ public class CourseDao {
         }
     }
 
+    /**
+     * Retrieves all courses for a given student ID.
+     *
+     * @param studentId The ID of the student whose courses to retrieve.
+     * @return List<Course>
+     */
     public List<Course> getAllCourses(final int studentId) {
         final List<Course> courses = new ArrayList<>();
         final Connection conn = MariaDBConnection.getConnection();
@@ -115,8 +121,8 @@ public class CourseDao {
 
     /**
      * Deletes a course by its ID. Also deletes associated schedules.
-     * Returns true if deletion was successful, false otherwise.
-     * @param courseId
+     *
+     * @param courseId The ID of the course to delete.
      * @return boolean
      */
     public boolean deleteCourse(final int courseId) {
@@ -142,12 +148,12 @@ public class CourseDao {
 
     /**
      * Updates an existing course with new values. Only non-null parameters are updated.
-     * Returns true if the update was successful, false otherwise.
-     * @param courseId
-     * @param courseName
-     * @param startDate
-     * @param endDate
-     * @return
+     *
+     * @param courseId The ID of the course to update.
+     * @param courseName The new name of the course (or null to keep existing).
+     * @param startDate The new start date of the course (or null to keep existing).
+     * @param endDate The new end date of the course (or null to keep existing).
+     * @return boolean
      */
     @SuppressWarnings("PMD.MethodArgumentCouldBeFinal")
     public boolean updateCourse(int courseId, String courseName, Date startDate, Date endDate) {

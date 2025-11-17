@@ -1,14 +1,21 @@
+package model;
+
 /**
  * Student class representing a student entity.
  */
-package model;
-
 public class Student {
     private int id;
     private String name;
     private String email;
     private String role;
 
+    /**
+     * Constructor for Student.
+     * @param id The unique identifier for the student.
+     * @param name The name of the student.
+     * @param email The email of the student.
+     * @param role The role of the student (e.g., "student", "admin").
+     */
     public Student(int id, String name, String email, String role) {
         this.id = id;
         this.name = name;
