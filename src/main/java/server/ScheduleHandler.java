@@ -29,6 +29,7 @@ public class ScheduleHandler extends BaseHandler {
     )
     private final CourseDao courseDao;
     private static final String ERROR_KEY = "error";
+    private static final String SCHEDULE_NOT_FOUND = "Schedule not found";
 
     /**
      * Constructor for ScheduleHandler. Data access objects (DAOs) are injected via constructor.
@@ -54,7 +55,7 @@ public class ScheduleHandler extends BaseHandler {
 
         if (handleGetByCourse(exchange, pathParts)) {return;}
         if (handleGetByStudent(exchange, pathParts)) {return;}
-        handleGetByScheduleId(exchange, pathParts);
+        handleGetByScheduleId(exchange);
     }
 
     private boolean handleGetByCourse(HttpExchange exchange, String[] pathParts) throws IOException {
@@ -90,13 +91,13 @@ public class ScheduleHandler extends BaseHandler {
         return true;
     }
 
-    private void handleGetByScheduleId(HttpExchange exchange, String[] pathParts) throws IOException {
+    private void handleGetByScheduleId(HttpExchange exchange) throws IOException {
         final int scheduleId = getIdFromPath(exchange, 2);
         if (scheduleId == -1) return;
 
         final Schedule schedule = scheduleDao.getSchedule(scheduleId);
         if (schedule == null) {
-            sendResponse(exchange, 404, "Schedule not found");
+            sendResponse(exchange, 404, SCHEDULE_NOT_FOUND);
             return;
         }
 
@@ -110,6 +111,7 @@ public class ScheduleHandler extends BaseHandler {
      * @param exchange
      * @throws IOException
      */
+    @Override
     protected void handlePost(HttpExchange exchange) throws IOException {
         final Map<String, String> requestMap = parseJsonBody(exchange);
         if (requestMap == null) { return; }
@@ -175,13 +177,14 @@ public class ScheduleHandler extends BaseHandler {
      * @param exchange
      * @throws IOException
      */
+    @Override
      protected void handleDelete(HttpExchange exchange) throws IOException {
          final int scheduleId = getIdFromPath(exchange, 2);
          if (scheduleId == -1) {return;}
 
          final Schedule schedule = scheduleDao.getSchedule(scheduleId);
          if (schedule == null) {
-            sendResponse(exchange, 404, "Schedule not found");
+            sendResponse(exchange, 404, SCHEDULE_NOT_FOUND);
             return;
          }
         final int courseId = schedule.getCourseId();
@@ -204,13 +207,14 @@ public class ScheduleHandler extends BaseHandler {
      * @param exchange
      * @throws IOException
      */
+    @Override
     protected void handlePut(HttpExchange exchange) throws IOException {
         final int scheduleId = getIdFromPath(exchange, 2);
         if (scheduleId == -1) {return;}
 
         final Schedule existingSchedule = scheduleDao.getSchedule(scheduleId);
         if (existingSchedule == null) {
-            sendResponse(exchange, 404, "Schedule not found");
+            sendResponse(exchange, 404, SCHEDULE_NOT_FOUND);
             return;
         }
 

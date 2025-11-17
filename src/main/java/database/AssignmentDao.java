@@ -18,6 +18,7 @@ import java.util.logging.Logger;
 @SuppressWarnings("PMD.AtLeastOneConstructor")
 public class AssignmentDao {
     private static final Logger LOGGER = Logger.getLogger(AssignmentDao.class.getName());
+    private static final String COURSE_KEY = "course_id";
 
     /**
      * Inserts a new assignment into the database.
@@ -69,7 +70,7 @@ public class AssignmentDao {
     public List<Assignment> getAssignments(final int studentId) {
         final List<Assignment> assignments = new ArrayList<>();
 
-        final String sql = "SELECT * FROM assignments WHERE student_id = ?";
+        final String sql = "SELECT assignment_id, course_id, title, description, deadline, status FROM assignments WHERE student_id = ?";
         final Connection conn = MariaDBConnection.getConnection();
         try (PreparedStatement ps = conn.prepareStatement(sql)){
 
@@ -81,7 +82,7 @@ public class AssignmentDao {
                     final String title = rs.getString("title");
                     final String description = rs.getString("description");
                     final Timestamp deadline = rs.getTimestamp("deadline");
-                    final String column = "course_id";
+                    final String column = COURSE_KEY;
                     final Integer courseId = rs.getObject(column) != null ? rs.getInt(column) : null;
                     final Status status = Status.fromDbValue(rs.getString("status"));
                     assignments.add(new Assignment(id, studentId, courseId, title, description, deadline, status));
@@ -131,14 +132,14 @@ public class AssignmentDao {
      */
     public Assignment getAssignmentById(final int assignmentId) {
         final Connection conn = MariaDBConnection.getConnection();
-        final String sql = "SELECT * FROM assignments WHERE assignment_id = ?";
+        final String sql = "SELECT assignment_id, student_id, course_id, title, description, deadline, status FROM assignments WHERE assignment_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)){
 
             ps.setInt(1, assignmentId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     final int studentId = rs.getInt("student_id");
-                    final Integer courseId = rs.getObject("course_id") != null ? rs.getInt("course_id") : null;
+                    final Integer courseId = rs.getObject(COURSE_KEY) != null ? rs.getInt(COURSE_KEY) : null;
                     final String title = rs.getString("title");
                     final String description = rs.getString("description");
                     final Timestamp deadline = rs.getTimestamp("deadline");

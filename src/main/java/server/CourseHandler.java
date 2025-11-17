@@ -20,6 +20,10 @@ public class CourseHandler extends BaseHandler {
     )
     private final CourseDao courseDao;
     private static final String ERROR_KEY = "error";
+    private static final String COURSE_ERROR = "Course not found";
+    private static final String END_DATE_KEY = "end_date";
+    private static final String START_DATE_KEY = "start_date";
+
 
     /**
      * Constructor for CourseHandler. Data access object (DAO) is injected via constructor.
@@ -37,10 +41,10 @@ public class CourseHandler extends BaseHandler {
      * @param exchange
      * @throws IOException
      */
+    @Override
     protected void handleGet(HttpExchange exchange) throws IOException {
         final String[] pathParts = exchange.getRequestURI().getPath().split("/");
 
-        // Handle /courses/students/{studentId}
         if ("students".equals(pathParts[2]) && pathParts.length == 4) {
             final int studentId = getIdFromPath(exchange, 3);
             if (studentId == -1) {return;}
@@ -59,7 +63,7 @@ public class CourseHandler extends BaseHandler {
 
         final Course course = courseDao.getCourseById(courseId);
         if (course == null) {
-            sendResponse(exchange, 404, "Course not found");
+            sendResponse(exchange, 404, COURSE_ERROR);
             return;
         }
         final int studentId = course.getStudentId();
@@ -74,6 +78,7 @@ public class CourseHandler extends BaseHandler {
      * @param exchange
      * @throws IOException
      */
+    @Override
     protected void handlePost(HttpExchange exchange) throws IOException {
         if (!isMethod(exchange, "POST")) { return; }
 
@@ -83,8 +88,8 @@ public class CourseHandler extends BaseHandler {
         final int studentId = getIdFromHeader(exchange);
         if (studentId == -1) {return;}
         final String courseName = requestMap.get("course_name");
-        final String startDate = requestMap.get("start_date");
-        final String endDate = requestMap.get("end_date");
+        final String startDate = requestMap.get(START_DATE_KEY);
+        final String endDate = requestMap.get(END_DATE_KEY);
 
         Date sqlStartDate = null;
         Date sqlEndDate = null;
@@ -118,6 +123,7 @@ public class CourseHandler extends BaseHandler {
      * @param exchange
      * @throws IOException
      */
+    @Override
     protected void handleDelete(HttpExchange exchange) throws IOException {
         final int studentId = getIdFromHeader(exchange);
         if (studentId == -1) {return;}
@@ -126,7 +132,7 @@ public class CourseHandler extends BaseHandler {
 
         final Course course = courseDao.getCourseById(courseId);
         if (course == null) {
-            sendResponse(exchange, 404, Map.of(ERROR_KEY, "Course not found"));
+            sendResponse(exchange, 404, Map.of(ERROR_KEY, COURSE_ERROR));
             return;
         }
         if (course.getStudentId() != studentId) {
@@ -150,6 +156,7 @@ public class CourseHandler extends BaseHandler {
      * @param exchange
      * @throws IOException
      */
+    @Override
     protected void handlePut(HttpExchange exchange) throws IOException {
         final int courseId = getIdFromPath(exchange, 2);
         if (courseId == -1) {return;}
@@ -159,7 +166,7 @@ public class CourseHandler extends BaseHandler {
 
         final Course existingCourse = courseDao.getCourseById(courseId);
         if (existingCourse == null) {
-            sendResponse(exchange, 404, Map.of(ERROR_KEY, "Course not found"));
+            sendResponse(exchange, 404, Map.of(ERROR_KEY, COURSE_ERROR));
             return;
         }
 
@@ -173,11 +180,11 @@ public class CourseHandler extends BaseHandler {
         Date sqlEndDate = existingCourse.getEndDate() != null ?
                 new Date(existingCourse.getEndDate().getTime()) : null;
         try {
-            if (requestMap.get("start_date") != null) {
-                sqlStartDate = Date.valueOf(requestMap.get("start_date"));
+            if (requestMap.get(START_DATE_KEY) != null) {
+                sqlStartDate = Date.valueOf(requestMap.get(START_DATE_KEY));
             }
-            if (requestMap.get("end_date") != null) {
-                sqlEndDate = Date.valueOf(requestMap.get("end_date"));
+            if (requestMap.get(END_DATE_KEY) != null) {
+                sqlEndDate = Date.valueOf(requestMap.get(END_DATE_KEY));
             }
         } catch (IllegalArgumentException e) {
             sendResponse(exchange, 400, Map.of(ERROR_KEY, "Invalid date format. Use YYYY-MM-DD"));

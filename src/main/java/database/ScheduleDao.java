@@ -6,10 +6,7 @@ package database;
 import model.Schedule;
 import model.Weekday;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +18,10 @@ import static java.sql.Time.valueOf;
 @SuppressWarnings("PMD.AtLeastOneConstructor")
 public class ScheduleDao {
     private static final Logger LOGGER = Logger.getLogger(ScheduleDao.class.getName());
+    private static final String COURSE_KEY = "course_id";
+    private static final String WEEKDAY_KEY = "weekday";
+    private static final String START_TIME_KEY = "start_time";
+    private static final String END_TIME_KEY = "end_time";
 
     /**
      * Inserts a new schedule into the schedules table. Returns the created Schedule object, or null if insertion fails.
@@ -97,10 +98,10 @@ public class ScheduleDao {
             ps.setInt(1, scheduleId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    final int courseId = rs.getInt("course_id");
-                    final Weekday weekday = Weekday.valueOf(rs.getString("weekday").toUpperCase());
-                    final LocalTime startTime = rs.getTime("start_time").toLocalTime();
-                    final LocalTime endTime = rs.getTime("end_time").toLocalTime();
+                    final int courseId = rs.getInt(COURSE_KEY);
+                    final Weekday weekday = Weekday.fromString(rs.getString(WEEKDAY_KEY));
+                    final LocalTime startTime = rs.getTime(START_TIME_KEY).toLocalTime();
+                    final LocalTime endTime = rs.getTime(END_TIME_KEY).toLocalTime();
                     return new Schedule(scheduleId, courseId, weekday, startTime, endTime);
                 }
             }
@@ -127,10 +128,10 @@ public class ScheduleDao {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     final int scheduleId = rs.getInt("schedule_id");
-                    final int dbCourseId = rs.getInt("course_id");
-                    final Weekday weekday = Weekday.valueOf(rs.getString("weekday").toUpperCase());
-                    final LocalTime startTime = rs.getTime("start_time").toLocalTime();
-                    final LocalTime endTime = rs.getTime("end_time").toLocalTime();
+                    final int dbCourseId = rs.getInt(COURSE_KEY);
+                    final Weekday weekday = Weekday.fromString(rs.getString(WEEKDAY_KEY));
+                    final LocalTime startTime = rs.getTime(START_TIME_KEY).toLocalTime();
+                    final LocalTime endTime = rs.getTime(END_TIME_KEY).toLocalTime();
                     schedules.add(new Schedule(scheduleId, dbCourseId, weekday, startTime, endTime));
                 }
             }
@@ -162,10 +163,10 @@ public class ScheduleDao {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     final int scheduleId = rs.getInt("schedule_id");
-                    final int courseId = rs.getInt("course_id");
-                    final Weekday weekday = Weekday.valueOf(rs.getString("weekday").toUpperCase());
-                    final LocalTime startTime = rs.getTime("start_time").toLocalTime();
-                    final LocalTime endTime = rs.getTime("end_time").toLocalTime();
+                    final int courseId = rs.getInt(COURSE_KEY);
+                    final Weekday weekday = Weekday.fromString(rs.getString(WEEKDAY_KEY));
+                    final LocalTime startTime = rs.getTime(START_TIME_KEY).toLocalTime();
+                    final LocalTime endTime = rs.getTime(END_TIME_KEY).toLocalTime();
                     schedules.add(new Schedule(scheduleId, courseId, weekday, startTime, endTime));
                 }
             }

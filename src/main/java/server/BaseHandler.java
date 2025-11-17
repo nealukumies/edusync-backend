@@ -7,12 +7,10 @@ package server;
 import com.google.gson.*;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import model.Status;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.sql.Timestamp;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
@@ -62,7 +60,7 @@ public abstract class BaseHandler implements HttpHandler {
      */
     protected boolean isMethod(HttpExchange exchange, String method) throws IOException {
         if (!exchange.getRequestMethod().equalsIgnoreCase(method)) {
-            sendResponse(exchange, 405, Map.of(ERROR_KEY, "Method Not Allowed"));
+            sendResponse(exchange, 405, Map.of(ERROR_KEY, METHOD_NOT_ALLOWED));
             return false;
         }
         return true;

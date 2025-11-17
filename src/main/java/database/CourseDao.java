@@ -63,7 +63,7 @@ public class CourseDao {
      */
     public Course getCourseById(final int courseId) {
         final Connection conn = MariaDBConnection.getConnection();
-        final String sql = "SELECT * FROM courses WHERE course_id = ?;";
+        final String sql = "SELECT course_id, student_id, course_name, start_date, end_date FROM courses WHERE course_id = ?;";
         try (PreparedStatement ps = conn.prepareStatement(sql)){
 
             ps.setInt(1, courseId);
@@ -90,7 +90,7 @@ public class CourseDao {
     public List<Course> getAllCourses(final int studentId) {
         final List<Course> courses = new ArrayList<>();
         final Connection conn = MariaDBConnection.getConnection();
-        final String sql = "SELECT * FROM courses WHERE student_id = ?;";
+        final String sql = "SELECT course_id, student_id, course_name, start_date, end_date FROM courses WHERE student_id = ?;";
         try (PreparedStatement ps = conn.prepareStatement(sql)){
 
             ps.setInt(1, studentId);
@@ -126,7 +126,6 @@ public class CourseDao {
 
         try (PreparedStatement psSchedules = conn.prepareStatement(sqlSchedules);
              PreparedStatement psCourse = conn.prepareStatement(sqlCourse)) {
-            psSchedules.setInt(1, courseId);
             psSchedules.setInt(1, courseId);
             psSchedules.executeUpdate();
             psCourse.setInt(1, courseId);

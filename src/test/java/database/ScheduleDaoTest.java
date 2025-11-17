@@ -166,6 +166,7 @@ class ScheduleDaoTest {
         StudentDao studentDao = new StudentDao();
         CourseDao courseDao = new CourseDao();
         Student student = studentDao.addStudent("testuser", "test@cases.com", "password");
+        assertNotNull(student, "Student should not be null");
         int studentId = student.getId();
         Course course = courseDao.addCourse(studentId, "Test101", Date.valueOf("2025-01-01"), Date.valueOf("2025-06-01"));
         int courseId = course.getCourseId();

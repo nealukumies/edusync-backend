@@ -36,6 +36,7 @@ public class StudentHandler extends BaseHandler {
      * @param exchange
      * @throws IOException
      */
+    @Override
     protected void handleGet(HttpExchange exchange) throws IOException {
 
         final int studentId = getIdFromPath(exchange, 2);
@@ -58,6 +59,7 @@ public class StudentHandler extends BaseHandler {
      * @param exchange
      * @throws IOException
      */
+    @Override
     protected void handlePost(HttpExchange exchange) throws IOException {
         if (!isMethod(exchange, "POST")) { return; }
 
@@ -89,6 +91,7 @@ public class StudentHandler extends BaseHandler {
      * @param exchange
      * @throws IOException
      */
+    @Override
     protected void handleDelete(HttpExchange exchange) throws IOException {
         final int studentId = getIdFromPath(exchange, 2);
         if (studentId == -1) {return;}
@@ -111,6 +114,7 @@ public class StudentHandler extends BaseHandler {
      * @param exchange
      * @throws IOException
      */
+    @Override
     protected void handlePut(HttpExchange exchange) throws IOException {
         final int studentId = getIdFromPath(exchange, 2);
         if (studentId == -1) {return;}

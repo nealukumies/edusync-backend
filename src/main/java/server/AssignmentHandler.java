@@ -16,6 +16,12 @@ import java.sql.Timestamp;
 import java.util.Map;
 
 public class AssignmentHandler extends BaseHandler {
+    private static final String NO_ASSIGNMENTS_FOUND = "No assignments found";
+    private static final String COURSE_ID_KEY = "course_id";
+    private static final String TITLE_KEY = "title";
+    private static final String DESCRIPTION_KEY = "description";
+    private static final String DEADLINE_KEY = "deadline";
+
     @SuppressFBWarnings(
             value = "EI_EXPOSE_REP2",
             justification = "AssignmentDao is controller; no exposure risk"
@@ -40,6 +46,7 @@ public class AssignmentHandler extends BaseHandler {
      * @param exchange
      * @throws IOException
      */
+    @Override
     protected void handleGet(HttpExchange exchange) throws IOException {
         final String[] pathParts = exchange.getRequestURI().getPath().split("/");
 
@@ -50,7 +57,7 @@ public class AssignmentHandler extends BaseHandler {
 
             final List<Assignment> assignments = assignmentDao.getAssignments(studentId);
             if (assignments == null || assignments.isEmpty()) {
-                sendResponse(exchange, 404, "No assignments found");
+                sendResponse(exchange, 404, NO_ASSIGNMENTS_FOUND);
                 return;
             }
             sendResponse(exchange, 200, assignments);
@@ -62,7 +69,7 @@ public class AssignmentHandler extends BaseHandler {
 
         final Assignment assignment = assignmentDao.getAssignmentById(assignmentId);
         if (assignment == null) {
-            sendResponse(exchange, 404, "Assignment not found");
+            sendResponse(exchange, 404, NO_ASSIGNMENTS_FOUND);
             return;
         }
         final int studentId = assignment.getStudentId();
@@ -78,16 +85,17 @@ public class AssignmentHandler extends BaseHandler {
      * @param exchange
      * @throws IOException
      */
+    @Override
     protected void handlePost(HttpExchange exchange) throws IOException {
         final Map<String, String> requestMap = parseJsonBody(exchange);
         if (requestMap == null) { return; }
 
         final int studentId = getIdFromHeader(exchange);
 
-        final int courseId = Integer.parseInt(requestMap.get("course_id"));
-        final String title = requestMap.get("title");
-        final String description = requestMap.get("description");
-        final String deadline = requestMap.get("deadline");
+        final int courseId = Integer.parseInt(requestMap.get(COURSE_ID_KEY));
+        final String title = requestMap.get(TITLE_KEY);
+        final String description = requestMap.get(DESCRIPTION_KEY);
+        final String deadline = requestMap.get(DEADLINE_KEY);
 
         Timestamp sqlDeadline = null;
         try {
@@ -115,13 +123,14 @@ public class AssignmentHandler extends BaseHandler {
      * @param exchange
      * @throws IOException
      */
+    @Override
     protected void handleDelete(HttpExchange exchange) throws IOException {
         final int assignmentId = getIdFromPath(exchange, 2);
         if (assignmentId == -1) {return;}
 
         final Assignment assignment = assignmentDao.getAssignmentById(assignmentId);
         if (assignment == null) {
-            sendResponse(exchange, 404, "Assignment not found");
+            sendResponse(exchange, 404, NO_ASSIGNMENTS_FOUND);
             return;
         }
         final int assignmentStudentId = assignment.getStudentId();
@@ -143,6 +152,7 @@ public class AssignmentHandler extends BaseHandler {
      * @param exchange
      * @throws IOException
      */
+    @Override
     protected void handlePut(HttpExchange exchange) throws IOException {
         final int assignmentId = getIdFromPath(exchange, 2);
         if (assignmentId == -1) return;
@@ -155,7 +165,7 @@ public class AssignmentHandler extends BaseHandler {
 
         final Assignment existingAssignment = assignmentDao.getAssignmentById(assignmentId);
         if (existingAssignment == null) {
-            sendResponse(exchange, 404, "Assignment not found");
+            sendResponse(exchange, 404, NO_ASSIGNMENTS_FOUND);
             return;
         }
 
@@ -171,8 +181,8 @@ public class AssignmentHandler extends BaseHandler {
 
         final boolean fieldsUpdated = assignmentDao.updateAssignment(
                 assignmentId,
-                requestMap.getOrDefault("title", existingAssignment.getTitle()),
-                requestMap.getOrDefault("description", existingAssignment.getDescription()),
+                requestMap.getOrDefault(TITLE_KEY, existingAssignment.getTitle()),
+                requestMap.getOrDefault(DESCRIPTION_KEY, existingAssignment.getDescription()),
                 newDeadline,
                 newCourseId
         );
@@ -185,9 +195,9 @@ public class AssignmentHandler extends BaseHandler {
     }
 
     private Timestamp parseDeadline(Map<String, String> requestMap, Timestamp existingDeadline, HttpExchange exchange) throws IOException {
-        if (requestMap.get("deadline") == null) return existingDeadline;
+        if (requestMap.get(DEADLINE_KEY) == null) return existingDeadline;
         try {
-            return Timestamp.valueOf(requestMap.get("deadline"));
+            return Timestamp.valueOf(requestMap.get(DEADLINE_KEY));
         } catch (IllegalArgumentException e) {
             sendResponse(exchange, 400, Map.of(ERROR_KEY, "Invalid date format. Use YYYY-MM-DD"));
             return null;
@@ -195,14 +205,16 @@ public class AssignmentHandler extends BaseHandler {
     }
 
     private Integer parseCourseId(Map<String, String> requestMap, Integer existingCourseId, HttpExchange exchange) throws IOException {
-        if (requestMap.get("course_id") == null) return existingCourseId;
+        if (requestMap.get(COURSE_ID_KEY) == null) return existingCourseId;
+        Integer parsedId;
         try {
-            int parsedId = Integer.parseInt(requestMap.get("course_id"));
-            return parsedId > 0 ? parsedId : existingCourseId;
+            parsedId = Integer.valueOf(requestMap.get(COURSE_ID_KEY));
         } catch (NumberFormatException e) {
             sendResponse(exchange, 400, Map.of(ERROR_KEY, "Invalid course_id"));
             return null;
         }
+
+        return (parsedId > 0) ? parsedId : existingCourseId;
     }
 
     private boolean updateStatusIfPresent(int assignmentId, Map<String, String> requestMap) {
