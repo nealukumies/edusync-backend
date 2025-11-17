@@ -19,7 +19,7 @@ public class Main {
     public static void main(String[] args) throws IOException {
         final String portStr = System.getenv("PORT");
         final int port = (portStr != null) ? Integer.parseInt(portStr) : 8000;
-        final Server server = new Server(port, HttpServer.create(new InetSocketAddress(port), 0));
+        final Server server = new Server(port);
         server.runServer();
     }
 }

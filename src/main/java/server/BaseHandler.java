@@ -61,11 +61,12 @@ public abstract class BaseHandler implements HttpHandler {
      * @throws IOException Throws IOException if an I/O error occurs
      */
     protected boolean isMethod(HttpExchange exchange, String method) throws IOException {
+        boolean success = true;
         if (!exchange.getRequestMethod().equalsIgnoreCase(method)) {
             sendResponse(exchange, 405, Map.of(ERROR_KEY, METHOD_NOT_ALLOWED));
-            return false;
+            success = false;
         }
-        return true;
+        return success;
     }
 
     /**
@@ -97,19 +98,21 @@ public abstract class BaseHandler implements HttpHandler {
      * @throws IOException Throws IOException if an I/O error occurs
      */
     protected int getIdFromPath(HttpExchange exchange, int index) throws IOException {
+        int result = -1;
         final String[] pathParts = exchange.getRequestURI().getPath().split("/");
 
-        if (pathParts.length <= index) {
+        if (index >= pathParts.length) {
             sendResponse(exchange, 400, Map.of(ERROR_KEY, "Bad Request: Missing ID in path"));
-            return -1;
+        } else {
+            try {
+                result = Integer.parseInt(pathParts[index]);
+            } catch (NumberFormatException e) {
+                sendResponse(exchange, 400, Map.of(ERROR_KEY, "Bad Request: Invalid ID format"));
+            }
         }
-        try {
-            return Integer.parseInt(pathParts[index]);
-        } catch (NumberFormatException e) {
-            sendResponse(exchange, 400, Map.of(ERROR_KEY, "Bad Request: Invalid ID format"));
-            return -1;
-        }
+        return result;
     }
+
 
     /**
      * Extracts the student ID from the request headers.
@@ -120,18 +123,21 @@ public abstract class BaseHandler implements HttpHandler {
      * @throws IOException Throws IOException if an I/O error occurs
      */
     protected int getIdFromHeader(HttpExchange exchange) throws IOException {
+        int result = -1;
         final String studentIdStr = exchange.getRequestHeaders().getFirst("student_id");
+
         if (studentIdStr == null) {
             sendResponse(exchange, 401, Map.of(ERROR_KEY, "Unauthorized: Missing Student ID header"));
-            return -1;
+        } else {
+            try {
+                result = Integer.parseInt(studentIdStr);
+            } catch (NumberFormatException e) {
+                sendResponse(exchange, 400, Map.of(ERROR_KEY, "Bad Request: Invalid Student ID format"));
+            }
         }
-        try {
-            return Integer.parseInt(studentIdStr);
-        } catch (NumberFormatException e) {
-            sendResponse(exchange, 400, Map.of(ERROR_KEY, "Bad Request: Invalid Student ID format"));
-            return -1;
-        }
+        return result;
     }
+
 
     /**
      * Extracts the role from the request headers.
@@ -142,10 +148,9 @@ public abstract class BaseHandler implements HttpHandler {
      * @throws IOException Throws IOException if an I/O error occurs
      */
     protected String getRoleFromHeader(HttpExchange exchange) throws IOException {
-        final String role = exchange.getRequestHeaders().getFirst("role");
-        if (role == null) {
-            sendResponse(exchange, 401, Map.of(ERROR_KEY, "Unauthorized: Missing role header"));
-            return null;
+        String role = null;
+        if (exchange.getRequestHeaders().getFirst("role") != null) {
+            role = exchange.getRequestHeaders().getFirst("role");
         }
         return role;
     }
@@ -162,22 +167,23 @@ public abstract class BaseHandler implements HttpHandler {
      * @throws IOException Throws IOException if an I/O error occurs
      */
     protected boolean isAuthorized(HttpExchange exchange, int studentId) throws IOException {
+        boolean success = true;
         final String role = getRoleFromHeader(exchange);
         if (role == null) {
             sendResponse(exchange, 401, Map.of(ERROR_KEY, "Unauthorized: Missing role header"));
-            return false;
+            success = false;
         }
 
         final int headerId = getIdFromHeader(exchange);
         if (headerId == -1) {
             sendResponse(exchange, 401, Map.of(ERROR_KEY, "Unauthorized: Missing student id in header"));
-            return false;
+            success = false;
         }
         if ("user".equals(role) && studentId != headerId) {
             sendResponse(exchange, 403, Map.of(ERROR_KEY, "Forbidden: Insufficient permissions"));
-            return false;
+            success = false;
         }
-        return true;
+        return success;
     }
 
     /**
@@ -193,7 +199,6 @@ public abstract class BaseHandler implements HttpHandler {
         final int id = getIdFromPath(exchange, 2);
         if (id == -1) {
             sendResponse(exchange, 400, Map.of(ERROR_KEY, entityName + " ID is required or invalid"));
-            return null;
         }
         return id;
     }

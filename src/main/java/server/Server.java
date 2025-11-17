@@ -7,6 +7,9 @@ import database.CourseDao;
 import database.ScheduleDao;
 import database.StudentDao;
 import service.AuthService;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -16,17 +19,18 @@ import java.util.logging.Logger;
 public class Server {
     private static final Logger LOGGER = Logger.getLogger(Server.class.getName());
     private final int port;
-    private final HttpServer httpServer;
+    private HttpServer httpServer;
 
-    public Server(int port, HttpServer httpServer) {
+    public Server(int port) {
         this.port = port;
-        this.httpServer = httpServer;
+
     }
 
     /**
      * Starts the HTTP server and sets up contexts for different endpoints.
      */
-    public void runServer(){
+    public void runServer() throws IOException {
+        httpServer = HttpServer.create(new InetSocketAddress(port), 0);
         final HttpContext loginContext = httpServer.createContext("/login");
         loginContext.setHandler(new LoginHandler(new AuthService(new StudentDao())));
 

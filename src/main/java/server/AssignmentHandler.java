@@ -51,13 +51,13 @@ public class AssignmentHandler extends BaseHandler {
         final String[] pathParts = exchange.getRequestURI().getPath().split("/");
 
         if (pathParts.length == 4 && "students".equals(pathParts[2])) {
-            handleGetByStudent(exchange, pathParts);
+            handleGetByStudent(exchange);
         } else {
-            handleGetByAssignment(exchange, pathParts);
+            handleGetByAssignment(exchange);
         }
     }
 
-    private void handleGetByStudent(HttpExchange exchange, String[] pathParts) throws IOException {
+    private void handleGetByStudent(HttpExchange exchange) throws IOException {
         final int studentId = getIdFromPath(exchange, 3);
         if (studentId == -1) {
             sendResponse(exchange, 400, null);
@@ -76,7 +76,7 @@ public class AssignmentHandler extends BaseHandler {
         }
     }
 
-    private void handleGetByAssignment(HttpExchange exchange, String[] pathParts) throws IOException {
+    private void handleGetByAssignment(HttpExchange exchange) throws IOException {
         final int assignmentId = getIdFromPath(exchange, 2);
         if (assignmentId == -1) {
             sendResponse(exchange, 400, null);
@@ -267,6 +267,7 @@ public class AssignmentHandler extends BaseHandler {
      * @return The parsed Integer course ID.
      * @throws IOException If an I/O error occurs.
      */
+    @SuppressFBWarnings("BX_UNBOXING_IMMEDIATELY_REBOXED")
     private Integer parseCourseId(Map<String, String> requestMap, Integer existingCourseId, HttpExchange exchange) throws IOException {
         if (requestMap.get(COURSE_ID_KEY) == null) {return existingCourseId;}
         final int parsedId;

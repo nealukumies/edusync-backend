@@ -23,7 +23,7 @@ public class CourseHandler extends BaseHandler {
     private static final String COURSE_ERROR = "Course not found";
     private static final String END_DATE_KEY = "end_date";
     private static final String START_DATE_KEY = "start_date";
-
+    private record Response(int status, Object body) {}
 
     /**
      * Constructor for CourseHandler. Data access object (DAO) is injected via constructor.
@@ -45,32 +45,71 @@ public class CourseHandler extends BaseHandler {
      */
     @Override
     protected void handleGet(HttpExchange exchange) throws IOException {
+        int status;
+        Object response;
+
         final String[] pathParts = exchange.getRequestURI().getPath().split("/");
 
         if ("students".equals(pathParts[2]) && pathParts.length == 4) {
-            final int studentId = getIdFromPath(exchange, 3);
-            if (studentId == -1) {return;}
-            if (!isAuthorized(exchange, studentId)) {return;}
-            final List<Course> courses = courseDao.getAllCourses(studentId);
-            if (courses == null || courses.isEmpty()) {
-                sendResponse(exchange, 404, "No courses found for this student");
-                return;
-            }
-            sendResponse(exchange, 200, courses);
-            return;
+            var result = handleGetStudentCourses(exchange);
+            status = result.status();
+            response = result.body();
+        } else {
+            var result = handleGetSingleCourse(exchange);
+            status = result.status();
+            response = result.body();
         }
 
-        final int courseId = getIdFromPath(exchange, 2);
-        if (courseId == -1) {return;}
+        sendResponse(exchange, status, response);
+    }
 
-        final Course course = courseDao.getCourseById(courseId);
+    /** Helper method to handle fetching a single course by its ID.
+     *
+     * @param exchange The HttpExchange object containing request and response data.
+     * @return A Response object containing the status code and response body.
+     * @throws IOException Throws IOException if an I/O error occurs.
+     */
+    private Response handleGetSingleCourse(HttpExchange exchange) throws IOException {
+        int courseId = getIdFromPath(exchange, 2);
+        if (courseId == -1) {
+            return new Response(400, Map.of(ERROR_KEY, "Invalid course ID"));
+        }
+
+        Course course = courseDao.getCourseById(courseId);
         if (course == null) {
-            sendResponse(exchange, 404, COURSE_ERROR);
-            return;
+            return new Response(404, COURSE_ERROR);
         }
-        final int studentId = course.getStudentId();
-        if (!isAuthorized(exchange, studentId)) {return;}
-        sendResponse(exchange, 200, course);
+
+        int studentId = course.getStudentId();
+        if (!isAuthorized(exchange, studentId)) {
+            return new Response(403, Map.of(ERROR_KEY, "Not authorized"));
+        }
+
+        return new Response(200, course);
+    }
+
+    /**
+     * Helper method to handle fetching all courses for a specific student.
+     * @param exchange The HttpExchange object containing request and response data.
+     * @return A Response object containing the status code and response body.
+     * @throws IOException Throws IOException if an I/O error occurs.
+     */
+    private Response handleGetStudentCourses(HttpExchange exchange) throws IOException {
+        int studentId = getIdFromPath(exchange, 3);
+        if (studentId == -1) {
+            return new Response(400, Map.of(ERROR_KEY, "Invalid student ID"));
+        }
+
+        if (!isAuthorized(exchange, studentId)) {
+            return new Response(403, Map.of(ERROR_KEY, "Not authorized"));
+        }
+
+        List<Course> courses = courseDao.getAllCourses(studentId);
+        if (courses == null || courses.isEmpty()) {
+            return new Response(404, "No courses found for this student");
+        }
+
+        return new Response(200, courses);
     }
 
     /**
@@ -83,39 +122,54 @@ public class CourseHandler extends BaseHandler {
      */
     @Override
     protected void handlePost(HttpExchange exchange) throws IOException {
-        if (!isMethod(exchange, "POST")) { return; }
-
-        final Map<String, String> requestMap = parseJsonBody(exchange);
-
-        final int studentId = getIdFromHeader(exchange);
-        if (studentId == -1) {return;}
-        final String courseName = requestMap.get("course_name");
-        final String startDate = requestMap.get(START_DATE_KEY);
-        final String endDate = requestMap.get(END_DATE_KEY);
-
-        Date sqlStartDate = null;
-        Date sqlEndDate = null;
-        try {
-            if (startDate != null) {
-                sqlStartDate = Date.valueOf(startDate);
-            }
-            if (endDate != null) {
-            sqlEndDate = Date.valueOf(endDate);}
-        } catch (IllegalArgumentException e) {
-            sendResponse(exchange, 400, Map.of(ERROR_KEY, "Invalid date format. Use YYYY-MM-DD"));
-            return;
-        }
-        if (courseName == null || sqlStartDate == null || sqlEndDate == null) {
-            sendResponse(exchange, 400, Map.of(ERROR_KEY, "Course name, start date, and end date are required"));
-            return;
-        }
-        final Course course  = courseDao.addCourse(studentId, courseName, sqlStartDate, sqlEndDate);
-        if (course == null) {
-            sendResponse(exchange, 500, Map.of(ERROR_KEY, "Failed to add course"));
-            return;
-        }
-        sendResponse(exchange, 201, course);
+        Response result = handleCreateCourse(exchange);
+        sendResponse(exchange, result.status(), result.body());
     }
+
+    /**
+     * Helper method to handle course creation logic.
+     * @param exchange The HttpExchange object containing request and response data.
+     * @return A Response object containing the status code and response body.
+     * @throws IOException Throws IOException if an I/O error occurs.
+     */
+    private Response handleCreateCourse(HttpExchange exchange) throws IOException {
+        if (!isMethod(exchange, "POST")) {
+            return new Response(405, Map.of(ERROR_KEY, "Method not allowed"));
+        }
+
+        Map<String, String> requestMap = parseJsonBody(exchange);
+        int studentId = getIdFromHeader(exchange);
+        if (studentId == -1) {
+            return new Response(400, Map.of(ERROR_KEY, "Invalid or missing student_id header"));
+        }
+
+        String courseName = requestMap.get("course_name");
+        String startDate = requestMap.get(START_DATE_KEY);
+        String endDate   = requestMap.get(END_DATE_KEY);
+        if (courseName == null || startDate == null || endDate == null) {
+            return new Response(400, Map.of(
+                    ERROR_KEY, "Course name, start date, and end date are required"
+            ));
+        }
+        Date sqlStartDate;
+        Date sqlEndDate;
+        try {
+            sqlStartDate = Date.valueOf(startDate);
+            sqlEndDate   = Date.valueOf(endDate);
+        } catch (IllegalArgumentException e) {
+            return new Response(400, Map.of(
+                    ERROR_KEY, "Invalid date format. Use YYYY-MM-DD"
+            ));
+        }
+
+        Course course = courseDao.addCourse(studentId, courseName, sqlStartDate, sqlEndDate);
+        if (course == null) {
+            return new Response(500, Map.of(ERROR_KEY, "Failed to add course"));
+        }
+
+        return new Response(201, course);
+    }
+
 
     /**
      * Handles DELETE requests to remove a course.
