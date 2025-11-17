@@ -6,6 +6,7 @@ import com.sun.net.httpserver.HttpHandler;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -41,14 +42,22 @@ public abstract class BaseHandler implements HttpHandler {
      * @param responseObj The response object to serialize to JSON
      * @throws IOException Throws IOException if an I/O error occurs
      */
-        protected void sendResponse(HttpExchange exchange, int statusCode, Object responseObj) throws IOException {
-            final String jsonResponse = gson.toJson(responseObj);
-        exchange.getResponseHeaders().set("Content-Type", "application/json");
-        exchange.sendResponseHeaders(statusCode, jsonResponse.getBytes(StandardCharsets.UTF_8).length);
-        try (OutputStream os = exchange.getResponseBody()) {
-            os.write(jsonResponse.getBytes(StandardCharsets.UTF_8));
-            os.flush();
+    protected void sendResponse(HttpExchange exchange, int statusCode, Object responseObj) throws IOException {
+        final String jsonResponse = gson.toJson(responseObj);
+        final byte[] responseBytes = jsonResponse.getBytes(StandardCharsets.UTF_8);
+
+        setJsonContentType(exchange);
+        exchange.sendResponseHeaders(statusCode, responseBytes.length);
+
+        try (OutputStream outputStream = exchange.getResponseBody()) {
+            outputStream.write(responseBytes);
+            outputStream.flush();
         }
+    }
+
+    /** Helper to set JSON content-type, avoids direct Headers access in main method */
+    private void setJsonContentType(HttpExchange exchange) {
+        exchange.getResponseHeaders().set("Content-Type", "application/json");
     }
 
     /**
@@ -99,7 +108,7 @@ public abstract class BaseHandler implements HttpHandler {
      */
     protected int getIdFromPath(HttpExchange exchange, int index) throws IOException {
         int result = -1;
-        final String[] pathParts = exchange.getRequestURI().getPath().split("/");
+        final String[] pathParts = getPathParts(exchange);
 
         if (index >= pathParts.length) {
             sendResponse(exchange, 400, Map.of(ERROR_KEY, "Bad Request: Missing ID in path"));
@@ -113,6 +122,18 @@ public abstract class BaseHandler implements HttpHandler {
         return result;
     }
 
+    /**
+     * Splits the request path into its segments.
+     *
+     * @param exchange The HttpExchange object for the request/response
+     * @return An array of path segments
+     */
+    protected String[] getPathParts(HttpExchange exchange) {
+        final URI uri = exchange.getRequestURI();
+        final String path = uri.getPath();
+        return path.split("/");
+    }
+
 
     /**
      * Extracts the student ID from the request headers.
@@ -124,7 +145,7 @@ public abstract class BaseHandler implements HttpHandler {
      */
     protected int getIdFromHeader(HttpExchange exchange) throws IOException {
         int result = -1;
-        final String studentIdStr = exchange.getRequestHeaders().getFirst("student_id");
+        final String studentIdStr = getStudentIdHeader(exchange);
 
         if (studentIdStr == null) {
             sendResponse(exchange, 401, Map.of(ERROR_KEY, "Unauthorized: Missing Student ID header"));
@@ -150,7 +171,7 @@ public abstract class BaseHandler implements HttpHandler {
     protected String getRoleFromHeader(HttpExchange exchange) throws IOException {
         String role = null;
         if (exchange.getRequestHeaders().getFirst("role") != null) {
-            role = exchange.getRequestHeaders().getFirst("role");
+            role = getRoleHeader(exchange);
         }
         return role;
     }
@@ -201,6 +222,26 @@ public abstract class BaseHandler implements HttpHandler {
             sendResponse(exchange, 400, Map.of(ERROR_KEY, entityName + " ID is required or invalid"));
         }
         return id;
+    }
+
+    /**
+     * Extracts the student ID from the request headers.
+     *
+     * @param exchange The HttpExchange object for the request/response
+     * @return The student ID from the headers
+     */
+    private String getStudentIdHeader(HttpExchange exchange) {
+        return exchange.getRequestHeaders().getFirst("student_id");
+    }
+
+    /**
+     * Extracts the role from the request headers.
+     *
+     * @param exchange The HttpExchange object for the request/response
+     * @return The role from the headers
+     */
+    private String getRoleHeader(HttpExchange exchange) {
+        return exchange.getRequestHeaders().getFirst("role");
     }
 
     /**

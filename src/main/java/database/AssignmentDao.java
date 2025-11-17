@@ -32,20 +32,20 @@ public class AssignmentDao {
         final String sql = "INSERT INTO assignments (student_id, course_id, title, description, deadline) VALUES (?, ?, ?, ?, ?)";
         final Connection conn = MariaDBConnection.getConnection();
         Assignment result = null;
-        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)){
-            ps.setInt(1, studentId);
+        try (PreparedStatement prepareStatement = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)){
+            prepareStatement.setInt(1, studentId);
             if (courseId != null) {
-                ps.setInt(2, courseId);
+                prepareStatement.setInt(2, courseId);
             } else {
-                ps.setNull(2, Types.INTEGER);
+                prepareStatement.setNull(2, Types.INTEGER);
             }
-            ps.setString(3, title);
-            ps.setString(4, description);
-            ps.setTimestamp(5, deadline);
-            ps.executeUpdate();
-            try (ResultSet rs = ps.getGeneratedKeys()){
-                if (rs.next()) {
-                    final int newId = rs.getInt(1);
+            prepareStatement.setString(3, title);
+            prepareStatement.setString(4, description);
+            prepareStatement.setTimestamp(5, deadline);
+            prepareStatement.executeUpdate();
+            try (ResultSet resultSet = prepareStatement.getGeneratedKeys()){
+                if (resultSet.next()) {
+                    final int newId = resultSet.getInt(1);
                     result = new Assignment(newId, studentId, courseId, title, description, deadline, Status.PENDING);
             }
             }
@@ -70,15 +70,15 @@ public class AssignmentDao {
         final Connection conn = MariaDBConnection.getConnection();
         try (PreparedStatement ps = conn.prepareStatement(sql)){
             ps.setInt(1, studentId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) { // loop over all rows
-                    final int id = rs.getInt("assignment_id");
-                    final String title = rs.getString("title");
-                    final String description = rs.getString("description");
-                    final Timestamp deadline = rs.getTimestamp("deadline");
+            try (ResultSet resultSet = ps.executeQuery()) {
+                while (resultSet.next()) { // loop over all rows
+                    final int id = resultSet.getInt("assignment_id");
+                    final String title = resultSet.getString("title");
+                    final String description = resultSet.getString("description");
+                    final Timestamp deadline = resultSet.getTimestamp("deadline");
                     final String column = COURSE_KEY;
-                    final Integer courseId = rs.getObject(column) != null ? rs.getInt(column) : null;
-                    final Status status = Status.fromDbValue(rs.getString("status"));
+                    final Integer courseId = resultSet.getObject(column) != null ? resultSet.getInt(column) : null;
+                    final Status status = Status.fromDbValue(resultSet.getString("status"));
                     assignments.add(new Assignment(id, studentId, courseId, title, description, deadline, status));
                 }
             }
@@ -103,10 +103,10 @@ public class AssignmentDao {
         if (status != null) {
             final Connection conn = MariaDBConnection.getConnection();
             final String sql = "UPDATE assignments SET status = ? WHERE assignment_id = ?";
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setString(1, status.getDbValue());
-                ps.setInt(2, assignmentId);
-                final int rows = ps.executeUpdate();
+            try (PreparedStatement prepareStatement = conn.prepareStatement(sql)) {
+                prepareStatement.setString(1, status.getDbValue());
+                prepareStatement.setInt(2, assignmentId);
+                final int rows = prepareStatement.executeUpdate();
                 success = rows > 0;
             } catch (SQLException e) {
                 if (LOGGER.isLoggable(Level.SEVERE)) {
@@ -128,16 +128,16 @@ public class AssignmentDao {
         Assignment result = null;
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "SELECT assignment_id, student_id, course_id, title, description, deadline, status FROM assignments WHERE assignment_id = ?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)){
-            ps.setInt(1, assignmentId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    final int studentId = rs.getInt("student_id");
-                    final Integer courseId = rs.getObject(COURSE_KEY) != null ? rs.getInt(COURSE_KEY) : null;
-                    final String title = rs.getString("title");
-                    final String description = rs.getString("description");
-                    final Timestamp deadline = rs.getTimestamp("deadline");
-                    final Status status = Status.fromDbValue(rs.getString("status"));
+        try (PreparedStatement prepareStatement = conn.prepareStatement(sql)){
+            prepareStatement.setInt(1, assignmentId);
+            try (ResultSet resultSet = prepareStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    final int studentId = resultSet.getInt("student_id");
+                    final Integer courseId = resultSet.getObject(COURSE_KEY) != null ? resultSet.getInt(COURSE_KEY) : null;
+                    final String title = resultSet.getString("title");
+                    final String description = resultSet.getString("description");
+                    final Timestamp deadline = resultSet.getTimestamp("deadline");
+                    final Status status = Status.fromDbValue(resultSet.getString("status"));
                     result =  new Assignment(assignmentId, studentId, courseId, title, description, deadline, status);
                 }
             }
@@ -159,9 +159,9 @@ public class AssignmentDao {
         boolean success = false;
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "DELETE FROM assignments WHERE assignment_id = ?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)){
-            ps.setInt(1, assignmentId);
-            final int rows = ps.executeUpdate();
+        try (PreparedStatement preparedStatement = conn.prepareStatement(sql)){
+            preparedStatement.setInt(1, assignmentId);
+            final int rows = preparedStatement.executeUpdate();
             success = rows > 0;
         } catch (SQLException e) {
             if (LOGGER.isLoggable(Level.SEVERE)) {
@@ -186,17 +186,18 @@ public class AssignmentDao {
         boolean success = false;
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "UPDATE assignments SET title = ?, description = ?, deadline = ?, course_id = ? WHERE assignment_id = ?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)){
-            ps.setString(1, title);
-            ps.setString(2, description);
-            ps.setTimestamp(3, deadline);
+
+        try (PreparedStatement preparedStatement = conn.prepareStatement(sql)){
+            preparedStatement.setString(1, title);
+            preparedStatement.setString(2, description);
+            preparedStatement.setTimestamp(3, deadline);
             if (courseId != null) {
-                ps.setInt(4, courseId);
+                preparedStatement.setInt(4, courseId);
             } else {
-                ps.setNull(4, Types.INTEGER);
+                preparedStatement.setNull(4, Types.INTEGER);
             }
-            ps.setInt(5, assignmentId);
-            final int rows = ps.executeUpdate();
+            preparedStatement.setInt(5, assignmentId);
+            final int rows = preparedStatement.executeUpdate();
             success = rows > 0;
         } catch (SQLException e) {
             if (LOGGER.isLoggable(Level.SEVERE)) {

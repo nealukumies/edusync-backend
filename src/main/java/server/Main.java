@@ -1,9 +1,6 @@
 package server;
 
-import com.sun.net.httpserver.HttpServer;
-
 import java.io.IOException;
-import java.net.InetSocketAddress;
 
 /**
  * Main class to start the server.

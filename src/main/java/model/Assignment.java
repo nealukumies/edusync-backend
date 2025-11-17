@@ -52,8 +52,8 @@ public class Assignment {
         return description;
     }
     public Timestamp getDeadline() {
-        final Date d = DateFormater.parseStringToTimestamp(deadline);
-        return d != null ? new Timestamp(d.getTime()) : null;
+        final Date date = DateFormater.parseStringToTimestamp(deadline);
+        return date != null ? new Timestamp(date.getTime()) : null;
     }
     public Status getStatus() {
         return status;

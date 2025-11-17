@@ -27,16 +27,16 @@ public class StudentDao {
         Student result = null;
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "INSERT INTO students (name, email, password_hash) VALUES (?, ?, ?);";
-        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)){
-            ps.setString(1, name);
-            ps.setString(2, email);
+        try (PreparedStatement preparedStatement = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)){
+            preparedStatement.setString(1, name);
+            preparedStatement.setString(2, email);
             final String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(12));
-            ps.setString(3, hashedPassword);
-            final int rows = ps.executeUpdate();
+            preparedStatement.setString(3, hashedPassword);
+            final int rows = preparedStatement.executeUpdate();
             if (rows > 0) {
-                try (ResultSet rs = ps.getGeneratedKeys()) {
-                    if (rs.next()) {
-                        final int newId = rs.getInt(1);
+                try (ResultSet resultSet = preparedStatement.getGeneratedKeys()) {
+                    if (resultSet.next()) {
+                        final int newId = resultSet.getInt(1);
                         result = new Student(newId, name, email, "user"); // Default role is "user"
                     }
                 }
@@ -59,13 +59,13 @@ public class StudentDao {
         Student result = null;
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "SELECT student_id, name, email, role FROM students WHERE email = ?;";
-        try (PreparedStatement ps = conn.prepareStatement(sql)){
-            ps.setString(1, email);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    final int id = rs.getInt("student_id");
-                    final String name = rs.getString("name");
-                    final String role = rs.getString("role");
+        try (PreparedStatement preparedStatement = conn.prepareStatement(sql)){
+            preparedStatement.setString(1, email);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    final int id = resultSet.getInt("student_id");
+                    final String name = resultSet.getString("name");
+                    final String role = resultSet.getString("role");
                     result = new Student(id, name, email, role);
                 }
             }
@@ -88,13 +88,13 @@ public class StudentDao {
         Student result = null;
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "SELECT name, email, role FROM students WHERE student_id = ?;";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, studentId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    final String name = rs.getString("name");
-                    final String email = rs.getString("email");
-                    final String role = rs.getString("role");
+        try (PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            preparedStatement.setInt(1, studentId);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    final String name = resultSet.getString("name");
+                    final String email = resultSet.getString("email");
+                    final String role = resultSet.getString("role");
                     result = new Student(studentId, name, email, role);
                 }
             }
@@ -116,11 +116,11 @@ public class StudentDao {
         String result = null;
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "SELECT password_hash FROM students WHERE email = ?;";
-        try (PreparedStatement ps = conn.prepareStatement(sql)){
-            ps.setString(1, email);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    result = rs.getString("password_hash");
+        try (PreparedStatement preparedStatement = conn.prepareStatement(sql)){
+            preparedStatement.setString(1, email);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    result = resultSet.getString("password_hash");
                 }
             }
         } catch (SQLException e) {
@@ -142,21 +142,21 @@ public class StudentDao {
         final Connection conn = MariaDBConnection.getConnection();
         try {
             conn.setAutoCommit(false);
-            try (PreparedStatement ps = conn.prepareStatement(
+            try (PreparedStatement preparedStatement = conn.prepareStatement(
                     "DELETE FROM assignments WHERE student_id = ?")) {
-                ps.setInt(1, studentId);
-                ps.executeUpdate();
+                preparedStatement.setInt(1, studentId);
+                preparedStatement.executeUpdate();
             }
-            try (PreparedStatement ps = conn.prepareStatement(
+            try (PreparedStatement preparedStatement = conn.prepareStatement(
                     "DELETE FROM courses WHERE student_id = ?")) {
-                ps.setInt(1, studentId);
-                ps.executeUpdate();
+                preparedStatement.setInt(1, studentId);
+                preparedStatement.executeUpdate();
             }
             final int rows;
-            try (PreparedStatement ps = conn.prepareStatement(
+            try (PreparedStatement preparedStatement = conn.prepareStatement(
                     "DELETE FROM students WHERE student_id = ?")) {
-                ps.setInt(1, studentId);
-                rows = ps.executeUpdate();
+                preparedStatement.setInt(1, studentId);
+                rows = preparedStatement.executeUpdate();
             }
             conn.commit();
             success = rows > 0;
@@ -193,10 +193,10 @@ public class StudentDao {
         if (newName != null && !newName.isEmpty()) {
             final Connection conn = MariaDBConnection.getConnection();
             final String sql = "UPDATE students SET name = ? WHERE student_id = ?;";
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setString(1, newName);
-                ps.setInt(2, studentId);
-                final int rows = ps.executeUpdate();
+            try (PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+                preparedStatement.setString(1, newName);
+                preparedStatement.setInt(2, studentId);
+                final int rows = preparedStatement.executeUpdate();
                 success = rows > 0;
             } catch (SQLException e) {
                 if (LOGGER.isLoggable(Level.SEVERE)) {
@@ -221,10 +221,10 @@ public class StudentDao {
         }
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "UPDATE students SET email = ? WHERE student_id = ?;";
-        try (PreparedStatement ps = conn.prepareStatement(sql)){
-            ps.setString(1, newEmail);
-            ps.setInt(2, studentId);
-            final int rows = ps.executeUpdate();
+        try (PreparedStatement preparedStatement = conn.prepareStatement(sql)){
+            preparedStatement.setString(1, newEmail);
+            preparedStatement.setInt(2, studentId);
+            final int rows = preparedStatement.executeUpdate();
             return rows > 0;
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, () -> "Failed to update student email: " + e.getMessage());

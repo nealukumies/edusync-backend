@@ -31,7 +31,6 @@ public class ScheduleDao {
      */
     @SuppressWarnings("PMD.MethodArgumentCouldBeFinal")
     public Schedule insertSchedule(Integer courseId, Weekday weekday, LocalTime startTime, LocalTime endTime) {
-        Schedule result = null;
         if (courseId == null || weekday == null || startTime == null || endTime == null) {
             throw new IllegalArgumentException("Course ID, weekday, start time, and end time must not be null");
         }
@@ -42,16 +41,17 @@ public class ScheduleDao {
 
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "INSERT INTO schedule (course_id, weekday, start_time, end_time) VALUES (?, ?, ?, ?);";
-        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)){
-            ps.setInt(1, courseId);
-            ps.setString(2, weekday.name());
-            ps.setTime(3, valueOf(startTime));
-            ps.setTime(4, valueOf(endTime));
-            final int rows = ps.executeUpdate();
+        Schedule result = null;
+        try (PreparedStatement preparedStatement = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)){
+            preparedStatement.setInt(1, courseId);
+            preparedStatement.setString(2, weekday.name());
+            preparedStatement.setTime(3, valueOf(startTime));
+            preparedStatement.setTime(4, valueOf(endTime));
+            final int rows = preparedStatement.executeUpdate();
             if (rows > 0) {
-                try (ResultSet rs = ps.getGeneratedKeys()) {
-                    if (rs.next()) {
-                        final int newId = rs.getInt(1);
+                try (ResultSet resultSet = preparedStatement.getGeneratedKeys()) {
+                    if (resultSet.next()) {
+                        final int newId = resultSet.getInt(1);
                         result = new Schedule(newId, courseId, weekday, startTime, endTime);
                     }
                 }
@@ -74,9 +74,9 @@ public class ScheduleDao {
         boolean success = false;
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "DELETE FROM schedule WHERE schedule_id = ?;";
-        try (PreparedStatement ps = conn.prepareStatement(sql)){
-            ps.setInt(1, scheduleId);
-            final int rows = ps.executeUpdate();
+        try (PreparedStatement preparedStatement = conn.prepareStatement(sql)){
+            preparedStatement.setInt(1, scheduleId);
+            final int rows = preparedStatement.executeUpdate();
             success = rows > 0;
         } catch (SQLException e) {
             if (LOGGER.isLoggable(Level.SEVERE)) {
@@ -96,14 +96,14 @@ public class ScheduleDao {
         Schedule result = null;
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "SELECT course_id, weekday, start_time, end_time FROM schedule WHERE schedule_id = ?;";
-        try (PreparedStatement ps = conn.prepareStatement(sql)){
-            ps.setInt(1, scheduleId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    final int courseId = rs.getInt(COURSE_KEY);
-                    final Weekday weekday = Weekday.fromString(rs.getString(WEEKDAY_KEY));
-                    final LocalTime startTime = rs.getTime(START_TIME_KEY).toLocalTime();
-                    final LocalTime endTime = rs.getTime(END_TIME_KEY).toLocalTime();
+        try (PreparedStatement preparedStatement = conn.prepareStatement(sql)){
+            preparedStatement.setInt(1, scheduleId);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    final int courseId = resultSet.getInt(COURSE_KEY);
+                    final Weekday weekday = Weekday.fromString(resultSet.getString(WEEKDAY_KEY));
+                    final LocalTime startTime = resultSet.getTime(START_TIME_KEY).toLocalTime();
+                    final LocalTime endTime = resultSet.getTime(END_TIME_KEY).toLocalTime();
                     result = new Schedule(scheduleId, courseId, weekday, startTime, endTime);
                 }
             }
@@ -125,15 +125,15 @@ public class ScheduleDao {
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "SELECT schedule_id, course_id, weekday, start_time, end_time  FROM schedule WHERE course_id = ?;";
         final List<Schedule> schedules = new ArrayList<>();
-        try (PreparedStatement ps = conn.prepareStatement(sql)){
-            ps.setInt(1, courseId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    final int scheduleId = rs.getInt("schedule_id");
-                    final int dbCourseId = rs.getInt(COURSE_KEY);
-                    final Weekday weekday = Weekday.fromString(rs.getString(WEEKDAY_KEY));
-                    final LocalTime startTime = rs.getTime(START_TIME_KEY).toLocalTime();
-                    final LocalTime endTime = rs.getTime(END_TIME_KEY).toLocalTime();
+        try (PreparedStatement preparedStatement = conn.prepareStatement(sql)){
+            preparedStatement.setInt(1, courseId);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    final int scheduleId = resultSet.getInt("schedule_id");
+                    final int dbCourseId = resultSet.getInt(COURSE_KEY);
+                    final Weekday weekday = Weekday.fromString(resultSet.getString(WEEKDAY_KEY));
+                    final LocalTime startTime = resultSet.getTime(START_TIME_KEY).toLocalTime();
+                    final LocalTime endTime = resultSet.getTime(END_TIME_KEY).toLocalTime();
                     schedules.add(new Schedule(scheduleId, dbCourseId, weekday, startTime, endTime));
                 }
             }
@@ -159,15 +159,15 @@ public class ScheduleDao {
                      "JOIN courses c ON s.course_id = c.course_id " +
                      "WHERE c.student_id = ?;";
         final List<Schedule> schedules = new ArrayList<>();
-        try (PreparedStatement ps = conn.prepareStatement(sql)){
-            ps.setInt(1, studentId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    final int scheduleId = rs.getInt("schedule_id");
-                    final int courseId = rs.getInt(COURSE_KEY);
-                    final Weekday weekday = Weekday.fromString(rs.getString(WEEKDAY_KEY));
-                    final LocalTime startTime = rs.getTime(START_TIME_KEY).toLocalTime();
-                    final LocalTime endTime = rs.getTime(END_TIME_KEY).toLocalTime();
+        try (PreparedStatement preparedStatement = conn.prepareStatement(sql)){
+            preparedStatement.setInt(1, studentId);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    final int scheduleId = resultSet.getInt("schedule_id");
+                    final int courseId = resultSet.getInt(COURSE_KEY);
+                    final Weekday weekday = Weekday.fromString(resultSet.getString(WEEKDAY_KEY));
+                    final LocalTime startTime = resultSet.getTime(START_TIME_KEY).toLocalTime();
+                    final LocalTime endTime = resultSet.getTime(END_TIME_KEY).toLocalTime();
                     schedules.add(new Schedule(scheduleId, courseId, weekday, startTime, endTime));
                 }
             }
@@ -191,7 +191,6 @@ public class ScheduleDao {
      * @return boolean
      */
     public boolean updateSchedule(int scheduleId, Integer courseId, Weekday weekday, LocalTime startTime, LocalTime endTime) {
-        boolean success = false;
         if (courseId == null || weekday == null || startTime == null || endTime == null) {
             throw new IllegalArgumentException("Course ID, weekday, start time, and end time must not be null");
         }
@@ -202,6 +201,7 @@ public class ScheduleDao {
 
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "UPDATE schedule SET course_id = ?, weekday = ?, start_time = ?, end_time = ? WHERE schedule_id = ?;";
+        boolean success = false;
         try (PreparedStatement ps = conn.prepareStatement(sql)){
             ps.setInt(1, courseId);
             ps.setString(2, weekday.name());

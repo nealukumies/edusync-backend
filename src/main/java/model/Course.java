@@ -5,8 +5,8 @@ import java.util.Date;
  * Course class represents a course taken by a student.
  */
 public class Course {
-    private int courseId;
-    private int studentId;
+    private final int courseId;
+    private final int studentId;
     private String courseName;
     private String startDate;
     private String endDate;

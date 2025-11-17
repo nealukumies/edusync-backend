@@ -25,7 +25,6 @@ public class CourseDao {
      * @param endDate    The end date of the course.
      */
     public Course addCourse(int studentId, String courseName, Date startDate, Date endDate) {
-        Course result = null;
         if (startDate != null && endDate != null && endDate.before(startDate)) {
             return null;
         }
@@ -34,17 +33,18 @@ public class CourseDao {
         }
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "INSERT INTO courses (student_id, course_name, start_date, end_date) VALUES (?, ?, ?, ?);";
-        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        Course result = null;
+        try (PreparedStatement preparedStatement = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-            ps.setInt(1, studentId);
-            ps.setString(2, courseName);
-            ps.setDate(3, startDate);
-            ps.setDate(4, endDate);
-            final int rows = ps.executeUpdate();
+            preparedStatement.setInt(1, studentId);
+            preparedStatement.setString(2, courseName);
+            preparedStatement.setDate(3, startDate);
+            preparedStatement.setDate(4, endDate);
+            final int rows = preparedStatement.executeUpdate();
             if (rows > 0) {
-                try (ResultSet rs = ps.getGeneratedKeys()) {
-                    if (rs.next()) {
-                        final int newId = rs.getInt(1);
+                try (ResultSet resultSet = preparedStatement.getGeneratedKeys()) {
+                    if (resultSet.next()) {
+                        final int newId = resultSet.getInt(1);
                         result = new Course(newId, studentId, courseName, startDate, endDate);
                     }
                 }
@@ -67,17 +67,17 @@ public class CourseDao {
         Course result = null;
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "SELECT course_id, student_id, course_name, start_date, end_date FROM courses WHERE course_id = ?;";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, courseId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
+            preparedStatement.setInt(1, courseId);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
                     result = new Course(
-                            rs.getInt("course_id"),
-                            rs.getInt("student_id"),
-                            rs.getString("course_name"),
-                            rs.getDate("start_date"),
-                            rs.getDate("end_date")
+                            resultSet.getInt("course_id"),
+                            resultSet.getInt("student_id"),
+                            resultSet.getString("course_name"),
+                            resultSet.getDate("start_date"),
+                            resultSet.getDate("end_date")
                     );
                 }
             }
@@ -100,16 +100,16 @@ public class CourseDao {
         final List<Course> courses = new ArrayList<>();
         final Connection conn = MariaDBConnection.getConnection();
         final String sql = "SELECT course_id, student_id, course_name, start_date, end_date FROM courses WHERE student_id = ?;";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, studentId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    final int courseId = rs.getInt("course_id");
-                    final int studentIdFromDb = rs.getInt("student_id");
-                    final String courseName = rs.getString("course_name");
-                    final Date startDate = rs.getDate("start_date");
-                    final Date endDate = rs.getDate("end_date");
+            preparedStatement.setInt(1, studentId);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    final int courseId = resultSet.getInt("course_id");
+                    final int studentIdFromDb = resultSet.getInt("student_id");
+                    final String courseName = resultSet.getString("course_name");
+                    final Date startDate = resultSet.getDate("start_date");
+                    final Date endDate = resultSet.getDate("end_date");
                     courses.add(new Course(courseId, studentIdFromDb, courseName, startDate, endDate));
                 }
             }
@@ -160,15 +160,14 @@ public class CourseDao {
      */
     public boolean updateCourse(int courseId, String courseName, Date startDate, Date endDate) {
         final Course existingCourse = getCourseById(courseId);
-        if (existingCourse == null) return false; // early exit reduces nesting
+        if (existingCourse == null) return false;
 
         final String finalCourseName = resolveCourseName(courseName, existingCourse);
         final Date finalStartDate = resolveStartDate(startDate, existingCourse);
         final Date finalEndDate = resolveEndDate(endDate, existingCourse);
 
-        if (!isValidDateRange(finalStartDate, finalEndDate)) return false; // early exit
-
-        return executeUpdate(courseId, finalCourseName, finalStartDate, finalEndDate);
+        return isValidDateRange(finalStartDate, finalEndDate) &&
+                executeUpdate(courseId, finalCourseName, finalStartDate, finalEndDate);
     }
 
     /** Helper method for updateCourse */
@@ -178,15 +177,15 @@ public class CourseDao {
 
     /** Helper method for updateCourse */
     private Date resolveStartDate(Date startDate, Course existingCourse) {
-        if (startDate != null) return startDate;
-        if (existingCourse.getStartDate() != null) return new Date(existingCourse.getStartDate().getTime());
+        if (startDate != null) {return startDate;}
+        if (existingCourse.getStartDate() != null) {return new Date(existingCourse.getStartDate().getTime());}
         return null;
     }
 
     /** Helper method for updateCourse */
     private Date resolveEndDate(Date endDate, Course existingCourse) {
-        if (endDate != null) return endDate;
-        if (existingCourse.getEndDate() != null) return new Date(existingCourse.getEndDate().getTime());
+        if (endDate != null) {return endDate;}
+        if (existingCourse.getEndDate() != null) {return new Date(existingCourse.getEndDate().getTime());}
         return null;
     }
 
@@ -199,12 +198,12 @@ public class CourseDao {
     private boolean executeUpdate(int courseId, String courseName, Date startDate, Date endDate) {
         final String sql = "UPDATE courses SET course_name = ?, start_date = ?, end_date = ? WHERE course_id = ?;";
         final Connection conn = MariaDBConnection.getConnection();
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, courseName);
-            ps.setDate(2, startDate);
-            ps.setDate(3, endDate);
-            ps.setInt(4, courseId);
-            return ps.executeUpdate() > 0;
+        try (PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            preparedStatement.setString(1, courseName);
+            preparedStatement.setDate(2, startDate);
+            preparedStatement.setDate(3, endDate);
+            preparedStatement.setInt(4, courseId);
+            return preparedStatement.executeUpdate() > 0;
         } catch (SQLException e) {
             if (LOGGER.isLoggable(Level.SEVERE)) {
                 LOGGER.log(Level.SEVERE, () -> "Failed to update course: " + e.getMessage());

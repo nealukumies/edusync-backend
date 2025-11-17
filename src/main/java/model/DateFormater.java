@@ -14,6 +14,7 @@ import java.util.logging.Logger;
 
 public class DateFormater {
     private static final Logger LOGGER = Logger.getLogger(DateFormater.class.getName());
+
     public static String formatDateToString(Date date) {
         final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
         return sdf.format(date);

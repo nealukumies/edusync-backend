@@ -4,10 +4,10 @@ package model;
  * Student class representing a student entity.
  */
 public class Student {
-    private int id;
+    private final int id;
     private String name;
     private String email;
-    private String role;
+    private final String role;
 
     /**
      * Constructor for Student.

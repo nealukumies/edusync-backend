@@ -48,7 +48,7 @@ public class AssignmentHandler extends BaseHandler {
      */
     @Override
     protected void handleGet(HttpExchange exchange) throws IOException {
-        final String[] pathParts = exchange.getRequestURI().getPath().split("/");
+        final String[] pathParts = getPathParts(exchange);
 
         if (pathParts.length == 4 && "students".equals(pathParts[2])) {
             handleGetByStudent(exchange);
@@ -142,31 +142,31 @@ public class AssignmentHandler extends BaseHandler {
      */
     @Override
     protected void handleDelete(HttpExchange exchange) throws IOException {
-        int status = 200;
-        Object responseBody = Map.of("message", "Assignment deleted successfully");
-
         final int assignmentId = getIdFromPath(exchange, 2);
         if (assignmentId == -1) {
-            status = 400;
-            responseBody = null;
-        } else {
-            final Assignment assignment = assignmentDao.getAssignmentById(assignmentId);
-            if (assignment == null) {
-                status = 404;
-                responseBody = NO_ASSIGNMENTS;
-            } else if (!isAuthorized(exchange, assignment.getStudentId())) {
-                status = 403;
-                responseBody = null;
-            } else {
-                final boolean success = assignmentDao.deleteAssignment(assignmentId);
-                if (!success) {
-                    status = 500;
-                    responseBody = Map.of(ERROR_KEY, "Failed to delete assignment");
-                }
-            }
+            sendResponse(exchange, 400, Map.of(ERROR_KEY, "Invalid assignment ID"));
+            return;
         }
-        sendResponse(exchange, status, responseBody);
+
+        final Assignment assignment = assignmentDao.getAssignmentById(assignmentId);
+        if (assignment == null) {
+            sendResponse(exchange, 404, NO_ASSIGNMENTS);
+            return;
+        }
+
+        if (!isAuthorized(exchange, assignment.getStudentId())) {
+            sendResponse(exchange, 403, Map.of(ERROR_KEY, "Forbidden"));
+            return;
+        }
+
+        final boolean success = assignmentDao.deleteAssignment(assignmentId);
+        if (!success) {
+            sendResponse(exchange, 500, Map.of(ERROR_KEY, "Failed to delete assignment"));
+            return;
+        }
+        sendResponse(exchange, 200, Map.of("message", "Assignment deleted successfully"));
     }
+
 
     /**
      * Handles PUT requests to update an existing assignment.
@@ -180,8 +180,6 @@ public class AssignmentHandler extends BaseHandler {
      */
     @Override
     protected void handlePut(HttpExchange exchange) throws IOException {
-        Object responseBody;
-
         final int assignmentId = getIdFromPath(exchange, 2);
         if (assignmentId == -1) {
             sendError(exchange, 400, "Invalid assignment ID");
@@ -209,14 +207,14 @@ public class AssignmentHandler extends BaseHandler {
             return;
         }
 
-        responseBody = updateAssignmentFields(assignmentId, existingAssignment, requestMap);
+        final Object responseBody = updateAssignmentFields(assignmentId, existingAssignment, requestMap);
         sendResponse(exchange, 200, responseBody);
     }
 
     /** Helper method to update fields and status */
     private Object updateAssignmentFields(int assignmentId, Assignment existingAssignment, Map<String, String> requestMap) throws IOException {
-        boolean statusUpdated = updateStatusIfPresent(assignmentId, requestMap);
-        boolean fieldsUpdated = assignmentDao.updateAssignment(
+        final boolean statusUpdated = updateStatusIfPresent(assignmentId, requestMap);
+        final boolean fieldsUpdated = assignmentDao.updateAssignment(
                 assignmentId,
                 requestMap.getOrDefault(TITLE_KEY, existingAssignment.getTitle()),
                 requestMap.getOrDefault(DESCRIPTION_KEY, existingAssignment.getDescription()),
@@ -288,7 +286,7 @@ public class AssignmentHandler extends BaseHandler {
      * @return True if the status was updated, false otherwise.
      */
     private boolean updateStatusIfPresent(int assignmentId, Map<String, String> requestMap) {
-        if (requestMap.get("status") == null) return false;
+        if (requestMap.get("status") == null) {return false;}
         final Status status = Status.fromDbValue(requestMap.get("status"));
         return assignmentDao.updateStatus(assignmentId, status);
     }

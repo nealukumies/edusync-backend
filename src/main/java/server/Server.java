@@ -19,7 +19,6 @@ import java.util.logging.Logger;
 public class Server {
     private static final Logger LOGGER = Logger.getLogger(Server.class.getName());
     private final int port;
-    private HttpServer httpServer;
 
     public Server(int port) {
         this.port = port;
@@ -30,7 +29,7 @@ public class Server {
      * Starts the HTTP server and sets up contexts for different endpoints.
      */
     public void runServer() throws IOException {
-        httpServer = HttpServer.create(new InetSocketAddress(port), 0);
+        HttpServer httpServer = HttpServer.create(new InetSocketAddress(port), 0);
         final HttpContext loginContext = httpServer.createContext("/login");
         loginContext.setHandler(new LoginHandler(new AuthService(new StudentDao())));
 
