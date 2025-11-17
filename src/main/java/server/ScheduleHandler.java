@@ -30,6 +30,9 @@ public class ScheduleHandler extends BaseHandler {
     private final CourseDao courseDao;
     private static final String ERROR_KEY = "error";
     private static final String SCHEDULE_NOT_FOUND = "Schedule not found";
+    private static final String START_TIME_KEY = "start_time";
+    private static final String END_TIME_KEY = "end_time";
+    private static final String WEEKDAY_KEY = "weekday";
 
     /**
      * Constructor for ScheduleHandler. Data access objects (DAOs) are injected via constructor.
@@ -155,7 +158,7 @@ public class ScheduleHandler extends BaseHandler {
             return;
         }
 
-        if (body.get("weekday") == null || body.get("start_time") == null || body.get("end_time") == null) {
+        if (body.get(WEEKDAY_KEY) == null || body.get(START_TIME_KEY) == null || body.get(END_TIME_KEY) == null) {
             sendResponse(exchange, 400, Map.of(ERROR_KEY, "course_id, weekday, start_time, and end_time are required"));
             return;
         }
@@ -165,11 +168,16 @@ public class ScheduleHandler extends BaseHandler {
         final LocalTime end;
 
         try {
-            weekday = parseWeekdaySafe(body.get("weekday"));
-            start = parseTimeSafe(body.get("start_time"));
-            end   = parseTimeSafe(body.get("end_time"));
+            weekday = parseWeekdaySafe(body.get(WEEKDAY_KEY));
+            start = parseTimeSafe(body.get(START_TIME_KEY));
+            end   = parseTimeSafe(body.get(END_TIME_KEY));
         } catch (IllegalArgumentException e) {
             sendResponse(exchange, 400, Map.of(ERROR_KEY, e.getMessage()));
+            return;
+        }
+
+        if (start == null || end == null) {
+            sendResponse(exchange, 400, Map.of(ERROR_KEY, "start_time and end_time are required"));
             return;
         }
 
@@ -233,9 +241,9 @@ public class ScheduleHandler extends BaseHandler {
         Weekday weekday = existing.getWeekday();
 
         try {
-            final LocalTime parsedStart = parseTimeSafe(requestMap.get("start_time"));
-            final LocalTime parsedEnd   = parseTimeSafe(requestMap.get("end_time"));
-            final Weekday parsedWeekday = parseWeekdaySafe(requestMap.get("weekday"));
+            final LocalTime parsedStart = parseTimeSafe(requestMap.get(START_TIME_KEY));
+            final LocalTime parsedEnd   = parseTimeSafe(requestMap.get(END_TIME_KEY));
+            final Weekday parsedWeekday = parseWeekdaySafe(requestMap.get(WEEKDAY_KEY));
 
             if (parsedStart != null) {start = parsedStart;}
             if (parsedEnd != null)   {end   = parsedEnd;}
