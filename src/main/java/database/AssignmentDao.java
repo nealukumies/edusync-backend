@@ -32,6 +32,7 @@ public class AssignmentDao {
         final String sql = "INSERT INTO assignments (student_id, course_id, title, description, deadline) VALUES (?, ?, ?, ?, ?)";
         final Connection conn = MariaDBConnection.getConnection();
         Assignment result = null;
+
         try (PreparedStatement prepareStatement = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)){
             prepareStatement.setInt(1, studentId);
             if (courseId != null) {
@@ -169,6 +170,19 @@ public class AssignmentDao {
             }
         }
         return success;
+    }
+
+    public void deleteAssignmentsByCourseId(final int courseId) {
+        final Connection conn = MariaDBConnection.getConnection();
+        final String sql = "DELETE FROM assignments WHERE course_id = ?";
+        try (PreparedStatement preparedStatement = conn.prepareStatement(sql)){
+            preparedStatement.setInt(1, courseId);
+            final int rows = preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.log(Level.SEVERE, () -> "Failed to delete assignments by course ID: " + e.getMessage());
+            }
+        }
     }
 
     /**

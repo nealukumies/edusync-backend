@@ -16,7 +16,6 @@ public class DateFormater {
     private static final Logger LOGGER = Logger.getLogger(DateFormater.class.getName());
 
     private DateFormater() {
-        throw new UnsupportedOperationException("Utility class, cannot be instantiated");
     }
 
     public static String formatDateToString(Date date) {

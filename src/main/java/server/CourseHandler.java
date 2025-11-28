@@ -1,6 +1,7 @@
 package server;
 
 import com.sun.net.httpserver.HttpExchange;
+import database.AssignmentDao;
 import database.CourseDao;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import model.Course;
@@ -195,6 +196,8 @@ public class CourseHandler extends BaseHandler {
             sendResponse(exchange, 403, Map.of(ERROR_KEY, "Forbidden: You can only delete your own courses"));
             return;
         }
+        AssignmentDao assignmentDao = new AssignmentDao();
+        assignmentDao.deleteAssignmentsByCourseId(courseId);
         final boolean deleted = courseDao.deleteCourse(courseId);
         if (!deleted) {
             sendResponse(exchange, 500, Map.of(ERROR_KEY, "Failed to delete course"));
